@@ -23,15 +23,14 @@ Print the base and the sled first and test the slide before printing the rest. I
 
 | Qty | Item | Where |
 |---|---|---|
-| 2 | M4 × 8 (or M3 × 8 with nuts) | 28BYJ-48 ears into the motor plate (holes are 3.5 mm: M4 self-taps) |
+| 2 | M4 × 8 (or M3 × 8 with nuts) | 28BYJ-48 ears (35 mm apart) into the motor plate; plate holes are 3.5 mm so M4 self-taps |
 | 4 | M3 × 6 | U-yoke into the base, from underneath (holes 2.5 mm, self-tap) |
 | 1 | M3 × 10 | Blade clamp, from the front of the riser, self-taps into the block |
-| 4 | M3 × 6 | ULN2003 board onto the standoffs (**verify 29 × 26.5 mm hole spacing first**) |
 | 2 | M5 × 20 hex-head (or socket) | Nest pins. One gets the printed knob on its head; one plain |
 | 1 | 3 × 2 mm magnet | Blade back face, in the shallow pocket at pad height |
 | 1 | SS49E hall sensor | Post front pocket, legs out the top |
 
-The ESP32 board slides into its rails from the open end (toward the nest); no screws. Measure your board width first: the rails are cut for 28.3 mm; the Fusion model has the value in the base sketch if yours differs.
+Both boards slide into printed rails, no screws: the ESP32 from the nest end of its cradle, the ULN2003 from the edge of the base. **Measure your boards before printing the base.** The rails are cut for a 28.3 mm wide ESP32 and a 32 mm wide ULN2003 (some ULN2003 boards are 30 mm). The widths are single values in the base sketches.
 
 ## Assembly order
 
@@ -44,7 +43,7 @@ The ESP32 board slides into its rails from the open end (toward the nest); no sc
 7. Fit the liner (or foam) into the nest.
 8. Set the U-yoke into its recess and screw it from below.
 9. Hang the nest between the arms: M5 bolt through each arm into the nest ear. Fit the knob on one bolt head and snug it so the nest rests on the stop tab.
-10. Boards: ESP32 slides into its rails, ULN2003 screws to the standoffs. Wire per `../README.md`.
+10. Boards: slide the ESP32 and the ULN2003 into their rails. Wire per `../README.md`, including the 0.1 µF capacitor on the hall sensor output.
 
 ## v2
 

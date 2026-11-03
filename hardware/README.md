@@ -48,7 +48,7 @@ Fallback if the printed lead screw is rough: an **M8 threaded rod and nut** from
 | ~8 | M3 screws | Motor ears, blade clamp. Or design printed dovetails/snap fits. | ~$1 |
 | 2 | M5 × 20 hex-head bolt | Nest trunnion pins, self-tapped into the nest ears. One wears the printed knob. | ~$0.40 |
 | 1 | M3 × 10 | Blade clamp | — |
-| 4 + 4 | M3 × 6 | Yoke to base (from below), ULN2003 to standoffs | — |
+| 4 | M3 × 6 | Yoke to base (from below) | — |
 | 2 | M4 × 8 | Motor ears | — |
 | 1 | SG90 micro servo (v2 only) | Tips the nest ~110°, within its 180° range. Needs ~10 N·mm, has ~170. Add a 470 µF cap on 5 V. | ~$2 |
 | 1 | USB cable + phone charger | Powers everything at 5 V. | have |
