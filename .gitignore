@@ -1,0 +1,21 @@
+# PlatformIO / Arduino
+.pio/
+.pioenvs/
+.piolibdeps/
+build/
+*.bin
+*.elf
+
+# Editors
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Secrets (Wi-Fi passwords, API keys)
+secrets.h
+firmware/**/secrets.h
+.env
