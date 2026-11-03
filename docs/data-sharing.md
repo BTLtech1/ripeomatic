@@ -37,15 +37,15 @@ One row per reading, CSV or JSON, same fields either way. Fields marked * are th
 | `cut_open` | `no_bruise` | Optional, if the fruit was cut that day: `no_bruise`, `bruise_at_pad`, `bruise_elsewhere` |
 | `notes` | | Free text |
 
-The **human rating** is the label everything else is trained against. The firmware should make it a one-tap action (web page button, or a physical button on the base for "I ate it, it was perfect").
+The **human rating** is the label everything else is trained against. The firmware makes it a one-tap action: the rating buttons on the page, or holding the BOOT button for "I ate it, it was perfect". A rating is logged as **its own row** with the measurement columns blank (the log is append-only on the device); analysis joins it to the nearest preceding reading of the same `fruit_id`.
 
 ## Collecting
 
 Start simple and only add infrastructure when there are enough users to need it.
 
-1. **v1, now:** the device serves its log as CSV from its web page (`/data.csv`). People contribute by opening a pull request that drops the file into `data/contrib/<device_id>/`. A GitHub Action validates the schema and merges the CSVs into one `data/all.csv`.
+1. **v1, done:** the device serves its log as CSV from its web page (`/data.csv`). People contribute by opening a pull request that drops the file into `data/contrib/<device_id>/`. The `data` GitHub Action (`tools/merge_data.py`) validates the schema and merges the CSVs into one `data/all.csv`.
 2. **v2:** an opt-in "share readings" toggle in the device settings that POSTs each reading as JSON to a small endpoint (a free-tier serverless function writing to a public bucket or straight into the repo). Default off. Nothing but the fields above is sent: no Wi-Fi name, no IP kept, no location.
-3. **Dashboard:** a static page on GitHub Pages that reads `data/all.csv` and plots every fruit's stiffness-vs-time curve, coloured by human rating. This is also the project's best marketing.
+3. **Dashboard, done:** `dashboard/index.html`, a static page (GitHub Pages) that reads `data/all.csv` and plots every fruit's stiffness-vs-time curve with the human ratings marked. This is also the project's best marketing.
 
 ## What pooled data buys
 
@@ -57,13 +57,13 @@ Start simple and only add infrastructure when there are enough users to need it.
 
 ## Firmware changes this needs
 
-- [ ] Generate and persist `device_id` on first boot
-- [ ] NTP time; include `fw_version`, `hw_version`, `blade_k` and `cal_points` in every record
-- [ ] `fruit_id` counter that increments when a swap is detected
-- [ ] One-tap human rating on the web page; optional physical "perfect" button on GPIO 0 (the BOOT button already on the board)
+- [x] Generate and persist `device_id` on first boot
+- [x] NTP time; include `fw_version`, `hw_version`, `blade_k` and `cal_points` in every record
+- [x] `fruit_id` counter that increments when a swap is detected
+- [x] One-tap human rating on the web page; hold the BOOT button (GPIO 0) for "perfect"
 - [ ] Optional DS18B20 or thermistor for `room_temp_c`
-- [ ] `/data.csv` and `/data.json` endpoints; "download" and, later, "share" toggle
-- [ ] Threshold and decay-rate constants loaded from a small JSON that the community model can update, rather than hard-coded
+- [x] `/data.csv` endpoint and the download button; later, a "share" toggle
+- [ ] Threshold and decay-rate constants loaded from a small JSON that the community model can update, rather than hard-coded (today: two settings, `ripe_abs_n_per_mm` and `ripe_pct_of_first`)
 
 ## Privacy
 

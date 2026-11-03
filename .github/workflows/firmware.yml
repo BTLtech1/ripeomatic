@@ -1,0 +1,38 @@
+# Firmware checks that need no ESP32 toolchain: unit tests, a desktop type-check
+# of the sketch, the generated UI header being up to date, and the web page
+# exercised in a headless browser against the mock device.
+name: firmware
+
+on:
+  pull_request:
+    paths: ["firmware/**", "tools/**"]
+  push:
+    branches: [main]
+    paths: ["firmware/**", "tools/**"]
+  workflow_dispatch:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests (measure.h)
+        run: |
+          cd firmware/test
+          g++ -std=c++17 -Wall -Wextra -Werror -I../ripeomatic test_measure.cpp -o test_measure
+          ./test_measure
+      - name: Type-check the sketch
+        run: ./firmware/test/check_sketch.sh
+      - name: ui.h matches ui/index.html
+        run: |
+          python3 tools/build_ui.py
+          git diff --exit-code firmware/ripeomatic/ui.h || { echo "run tools/build_ui.py and commit ui.h"; exit 1; }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Web page smoke test against the mock device
+        run: |
+          npm i -s playwright@1.47.0 && npx playwright install --with-deps chromium
+          python3 tools/mock_device.py --port 8080 &
+          sleep 1
+          node firmware/test/ui_smoke.js

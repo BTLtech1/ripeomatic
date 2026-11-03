@@ -1,0 +1,35 @@
+# Validates contributed readings on every PR and rebuilds data/all.csv on main.
+name: data
+
+on:
+  pull_request:
+    paths: ["data/contrib/**", "tools/merge_data.py"]
+  push:
+    branches: [main]
+    paths: ["data/contrib/**", "tools/merge_data.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate contributions
+        run: python3 tools/merge_data.py --check
+      - name: Rebuild data/all.csv
+        if: github.event_name != 'pull_request'
+        run: python3 tools/merge_data.py
+      - name: Commit data/all.csv
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/all.csv
+          git diff --cached --quiet || git commit -m "data: rebuild all.csv"
+          git push
