@@ -187,6 +187,9 @@ class Machine {
     if (grams <= 0) { *why = "mass must be > 0"; return false; }
     if (!zeroCaptured_) { *why = "capture the zero first (nothing on the pad)"; return false; }
     float raw = hall.readRaw(HALL_SAMPLES_TARE);
+#if SIMULATE
+    raw = S.cal_zero_counts + grams / 1000.0f * 9.80665f / 0.0035f;   // pretend the coins are on the pad
+#endif
     if (fabsf(raw - S.cal_zero_counts) < 3) { *why = "sensor didn't change: is the mass on the pad? is the magnet near the sensor?"; return false; }
     char pt[24];
     snprintf(pt, sizeof pt, "%s%.1f:%.0f", S.cal_points[0] ? ";" : "", grams, raw);
