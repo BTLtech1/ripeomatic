@@ -1,6 +1,6 @@
 # Data
 
-Readings from real avocados. This is how a good ripeness threshold gets found, so contributions are very welcome.
+Readings from real avocados. This is how a good ripeness threshold gets found, so contributions are very welcome. The full record format, how readings from different builds are made comparable, and what pooled data is for are in [`../docs/data-sharing.md`](../docs/data-sharing.md). Contributed logs go in `contrib/<device_id>/`.
 
 ## Format
 
