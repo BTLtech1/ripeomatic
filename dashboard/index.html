@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ripe-O-Matic data</title>
+<meta name="description" content="Pooled avocado ripening curves from BTL Ripe-O-Matic builds, and the ripeness threshold they imply.">
+<style>
+:root{
+  color-scheme:light;
+  --page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--muted:#898781;--grid:#e1e0d9;--axis:#c3c2b7;--border:rgba(11,11,11,.10);
+  --s1:#2a78d6;--s2:#eb6834;--s3:#6250d6;--band:rgba(235,104,52,.12);
+}
+@media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--ink:#f0efec;--ink-2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);--s1:#3987e5;--s2:#d95926;--s3:#9085e9;--band:rgba(217,89,38,.16)}}
+:root[data-theme="dark"]{color-scheme:dark;--page:#0d0d0d;--surface:#1a1a19;--ink:#f0efec;--ink-2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--border:rgba(255,255,255,.10);--s1:#3987e5;--s2:#d95926;--s3:#9085e9;--band:rgba(217,89,38,.16)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--page);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:24px 16px 48px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 16px;margin-bottom:6px}
+h1{font-size:22px;margin:0;font-weight:650;letter-spacing:-.01em}
+h1 span{color:var(--ink-2);font-weight:400}
+.sub{color:var(--ink-2);margin:0 0 16px;max-width:70ch}
+.filters{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:0 0 16px;font-size:14px}
+.filters label{color:var(--ink-2)}
+.filters select,.filters input[type=file]{font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--ink)}
+.filters .file{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);cursor:pointer}
+.filters .file input{display:none}
+.banner{background:var(--band);border:1px solid var(--s2);border-radius:10px;padding:8px 12px;font-size:14px;margin-bottom:16px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.tile .v{font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1}
+.tile .v small{font-size:14px;font-weight:450;color:var(--ink-2);letter-spacing:0;margin-left:2px}
+.tile .l{color:var(--ink-2);font-size:13px;margin-top:2px}
+.tile.hero{grid-column:span 2}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;position:relative}
+.card h2{font-size:15px;margin:0 0 2px;font-weight:650}
+.card p.d{margin:0 0 10px;color:var(--ink-2);font-size:13px;max-width:80ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin:6px 0 2px}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:6px}
+svg.chart{width:100%;height:auto;display:block;font:11px system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.chart text{fill:var(--muted)}
+.chart .grid{stroke:var(--grid);stroke-width:1}
+.chart .axis{stroke:var(--axis);stroke-width:1}
+.chart .curve{fill:none;stroke:var(--s1);stroke-width:1.5;opacity:.45;transition:opacity .15s}
+.chart .curve.hi{opacity:1;stroke-width:2.5}
+.chart .curve.dim{opacity:.12}
+.chart .ring{stroke:var(--surface);stroke-width:2}
+.chart .hit{fill:transparent;pointer-events:all}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--page);font-size:12px;line-height:1.4;padding:6px 9px;border-radius:8px;white-space:nowrap;opacity:0;transition:opacity .1s;z-index:2}
+.tip b{font-weight:650}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{color:var(--ink-2);font-weight:600;cursor:pointer;user-select:none}
+th.on::after{content:" ↓";color:var(--muted)}
+td.n,th.n{text-align:right}
+.tablewrap{overflow:auto}
+details summary{cursor:pointer;color:var(--ink-2);font-size:14px}
+.foot{color:var(--ink-2);font-size:13px;margin-top:8px}
+.foot a,.sub a{color:inherit}
+.empty{color:var(--ink-2);font-size:14px;padding:30px 0;text-align:center}
+@media(max-width:600px){.tile.hero{grid-column:span 1}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>Ripe-O-Matic <span>· pooled readings</span></h1></header>
+<p class="sub">Every avocado anyone has measured with a <a href="https://github.com/BTLtech1/ripeomatic">Ripe-O-Matic</a>: stiffness (N/mm) against time, with the moment people said it was <b>perfect</b>. The more fruit in here, the better the "ripe" threshold in the firmware gets. <a href="https://github.com/BTLtech1/ripeomatic/tree/main/data">Contribute yours.</a></p>
+
+<div class="filters" id="filters">
+  <label>Variety <select id="fVariety"><option value="">all</option></select></label>
+  <label>Device <select id="fDevice"><option value="">all</option></select></label>
+  <label>Source <select id="fSource"><option value="all">merged data</option><option value="sample">synthetic sample</option></select></label>
+  <label class="file">Open your own CSV <input type="file" id="fFile" accept=".csv,text/csv"></label>
+</div>
+<div class="banner" id="banner" hidden></div>
+
+<div class="tiles" id="tiles"></div>
+
+<div class="card">
+  <h2>Ripening curves</h2>
+  <p class="d">One line per avocado, stiffness vs. days since its first reading. Markers are what the owner tapped. The shaded band is the middle half of all "perfect" readings.</p>
+  <div class="legend"><span><i style="background:var(--s1);height:2px;vertical-align:3px"></i>one avocado</span><span><i style="background:var(--s2);border-radius:50%"></i>perfect</span><span><i style="background:var(--s3);clip-path:polygon(20% 0,50% 30%,80% 0,100% 20%,70% 50%,100% 80%,80% 100%,50% 70%,20% 100%,0 80%,30% 50%,0 20%)"></i>overripe</span><span><i style="border:2px solid var(--muted);background:none;width:9px;height:9px;transform:rotate(45deg)"></i>firm / ready</span></div>
+  <svg class="chart" id="curves" viewBox="0 0 1000 420" role="img" aria-label="Ripening curves"></svg>
+  <div class="tip" id="tip"></div>
+</div>
+
+<div class="card">
+  <h2>Stiffness at the moment of each rating</h2>
+  <p class="d">The last reading before someone tapped a rating. Where the "perfect" dots sit is the ripeness threshold; the spread is how much one number can be trusted.</p>
+  <svg class="chart" id="strip" viewBox="0 0 1000 230" role="img" aria-label="Stiffness by rating"></svg>
+</div>
+
+<div class="card" id="tempcard">
+  <h2>Days to perfect vs. room temperature</h2>
+  <p class="d">Only fruit that were rated perfect and had a temperature logged. Ripening roughly doubles in speed per 10 °C, so this should slope down.</p>
+  <svg class="chart" id="temp" viewBox="0 0 1000 260" role="img" aria-label="Days to perfect vs temperature"></svg>
+</div>
+
+<div class="card">
+  <h2>All avocados</h2>
+  <p class="d">Click a column to sort. Everything in the charts is in here too.</p>
+  <div class="tablewrap"><table id="table"><thead><tr>
+    <th data-k="fruit">Fruit</th><th data-k="device">Device</th><th data-k="variety">Variety</th><th class="n" data-k="n">Readings</th><th class="n" data-k="firstK">First N/mm</th><th class="n" data-k="lastK">Last N/mm</th><th class="n" data-k="perfectK">At perfect</th><th class="n" data-k="daysToPerfect">Days to perfect</th><th class="n" data-k="temp">°C</th><th data-k="outcome">Rated</th><th data-k="cut">Cut open</th>
+  </tr></thead><tbody></tbody></table></div>
+</div>
+
+<p class="foot">Built from <code>data/all.csv</code> in the repo, which CI rebuilds from every merged contribution. Nothing personal is collected: random device ids, UTC timestamps, numbers.</p>
+</div>
+
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const RATING_ORDER = ['hard', 'firm', 'ready', 'perfect', 'overripe'];
+let raw = [], fruits = [], sortKey = 'start', sortDir = 1, source = 'all';
+
+// ---- CSV -----------------------------------------------------------------
+function parseCsv(text) {
+  const out = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(f); f = ''; }
+    else if (c === '\n' || c === '\r') { if (f !== '' || row.length) { row.push(f); out.push(row); } row = []; f = ''; if (c === '\r' && text[i + 1] === '\n') i++; }
+    else f += c;
+  }
+  if (f !== '' || row.length) { row.push(f); out.push(row); }
+  if (out.length < 1) return [];
+  const h = out[0];
+  return out.slice(1).filter(r => r.length >= 6).map(r => { const o = {}; h.forEach((k, i) => o[k] = r[i] == null ? '' : r[i]); return o; });
+}
+
+// ---- model ---------------------------------------------------------------
+function build(rows) {
+  const byFruit = new Map();
+  for (const r of rows) {
+    if (!r.fruit_id) continue;
+    if (!byFruit.has(r.fruit_id)) byFruit.set(r.fruit_id, { fruit: r.fruit_id, device: r.device_id, variety: r.variety || '', readings: [], events: [] });
+    const f = byFruit.get(r.fruit_id);
+    const t = Date.parse(r.timestamp);
+    const k = parseFloat(r.stiffness_n_per_mm);
+    if (!isNaN(k)) f.readings.push({ t, k, temp: parseFloat(r.room_temp_c), contact: parseFloat(r.contact_pos_mm), squish: parseFloat(r.squish_at_cap_mm) });
+    if (r.human_rating || r.cut_open) f.events.push({ t, rating: r.human_rating, cut: r.cut_open, notes: r.notes });
+  }
+  const list = [];
+  for (const f of byFruit.values()) {
+    f.readings.sort((a, b) => a.t - b.t);
+    f.events.sort((a, b) => a.t - b.t);
+    if (!f.readings.length) continue;
+    f.start = f.readings[0].t;
+    f.hasTime = f.readings.every(r => !isNaN(r.t));
+    f.readings.forEach((r, i) => r.day = f.hasTime ? (r.t - f.start) / 86400000 : i / 2);
+    for (const e of f.events) {
+      let before = null;
+      for (const r of f.readings) if (!f.hasTime || isNaN(e.t) || r.t <= e.t) before = r;
+      e.k = before ? before.k : NaN;
+      e.day = before ? before.day : NaN;
+    }
+    f.n = f.readings.length;
+    f.firstK = f.readings[0].k;
+    f.lastK = f.readings[f.n - 1].k;
+    const perfect = f.events.find(e => e.rating === 'perfect');
+    f.perfectK = perfect ? perfect.k : NaN;
+    f.daysToPerfect = perfect ? perfect.day : NaN;
+    const temps = f.readings.map(r => r.temp).filter(v => !isNaN(v));
+    f.temp = temps.length ? temps.reduce((a, b) => a + b, 0) / temps.length : NaN;
+    const rated = f.events.filter(e => e.rating);
+    f.outcome = rated.length ? rated[rated.length - 1].rating : '';
+    f.cut = (f.events.find(e => e.cut) || {}).cut || '';
+    list.push(f);
+  }
+  list.sort((a, b) => a.start - b.start);
+  return list;
+}
+const filtered = () => fruits.filter(f => (!$('fVariety').value || f.variety === $('fVariety').value) && (!$('fDevice').value || f.device === $('fDevice').value));
+const quantile = (arr, q) => { if (!arr.length) return NaN; const s = [...arr].sort((a, b) => a - b); const p = (s.length - 1) * q, lo = Math.floor(p), hi = Math.ceil(p); return s[lo] + (s[hi] - s[lo]) * (p - lo); };
+const fmt = (v, d = 2) => isNaN(v) || v == null ? '—' : Number(v).toFixed(d);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---- scales ----------------------------------------------------------------
+function scale(d0, d1, r0, r1) { const f = v => r0 + (v - d0) / (d1 - d0 || 1) * (r1 - r0); f.inv = p => d0 + (p - r0) / (r1 - r0) * (d1 - d0); return f; }
+function niceTicks(max, n = 5) { const step = Math.pow(10, Math.floor(Math.log10(max / n || 1))); const m = [1, 2, 2.5, 5, 10].find(x => max / (step * x) <= n) || 10; const s = step * m; const out = []; for (let v = 0; v <= max + 1e-9; v += s) out.push(+v.toFixed(6)); return out; }
+
+// ---- tiles --------------------------------------------------------------------
+function renderTiles(fs) {
+  const readings = fs.reduce((a, f) => a + f.n, 0);
+  const perfectKs = fs.map(f => f.perfectK).filter(v => !isNaN(v));
+  const devices = new Set(fs.map(f => f.device)).size;
+  const med = quantile(perfectKs, 0.5), q1 = quantile(perfectKs, 0.25), q3 = quantile(perfectKs, 0.75);
+  const dtp = fs.map(f => f.daysToPerfect).filter(v => !isNaN(v));
+  $('tiles').innerHTML = `
+    <div class="tile hero"><div class="v">${perfectKs.length ? fmt(med) : '—'}<small>N/mm</small></div><div class="l">stiffness when people said <b>perfect</b> · median of ${perfectKs.length}${perfectKs.length > 1 ? `, middle half ${fmt(q1)}–${fmt(q3)}` : ''}</div></div>
+    <div class="tile"><div class="v">${fs.length}</div><div class="l">avocados</div></div>
+    <div class="tile"><div class="v">${readings}</div><div class="l">readings</div></div>
+    <div class="tile"><div class="v">${devices}</div><div class="l">device${devices === 1 ? '' : 's'}</div></div>
+    <div class="tile"><div class="v">${dtp.length ? fmt(quantile(dtp, 0.5), 1) : '—'}<small>days</small></div><div class="l">median time to perfect${dtp.length ? ` (${dtp.length})` : ''}</div></div>`;
+}
+
+// ---- ripening curves --------------------------------------------------------
+let pointIndex = [];
+function renderCurves(fs) {
+  const svg = $('curves'), W = 1000, H = 420, p = { l: 48, r: 20, t: 16, b: 36 };
+  pointIndex = [];
+  if (!fs.length) { svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" text-anchor="middle">No readings</text>`; return; }
+  const maxDay = Math.max(1, ...fs.flatMap(f => f.readings.map(r => r.day)));
+  const maxK = Math.max(...fs.flatMap(f => f.readings.map(r => r.k))) * 1.08;
+  const x = scale(0, maxDay * 1.03, p.l, W - p.r), y = scale(0, maxK, H - p.b, p.t);
+  const perfectKs = fs.map(f => f.perfectK).filter(v => !isNaN(v));
+  let h = '';
+  if (perfectKs.length > 1) { const q1 = quantile(perfectKs, 0.25), q3 = quantile(perfectKs, 0.75); h += `<rect x="${p.l}" y="${y(q3)}" width="${W - p.l - p.r}" height="${Math.max(2, y(q1) - y(q3))}" fill="var(--band)"/>`; }
+  for (const t of niceTicks(maxK)) h += `<line class="grid" x1="${p.l}" x2="${W - p.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${p.l - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>`;
+  for (const t of niceTicks(maxDay, 8)) h += `<text x="${x(t)}" y="${H - p.b + 18}" text-anchor="middle">${t === 0 ? 'day 0' : t}</text>`;
+  h += `<line class="axis" x1="${p.l}" x2="${W - p.r}" y1="${y(0)}" y2="${y(0)}"/>`;
+  h += `<text x="${p.l - 8}" y="${p.t - 4}" text-anchor="end">N/mm</text>`;
+  fs.forEach((f, i) => {
+    const d = f.readings.map((r, j) => (j ? 'L' : 'M') + x(r.day).toFixed(1) + ' ' + y(r.k).toFixed(1)).join(' ');
+    h += `<path class="curve" data-i="${i}" d="${d}"/>`;
+    f.readings.forEach(r => pointIndex.push({ px: x(r.day), py: y(r.k), f, r }));
+  });
+  // rating markers on top
+  fs.forEach(f => f.events.forEach(e => {
+    if (isNaN(e.k) || !e.rating) return;
+    const cx = x(e.day).toFixed(1), cy = y(e.k).toFixed(1);
+    if (e.rating === 'perfect') h += `<circle class="ring" cx="${cx}" cy="${cy}" r="5.5" fill="var(--s2)"/>`;
+    else if (e.rating === 'overripe') h += `<path class="ring" d="M${cx - 4.5} ${cy - 4.5}l9 9m0-9l-9 9" stroke="var(--s3)" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+    else if (e.rating === 'firm' || e.rating === 'ready') h += `<rect x="${cx - 4}" y="${cy - 4}" width="8" height="8" transform="rotate(45 ${cx} ${cy})" fill="var(--surface)" stroke="var(--muted)" stroke-width="1.5"/>`;
+  }));
+  h += `<rect class="hit" x="${p.l}" y="${p.t}" width="${W - p.l - p.r}" height="${H - p.t - p.b}"/>`;
+  svg.innerHTML = h;
+}
+// nearest-point hover
+(() => {
+  const svg = $('curves'), tip = $('tip');
+  let last = -1;
+  svg.addEventListener('mousemove', ev => {
+    const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY;
+    const m = pt.matrixTransform(svg.getScreenCTM().inverse());
+    let best = null, bd = 1e9;
+    for (const q of pointIndex) { const d = (q.px - m.x) ** 2 + ((q.py - m.y) * 1.6) ** 2; if (d < bd) { bd = d; best = q; } }
+    if (!best || bd > 40 * 40) { hide(); return; }
+    const i = fruits.indexOf(best.f);
+    svg.querySelectorAll('.curve').forEach(c => { c.classList.toggle('hi', c.dataset.i == filteredIndex(best.f)); c.classList.toggle('dim', c.dataset.i != filteredIndex(best.f)); });
+    const r = best.r, f = best.f;
+    tip.innerHTML = `<b>${esc(f.fruit)}</b> ${esc(f.variety)}<br>day ${r.day.toFixed(1)} · <b>${r.k.toFixed(2)} N/mm</b>${isNaN(r.temp) ? '' : ' · ' + r.temp.toFixed(1) + ' °C'}<br>${f.n} readings${f.outcome ? ' · rated ' + esc(f.outcome) : ''}`;
+    const card = svg.parentElement.getBoundingClientRect();
+    tip.style.left = Math.min(ev.clientX - card.left + 14, card.width - 220) + 'px';
+    tip.style.top = (ev.clientY - card.top - 10) + 'px';
+    tip.style.opacity = 1;
+    last = i;
+  });
+  svg.addEventListener('mouseleave', hide);
+  function hide() { tip.style.opacity = 0; svg.querySelectorAll('.curve').forEach(c => c.classList.remove('hi', 'dim')); last = -1; }
+})();
+let currentFiltered = [];
+const filteredIndex = f => currentFiltered.indexOf(f);
+
+// ---- strip plot by rating -------------------------------------------------------
+function renderStrip(fs) {
+  const svg = $('strip'), W = 1000, H = 230, p = { l: 80, r: 20, t: 14, b: 34 };
+  const pts = fs.flatMap(f => f.events.filter(e => e.rating && !isNaN(e.k)).map(e => ({ rating: e.rating, k: e.k, f })));
+  if (!pts.length) { svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" text-anchor="middle">No ratings yet. Tap how the avocado was on the device page.</text>`; return; }
+  const maxK = Math.max(...pts.map(q => q.k)) * 1.1;
+  const x = scale(0, maxK, p.l, W - p.r);
+  const rowH = (H - p.t - p.b) / RATING_ORDER.length;
+  let h = '';
+  for (const t of niceTicks(maxK, 8)) h += `<line class="grid" x1="${x(t)}" x2="${x(t)}" y1="${p.t}" y2="${H - p.b}"/><text x="${x(t)}" y="${H - p.b + 18}" text-anchor="middle">${t}</text>`;
+  h += `<text x="${W - p.r}" y="${H - 4}" text-anchor="end">N/mm</text>`;
+  RATING_ORDER.forEach((rt, i) => {
+    const cy = p.t + rowH * (i + 0.5);
+    const mine = pts.filter(q => q.rating === rt);
+    h += `<text x="${p.l - 12}" y="${cy + 4}" text-anchor="end" style="fill:var(--ink-2)">${rt}${mine.length ? ` (${mine.length})` : ''}</text>`;
+    if (mine.length >= 2) { const q1 = quantile(mine.map(q => q.k), 0.25), q3 = quantile(mine.map(q => q.k), 0.75); h += `<rect x="${x(q1)}" y="${cy - rowH * 0.32}" width="${Math.max(2, x(q3) - x(q1))}" height="${rowH * 0.64}" fill="var(--grid)" rx="3"/>`; }
+    const color = rt === 'perfect' ? 'var(--s2)' : rt === 'overripe' ? 'var(--s3)' : 'var(--s1)';
+    mine.forEach((q, j) => { const jit = ((j * 7919) % 11 - 5) / 5 * rowH * 0.22; h += `<circle class="ring" cx="${x(q.k).toFixed(1)}" cy="${(cy + jit).toFixed(1)}" r="5" fill="${color}"><title>${esc(q.f.fruit)}: ${q.k.toFixed(2)} N/mm</title></circle>`; });
+  });
+  svg.innerHTML = h;
+}
+
+// ---- temperature scatter -----------------------------------------------------------
+function renderTemp(fs) {
+  const svg = $('temp'), W = 1000, H = 260, p = { l: 48, r: 20, t: 16, b: 36 };
+  const pts = fs.filter(f => !isNaN(f.daysToPerfect) && !isNaN(f.temp));
+  $('tempcard').hidden = false;
+  if (pts.length < 2) { svg.innerHTML = `<text x="${W / 2}" y="${H / 2}" text-anchor="middle">${pts.length ? 'One fruit so far; needs a few more with a temperature logged.' : 'No fruit with both a "perfect" rating and a room temperature yet.'}</text>`; return; }
+  const t0 = Math.floor(Math.min(...pts.map(q => q.temp)) - 1), t1 = Math.ceil(Math.max(...pts.map(q => q.temp)) + 1);
+  const maxD = Math.max(...pts.map(q => q.daysToPerfect)) * 1.15;
+  const x = scale(t0, t1, p.l, W - p.r), y = scale(0, maxD, H - p.b, p.t);
+  let h = '';
+  for (const t of niceTicks(maxD)) h += `<line class="grid" x1="${p.l}" x2="${W - p.r}" y1="${y(t)}" y2="${y(t)}"/><text x="${p.l - 8}" y="${y(t) + 4}" text-anchor="end">${t}</text>`;
+  for (let t = t0; t <= t1; t++) h += `<text x="${x(t)}" y="${H - p.b + 18}" text-anchor="middle">${t} °C</text>`;
+  h += `<line class="axis" x1="${p.l}" x2="${W - p.r}" y1="${y(0)}" y2="${y(0)}"/><text x="${p.l - 8}" y="${p.t - 4}" text-anchor="end">days</text>`;
+  pts.forEach(q => h += `<circle class="ring" cx="${x(q.temp).toFixed(1)}" cy="${y(q.daysToPerfect).toFixed(1)}" r="6" fill="var(--s1)"><title>${esc(q.fruit)}: ${q.daysToPerfect.toFixed(1)} days at ${q.temp.toFixed(1)} °C</title></circle>`);
+  svg.innerHTML = h;
+}
+
+// ---- table ---------------------------------------------------------------------
+function renderTable(fs) {
+  const rows = [...fs].sort((a, b) => { const va = a[sortKey], vb = b[sortKey]; const na = typeof va === 'number', nb = typeof vb === 'number'; if (na && nb) { if (isNaN(va)) return 1; if (isNaN(vb)) return -1; return (va - vb) * sortDir; } return String(va).localeCompare(String(vb)) * sortDir; });
+  $('table').querySelector('tbody').innerHTML = rows.map(f => `<tr><td>${esc(f.fruit)}</td><td>${esc(f.device)}</td><td>${esc(f.variety)}</td><td class="n">${f.n}</td><td class="n">${fmt(f.firstK)}</td><td class="n">${fmt(f.lastK)}</td><td class="n">${fmt(f.perfectK)}</td><td class="n">${fmt(f.daysToPerfect, 1)}</td><td class="n">${fmt(f.temp, 1)}</td><td>${esc(f.outcome)}</td><td>${esc(f.cut.replace(/_/g, ' '))}</td></tr>`).join('') || '<tr><td colspan="11" class="empty">nothing to show</td></tr>';
+  document.querySelectorAll('#table th').forEach(th => th.classList.toggle('on', th.dataset.k === sortKey));
+}
+document.querySelectorAll('#table th').forEach(th => th.onclick = () => { if (sortKey === th.dataset.k) sortDir = -sortDir; else { sortKey = th.dataset.k; sortDir = 1; } renderTable(currentFiltered); });
+
+// ---- render all ------------------------------------------------------------------
+function render() {
+  currentFiltered = filtered();
+  renderTiles(currentFiltered); renderCurves(currentFiltered); renderStrip(currentFiltered); renderTemp(currentFiltered); renderTable(currentFiltered);
+}
+function fillFilters() {
+  const opts = (id, vals) => { const sel = $(id), cur = sel.value; sel.innerHTML = '<option value="">all</option>' + vals.map(v => `<option${v === cur ? ' selected' : ''}>${esc(v)}</option>`).join(''); };
+  opts('fVariety', [...new Set(fruits.map(f => f.variety).filter(Boolean))].sort());
+  opts('fDevice', [...new Set(fruits.map(f => f.device))].sort());
+}
+function setData(rows, note) {
+  raw = rows; fruits = build(rows); fillFilters();
+  $('banner').hidden = !note; $('banner').textContent = note || '';
+  render();
+}
+async function load(src) {
+  source = src;
+  // served from the repo root on GitHub Pages (data/) or opened from dashboard/ in the repo (../data/)
+  const rel = src === 'sample' ? 'data/sample/sample.csv' : 'data/all.csv';
+  let rows = [];
+  const paths = location.pathname.includes('/dashboard') ? ['../' + rel, rel] : [rel, '../' + rel];
+  for (const url of paths) {
+    try { const r = await fetch(url, { cache: 'no-store' }); if (r.ok) { rows = parseCsv(await r.text()); break; } } catch (e) {}
+  }
+  const nReadings = rows.filter(r => r.stiffness_n_per_mm).length;
+  if (src === 'all' && !nReadings) {
+    $('fSource').value = 'sample';
+    return load('sample');
+  }
+  setData(rows, src === 'sample' ? 'Synthetic sample data (tools/make_sample.py), not real avocados. No contributed readings yet — be the first.' : '');
+}
+$('fSource').onchange = () => load($('fSource').value);
+$('fVariety').onchange = render; $('fDevice').onchange = render;
+$('fFile').onchange = ev => { const file = ev.target.files[0]; if (!file) return; const rd = new FileReader(); rd.onload = () => setData(parseCsv(rd.result), 'Showing ' + file.name + ' from your computer. Nothing is uploaded.'); rd.readAsText(file); };
+load('all');
+})();
+</script>
+</body>
+</html>

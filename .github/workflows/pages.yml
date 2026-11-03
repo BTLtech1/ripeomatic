@@ -1,0 +1,41 @@
+# Publishes the dashboard to GitHub Pages: https://btltech1.github.io/ripeomatic/
+# The site is dashboard/index.html at the root plus data/ next to it.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["dashboard/**", "data/all.csv", "data/sample/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assemble the site
+        run: |
+          mkdir -p _site/data/sample
+          cp dashboard/index.html _site/index.html
+          cp data/all.csv _site/data/all.csv 2>/dev/null || true
+          cp data/sample/sample.csv _site/data/sample/sample.csv
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
