@@ -70,7 +70,7 @@ The most useful thing anyone can contribute is **readings from real avocados**: 
 
 ## Planned: tipping nest (v2)
 
-The nest is hinged at its rear bottom edge through a GoPro-style knuckle. A $2 micro servo on that axis will tip the nest backward when the avocado is ripe, so it rolls off the back of the base into a bowl below. The notification becomes physical.
+The nest hangs on two side pins through the avocado's centre of gravity, at the height of the pad. That makes the loaded nest nearly balanced and means the pad's push can't tip it. A $2 micro servo on one pin will swing the nest backward when the avocado is ripe, so it rolls off the back of the base into a bowl below. The notification becomes physical.
 
 ## Prior art
 
