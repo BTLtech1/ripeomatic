@@ -15,6 +15,7 @@ ESP32 firmware will live here.
 - [ ] Log readings to CSV (see `../data/README.md`)
 - [ ] Wi-Fi notification when ripe
 - [ ] Simple web page showing the ripening curve
+- [ ] v2: tip the nest with the servo on GPIO 25 when ripe, confirm with the empty-nest check, return upright
 
 ## Tunable settings
 
