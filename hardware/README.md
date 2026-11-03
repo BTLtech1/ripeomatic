@@ -24,7 +24,8 @@ All PLA or PETG unless noted. Roughly 150 g of filament total.
 
 | Part | Qty | Print notes |
 |---|---|---|
-| Base plate | 1 | Flat, ~185 × 150 × 6 mm. Flat, 165 × 165 × 5 mm with three lightening windows. One print carries the guide channel (two rails with 2 mm inward lips), motor plate with gussets, end stop, a 3 mm recess for the U-yoke, ULN2003 standoffs and ESP32 slide-in rails. The nest hangs clear of the base; the v2 servo overhangs the edge by a few mm, which is fine. |
+| Base plate | 1 | Flat, 165 × 165 × 5 mm with three lightening windows. One print carries the guide channel (two rails with 2 mm inward lips), motor plate with gussets, end stop, a 3 mm recess for the U-yoke, slide-in cradles for the ULN2003 and the ESP32, and one Ø3.4 hole for the board-cover screw. The nest hangs clear of the base; the v2 servo overhangs the edge by a few mm, which is fine. |
+| Board cover | 1 | 104 × 43 × 23 mm lid with 1.2 mm walls that drops over both board cradles. Vent slots in the roof, a gap along the inner edge for the motor ribbon and hall wires, a notch for the USB cable at the nest end, a hook tab into the base's window at that end and an M3 boss at the other, screwed from below. Printed open side up, about 20 min. |
 | Avocado nest | 1 | An avocado-shell scoop with flat ends: the back half of a spheroid shell, ends cut flat 132 mm apart, top cut off 15° above the equator so the fruit rolls out after ~110° of tip (a full half-shell would need ~200°, beyond a standard servo). Cavity 80 × 80 × 112 mm at the liner surface (takes up to an 80 mm fruit; a 55 mm one just sits deeper), 3 mm side wall, 8 mm flat end walls, 2 mm liner, with a low front lip (cut 43° below the equator so the sled's post clears it at full travel). The M5 pin bores (4.6 mm × 7 deep, so the bolt self-taps and turns with the nest) go straight into the flat end walls, 3 mm behind the cavity centre; nothing protrudes. Print bowl-up like a cup, no supports. |
 | U-yoke | 1 | Two 16 × 72 × 6 mm arms 136 mm apart (they sit against the nest's flat ends) joined by a 3 mm cross-bar that sits flush in a recess in the base, printed FLAT as one piece (157 × 72 mm), then stood up and screwed from below. Printed flat, both 5.5 mm pin bores are coaxial and the layers run along the arms, where the load is. On the servo-side arm: a small stop tab on the inside face that the nest's end wall rests on so it hangs upright, and on the outside a 40 × 20 × 9 mm boss with a Ø13 bore for the horn and the SG90's gear housing, plus its two M2 holes 28 mm apart, for v2. |
 | Nest liner | 1 | 2 mm TPU shell matching the cavity (STL provided), or 3 mm craft foam glued in. The fruit only needs to touch at the back and bottom, so one liner fits all sizes. |
@@ -48,6 +49,7 @@ Fallback if the printed lead screw is rough: an **M8 threaded rod and nut** from
 | ~8 | M3 screws | Motor ears, blade clamp. Or design printed dovetails/snap fits. | ~$1 |
 | 2 | M5 × 20 hex-head bolt | Nest trunnion pins, self-tapped into the nest ears. One wears the printed knob. | ~$0.40 |
 | 1 | M3 × 10 | Blade clamp | — |
+| 1 | M3 × 8 | Board cover to base (from below) | — |
 | 4 | M3 × 6 | Yoke to base (from below) | — |
 | 2 | M4 × 8 | Motor ears | — |
 | 1 | SG90 micro servo (v2 only) | Tips the nest ~110°, within its 180° range. Needs ~10 N·mm, has ~170. Add a 470 µF cap on 5 V. | ~$2 |
