@@ -210,7 +210,7 @@ class H(BaseHTTPRequestHandler):
                     "ap_mode": False, "ap_ssid": "", "rssi": -58, "time": now_iso(), "uptime_s": int(time.time() - state["boot"]),
                     "job": state["job"], "stage": state["stage"], "pos_mm": state["pos"], "force_n": state["force"], "raw": state["raw"] + state["force"] / settings["hall_n_per_count"],
                     "calibrated": bool(settings["cal_points"]), "n_per_count": settings["hall_n_per_count"], "cal_points_n": settings["cal_points"].count(":"),
-                    "blade_calibrated": settings["blade_k_n_per_mm"] > 0.01, "blade_k": settings["blade_k_n_per_mm"], "servo": False,
+                    "blade_calibrated": settings["blade_k_n_per_mm"] > 0.01, "blade_k": settings["blade_k_n_per_mm"], "setup_done": bool(settings["cal_points"]) and settings["blade_k_n_per_mm"] > 0.01, "servo": False,
                     "log_bytes": sum(len(r) + 1 for r in state["rows"]), "fs_free": 1400000, "next_auto_s": nxt, "error": state["error"],
                     "fruit": {"id": fruit_id(), "loaded": f["loaded"], "n": f["n"], "first_k": f["first_k"], "last_k": f["last_k"],
                               "first_contact": f["first_contact"], "last_contact": f["last_contact"], "start_epoch": int(f["start"]),

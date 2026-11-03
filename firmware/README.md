@@ -6,7 +6,7 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 
 ## What it does
 
-- **Measures** on a schedule (default every 12 h, every 6 h once the fruit is almost ripe) and on demand: homes against the end stop, zeroes the hall sensor, approaches, creeps to contact, preloads, presses to the force cap, retracts. ~1–2 minutes.
+- **Measures** on a schedule (default every 12 h, every 6 h once the fruit is almost ripe; only once both calibrations are done) and on demand: homes against the end stop, zeroes the hall sensor, approaches, creeps to contact, preloads, presses to the force cap, retracts. ~1–2 minutes.
 - **Reports stiffness in N/mm** with the blade's own bend subtracted, fits a line, and judges `hard / softening / almost ripe / ripe`. Guesses days-to-ripe from the fruit's own decay once it has two readings a day apart.
 - **Knows when you swap avocados** (contact position jumps, or the fruit got much stiffer) and starts a new fruit id. Notices an empty nest.
 - **Logs** every reading to a CSV on the ESP32's flash in the shared schema (`docs/data-sharing.md`), downloadable from the page as `/data.csv`.
@@ -36,8 +36,9 @@ No libraries to install. If you edit `ui/index.html`, run `python3 tools/build_u
 2. Back on your own Wi-Fi, open `http://ripeomatic.local` (or the IP from the serial monitor). Add to home screen.
 3. *Motor*: tap **1 ▶**. The sled must move **toward the nest**. If it goes the other way, flip `motor_invert` in Settings.
 4. *Calibration*, in order:
-   - **Blade**: put a glass jar in the nest, *Measure blade stiffness*. This records the machine's own spring (`blade_k`, ~3 N/mm) so it can be subtracted from every reading. Repeat if you reprint the blade or sled.
-   - **Force**: stand the machine on its motor end so the pad points up, balance a bottle cap on the pad, *Capture zero*; add nickels (5.000 g each), enter the grams, *Capture*. Two or three masses are better than one. Until this is done the page shows a warning and the force cap is a guess, so go easy on the first fruit.
+   - **Force**: stand the machine on its motor end so the pad points up, balance a bottle cap on the pad, *Capture zero*; add nickels (5.000 g each), enter the grams, *Capture*. Two or three masses are better than one.
+   - **Blade**: stand it back up, put a glass jar in the nest, *Measure blade stiffness*. This records the machine's own spring (`blade_k`, ~3 N/mm) so it can be subtracted from every reading. Redo it if you reprint the blade or sled. (If you redo the force calibration later, `blade_k` is rescaled automatically.)
+   Until both are done the page shows a warning, the force cap is a guess, the squish backstop is shortened to 3 mm, and **automatic readings stay off**: you press *Measure now* yourself.
 5. Put an avocado in, **Measure now**. Readings then run on the schedule.
 6. Settings → `ntfy topic`: any unguessable name. Install the ntfy app, subscribe to the same topic. That's the notification setup.
 
@@ -113,6 +114,8 @@ All in the Settings panel; defaults in `measure.h` and `config.h`.
 - The ADC is noisy; the firmware averages 48 samples per live reading and 256 for the tare, at 11 dB attenuation.
 - It tares before every reading with the pad in the air, so temperature drift in the sensor and the PLA blade cancels.
 - If a press aborts with *force reads negative*, the magnet is the wrong way round or `hall_n_per_count` needs its sign flipped. The coin calibration sets the sign automatically.
+- Every plain move (homing, retracting, jogging) also watches the sensor and stops if the reading changes by more than the force cap: an inverted motor or a fruit in the way can't be pushed through. *Unexpected force during a plain move* means check `motor_invert` first.
+- *Hall sensor saturated* means the ADC is pinned at 0 or 4095: the magnet is too close or too far, or the sensor isn't wired.
 - The response is not perfectly linear over a big gap, but over the ~1 mm of blade bend it's close enough; two or three coin masses give a good enough fit.
 
 ## Not done yet

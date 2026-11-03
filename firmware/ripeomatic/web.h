@@ -24,7 +24,7 @@ class Web {
     server.on("/api/settings", HTTP_GET, [this] { json(200, settingsJson()); });
     server.on("/api/settings", HTTP_POST, [this] { saveSettings(); });
     server.on("/api/measure", HTTP_POST, [this] { startJob(Job::Measure); });
-    server.on("/api/newfruit", HTTP_POST, [this] { if (M.busy()) return fail(409, "busy"); fruitNew(); startJob(Job::Measure); });
+    server.on("/api/newfruit", HTTP_POST, [this] { if (M.busy()) return fail(409, "busy"); M.forgetFruit(); startJob(Job::Measure); });
     server.on("/api/abort", HTTP_POST, [this] { M.abort(); ok(); });
     server.on("/api/home", HTTP_POST, [this] { startJob(Job::Home); });
     server.on("/api/jog", HTTP_POST, [this] {
@@ -49,7 +49,8 @@ class Web {
     server.on("/api/cal/mass", HTTP_POST, [this] {
       if (M.busy()) return fail(409, "busy");
       float g = server.arg("g").toFloat();
-      if (!M.captureMass(g)) return fail(400, "bad mass or too many points");
+      const char* why;
+      if (!M.captureMass(g, &why)) return fail(400, why);
       json(200, String("{\"ok\":true,\"n_per_count\":") + String(S.hall_n_per_count, 6) + "}");
     });
     server.on("/api/cal/clear", HTTP_POST, [this] { M.clearCalibration(); ok(); });
@@ -118,6 +119,7 @@ class Web {
     addNum(o, "n_per_count", S.hall_n_per_count, 6);
     addInt(o, "cal_points_n", M.calPointCount());
     addBool(o, "blade_calibrated", S.t.blade_k_n_per_mm > 0.01f);
+    addBool(o, "setup_done", M.calibrated());
     addNum(o, "blade_k", S.t.blade_k_n_per_mm, 2);
     addBool(o, "servo", ENABLE_SERVO);
     addInt(o, "log_bytes", M.store.logSize()); addInt(o, "fs_free", M.store.freeBytes());
@@ -168,6 +170,7 @@ class Web {
   }
 
   void saveSettings() {
+    if (M.busy()) return fail(409, "busy: settings can't change while the motor is moving");
     bool hostChanged = false;
     int unknown = 0;
     for (int i = 0; i < server.args(); i++) {

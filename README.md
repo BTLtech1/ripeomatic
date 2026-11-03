@@ -59,7 +59,7 @@ Optional upgrade if the printed blade drifts: a 1 kg load cell + HX711 (~$7) mou
 1. **Print** the parts in [`hardware/stl/`](hardware/stl/) (base and sled first; test the slide before printing the rest).
 2. **Assemble** in the order in [`hardware/stl/README.md`](hardware/stl/README.md#assembly-order), wire per [`hardware/README.md`](hardware/README.md#wiring) (don't forget the 0.1 µF capacitor on the hall sensor).
 3. **Flash** `firmware/ripeomatic/ripeomatic.ino` from the Arduino IDE or PlatformIO; no libraries needed. Join the `RipeOMatic-xxxxxx` Wi-Fi it creates and give it your network.
-4. **Calibrate** from the web page: blade (press a jar), then force (coins on the pad). Ten minutes.
+4. **Calibrate** from the web page: force (coins on the pad), then blade (press a jar). Ten minutes. Automatic readings switch on once both are done.
 5. **First avocado.** Tap *Measure now*, then let it run twice a day. When you eat it, tap how it was.
 
 Steps 3–5 in detail: [`firmware/README.md`](firmware/README.md#first-run).

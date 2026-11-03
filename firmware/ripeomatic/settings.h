@@ -2,6 +2,9 @@
 #pragma once
 #include <Arduino.h>
 #include <Preferences.h>
+#if __has_include(<esp_random.h>)
+#include <esp_random.h>   // esp_random() moved here in IDF 5 (Arduino core 3.x)
+#endif
 #include "config.h"
 #include "measure.h"
 
@@ -93,7 +96,7 @@ inline const FieldDef* settingsFields(int& count) {
 
 inline void settingsLoad() {
   Preferences p;
-  p.begin("ripe", true);
+  p.begin("ripe", false);   // read-write so the namespace is created on first boot (read-only open fails until it exists)
   int n; const FieldDef* f = settingsFields(n);
   for (int i = 0; i < n; i++) {
     if (!p.isKey(f[i].key)) continue;
@@ -196,7 +199,7 @@ struct FruitState {
 extern FruitState FR;
 
 inline void fruitLoad() {
-  Preferences p; p.begin("fruit", true);
+  Preferences p; p.begin("fruit", false);
   FR.counter = p.getUInt("counter", 0);
   FR.loaded = p.getBool("loaded", false);
   FR.first_contact_mm = p.getFloat("fc", 0);

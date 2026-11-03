@@ -9,6 +9,7 @@
 
 // ---- Pins -----------------------------------------------------------------
 // 28BYJ-48 through the ULN2003. IN1..IN4 in order.
+// (16/17 are free on WROOM boards; on a WROVER they are the PSRAM pins: use 25/26/27/14 there.)
 #define PIN_IN1 16
 #define PIN_IN2 17
 #define PIN_IN3 18

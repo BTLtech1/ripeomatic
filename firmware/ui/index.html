@@ -85,7 +85,7 @@ details[open] summary::after{content:"–"}
   <span class="pill" id="pill">…</span>
 </header>
 
-<div class="warn" id="calwarn" hidden>Force sensor not calibrated yet: readings are in made-up units until you run the coin calibration below. The force cap is a guess too, so go easy on the first fruit.</div>
+<div class="warn" id="calwarn" hidden>Not calibrated yet: readings are in made-up units until you run the force (coins) and blade (jar) calibrations below, and the force cap is a guess, so go easy on the first fruit. Automatic readings stay off until both are done.</div>
 
 <div class="card">
   <div class="hero">
@@ -125,10 +125,10 @@ details[open] summary::after{content:"–"}
   <details id="d-cal">
     <summary>Calibration</summary>
     <div class="kv" id="calstate" style="margin-bottom:8px"></div>
-    <div class="step"><span class="n">1</span><div><p><b>Blade.</b> Put something hard in the nest (a jar, a can) and press it. The slope is the machine's own spring, <code>blade_k</code>. Do this first, then again if you reprint the blade or sled.</p><button id="btnBlade">Measure blade stiffness</button></div></div>
-    <div class="step"><span class="n">2</span><div><p><b>Force zero.</b> Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad. Nothing else on it, then:</p><button id="btnZero">Capture zero</button> <span class="kv">raw: <b id="raw">—</b></span></div></div>
-    <div class="step"><span class="n">3</span><div><p><b>Known mass.</b> Add coins to the cap (US nickel = 5.000 g; 20 nickels = 100 g) and enter the total grams. Two or three different masses give a better fit.</p>
+    <div class="step"><span class="n">1</span><div><p><b>Force zero.</b> Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad. Nothing else on it, then:</p><button id="btnZero">Capture zero</button> <span class="kv">raw: <b id="raw">—</b></span></div></div>
+    <div class="step"><span class="n">2</span><div><p><b>Known mass.</b> Add coins to the cap (US nickel = 5.000 g; 20 nickels = 100 g) and enter the total grams. Two or three different masses give a better fit.</p>
       <div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button id="btnMass" style="flex:0 0 auto">Capture</button><button id="btnCalClear" class="quiet">Clear points</button></div></div></div>
+    <div class="step"><span class="n">3</span><div><p><b>Blade.</b> Stand the machine back up, put something hard in the nest (a jar, a can) and press it. The slope is the machine's own spring, <code>blade_k</code>, which gets subtracted from every reading. Redo it if you reprint the blade or sled.</p><button id="btnBlade">Measure blade stiffness</button></div></div>
     <p class="kv" style="margin:8px 0 4px">Alternative to coins: put a kitchen scale in the nest and press it. Read the peak grams and compare with the force the device reports; adjust <code>hall_n_per_count</code> by the ratio.</p>
   </details>
 
@@ -228,7 +228,7 @@ function render() {
   $('pill').textContent = busy ? (s.job === 'measure' ? 'measuring: ' + s.stage : s.job) : (s.next_auto_s > 0 ? 'next in ' + hms(s.next_auto_s) : 'idle');
   $('pill').className = 'pill' + (busy ? ' busy' : '');
   $('ver').textContent = 'fw ' + s.fw + ' · ' + s.hw + ' · id ' + s.device_id;
-  $('calwarn').hidden = !!s.calibrated;
+  $('calwarn').hidden = !!s.setup_done;
   $('servo').hidden = !s.servo;
 
   const v = $('verdict');

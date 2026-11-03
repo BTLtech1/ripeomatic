@@ -76,18 +76,15 @@ class Net {
   bool ntfy(const char* title, const char* message, int priority = 3, const char* tags = "avocado") {
     if (!online() || !S.ntfy_topic[0]) return false;
     String url = String(S.ntfy_server) + "/" + S.ntfy_topic;
+    // Both clients live until after http.end(): HTTPClient keeps a pointer to
+    // the one it was given and touches it in end().
+    WiFiClientSecure sclient;
+    WiFiClient pclient;
+    bool https = url.startsWith("https://");
+    if (https) sclient.setInsecure();   // no CA bundle on board; a spoofed ntfy only ever learns "your avocado is ripe"
     HTTPClient http;
-    bool ok = false;
-    if (url.startsWith("https://")) {
-      WiFiClientSecure client;
-      client.setInsecure();   // no CA bundle on board; a spoofed ntfy only ever learns "your avocado is ripe"
-      ok = http.begin(client, url);
-      if (ok) ok = post(http, title, message, priority, tags);
-    } else {
-      WiFiClient client;
-      ok = http.begin(client, url);
-      if (ok) ok = post(http, title, message, priority, tags);
-    }
+    bool ok = http.begin(https ? static_cast<WiFiClient&>(sclient) : pclient, url);
+    if (ok) ok = post(http, title, message, priority, tags);
     http.end();
     return ok;
   }

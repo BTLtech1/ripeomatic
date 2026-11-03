@@ -31,7 +31,7 @@ One row per reading, CSV or JSON, same fields either way. Fields marked * are th
 | `squish_at_cap_mm` * | `2.07` | Squish at `force_cap_n` |
 | `force_cap_n` * | `2.5` | |
 | `blade_k_n_per_mm` * | `3.3` | This unit's blade spring, from its calibration |
-| `cal_points` | `0:0,100:0.98,200:1.96` | grams:newtons used for calibration, so a bad calibration can be spotted later |
+| `cal_points` | `100.0:2281;200.0:2563` | `grams:counts;…` from the coin calibration (counts above the stored zero), so a bad calibration can be spotted later |
 | `curve` | `0.00:0.00;0.12:0.21;…` | Optional full force-squish curve, 20–30 points |
 | `human_rating` | `perfect` | `hard`, `firm`, `ready`, `perfect`, `overripe`, or blank |
 | `cut_open` | `no_bruise` | Optional, if the fruit was cut that day: `no_bruise`, `bruise_at_pad`, `bruise_elsewhere` |

@@ -37,7 +37,7 @@ Nothing personal is in the file: a random device id, UTC timestamps, numbers.
 | `squish_at_cap_mm` | Squish when the force cap was reached |
 | `force_cap_n` | The cap used |
 | `blade_k_n_per_mm` | That unit's blade spring (from its calibration) |
-| `cal_points` | `grams:counts;…` from the coin calibration, so a bad calibration can be spotted |
+| `cal_points` | `grams:counts;…` from the coin calibration (raw ADC counts), so a bad calibration can be spotted |
 | `curve` | `squish:force;…`, up to 24 points |
 | `human_rating` | `hard`, `firm`, `ready`, `perfect`, `overripe` |
 | `cut_open` | `no_bruise`, `bruise_at_pad`, `bruise_elsewhere` |

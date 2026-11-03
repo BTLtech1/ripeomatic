@@ -49,6 +49,7 @@ static void ledOn(bool on) {
 // ---- BOOT button: short press = measure now, hold 2 s = "it was perfect" ----
 static uint32_t btnDown = 0;
 static bool btnLongFired = false;
+static uint32_t ledFlashUntil = 0;
 
 static void pollButton() {
   bool down = digitalRead(PIN_BUTTON) == LOW;
@@ -57,8 +58,8 @@ static void pollButton() {
   if (down && btnDown && !btnLongFired && now - btnDown > 2000) {
     btnLongFired = true;
     M.rate("perfect", "", "button");
-    M.net.ntfy("Logged: perfect", "Thanks. That's the data point that matters most.", 2, "white_check_mark");
-    for (int i = 0; i < 3; i++) { ledOn(true); delay(80); ledOn(false); delay(80); }
+    M.queueNotify("Logged: perfect", "Thanks. That's the data point that matters most.");   // sent from the job task, not here
+    ledFlashUntil = now + 600;
   }
   if (!down && btnDown) {
     if (!btnLongFired && now - btnDown > 40 && now - btnDown < 1000) M.start(Job::Measure);
@@ -71,7 +72,8 @@ static void updateLed() {
 #if PIN_LED >= 0
   uint32_t t = millis();
   bool on = false;
-  if (M.net.apMode) on = (t / 150) % 2;
+  if ((int32_t)(ledFlashUntil - t) > 0) on = (t / 80) % 2;   // quick flutter: rating logged
+  else if (M.net.apMode) on = (t / 150) % 2;
   else if (M.busy()) on = (t / 500) % 2;
   ledOn(on);
 #endif
@@ -99,7 +101,7 @@ void setup() {
 #if ENABLE_OTA
   if (!M.net.apMode) {
     ArduinoOTA.setHostname(S.host);
-    ArduinoOTA.onStart([] { M.abort(); });
+    ArduinoOTA.onStart([] { M.abort(); delay(400); M.stepper.release(); });
     ArduinoOTA.begin();
   }
 #endif
