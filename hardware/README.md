@@ -10,11 +10,11 @@ All PLA or PETG unless noted. Roughly 150 g of filament total.
 
 | Part | Qty | Print notes |
 |---|---|---|
-| Base plate | 1 | Flat, ~130 × 160 × 6 mm. Post sockets, screw-tip pocket, cradle, board mounts. |
+| Base plate | 1 | Flat, ~130 × 160 × 6 mm, with a 20 mm tall motor cup (Ø28 inside, slot for the connector). The motor drops in shaft-up and its ears screw to the cup rim. Also post sockets, cradle, board mounts. |
 | Spine | 1 | Flat, ~80 × 180 × 5 mm. Slots into base and top plate. |
-| Top plate | 1 | ~90 × 44 × 8 mm. Motor ears mount here; post sockets underneath. |
+| Top plate | 1 | ~90 × 44 × 8 mm. Post sockets underneath and a Ø8.4 mm bearing hole for the screw tip. |
 | Guide posts | 2 | Ø10 × 180 mm, printed vertically. Press into base and top. Any straight rod (old printer rods, hardware-store steel) works too. |
-| Lead screw | 1 | Ø8 mm, 3 mm pitch, ~175 mm, printed vertically. D-socket on top fits the 28BYJ-48 shaft directly (no coupler). |
+| Lead screw | 1 | Ø8 mm, 3 mm pitch, ~150 mm, printed vertically. D-socket at the bottom pushes onto the 28BYJ-48 shaft (no coupler). A Ø13 mm flange 2 mm below the top plate takes the upward thrust so the screw can't lift off the shaft while the pad is pressing. |
 | Carriage | 1 | One print: two Ø10.3 mm bores, printed nut thread, rigid arm, sensor bridge. |
 | Flexure | 1 | 12 × 4 × 54 mm PLA leaf spring, printed flat. About 2.7 N/mm. Screws or glues to the arm. |
 | Pad | 1 | 16 mm dome. TPU if you have it; otherwise a pencil eraser cap or a stick-on silicone bumper on a PLA disc. |
@@ -43,6 +43,7 @@ If the printed flexure drifts too much (PLA creeps and softens a little when war
 ## Why these choices
 
 - **28BYJ-48.** It is the cheapest stepper there is and runs on USB 5 V. Its gear backlash doesn't matter because every measurement moves in one direction only (down, through contact, to the force cap). It is slow (about 0.5 mm/s), so a full reading from the top takes 1–2 minutes. That's fine twice a day.
+- **Motor in the base, not on top.** Its stock ribbon cable reaches the ULN2003 a few centimetres away, the heavy part sits low, and the top plate is just a post cap. The only wire that has to move with the carriage is the hall sensor lead. The one thing to get right: when the pad pushes on the avocado, the reaction tries to pull the screw up off the motor shaft, so the screw needs the flange under the top plate (or a drop of glue in the D-socket).
 - **Printed lead screw on the motor shaft.** One turn = 3 mm, so one of the motor's 2048 steps = 0.0015 mm. More resolution than the sensor can use.
 - **Printed posts, no bearings.** The carriage rides on two printed posts through printed bores with ~0.3 mm clearance. Sideways play doesn't affect the vertical measurement. A dab of grease keeps it smooth.
 - **Printed flexure + hall sensor instead of a load cell.** A 4 mm thick PLA beam bends about 1 mm at the 2.5 N force cap. A 3 × 2 mm magnet on its tip sits ~1.5 mm under an SS49E hall sensor; the ESP32's ADC reads the gap. Resolution is a few thousandths of a newton after averaging. Calibrate once with coins (a US nickel is exactly 5.000 g).
