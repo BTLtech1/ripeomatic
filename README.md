@@ -14,13 +14,13 @@ Store ripeness scanners (NIR, acoustic, laser vibrometry) judge a stranger's avo
 
 A soft pad presses very gently on the avocado once or twice a day and measures **how much it squishes for a given force**, the same way you'd test it with your thumb. As the avocado ripens, it gets softer, and when it crosses your threshold you get a notification.
 
-The machine is a low, horizontal press about 7 cm tall. The avocado lies across a V-trough with its side against a soft backstop, and a sled drives the pad into its other side.
+The machine is a low, horizontal press about 7 cm tall. The avocado lies in a printed half-shell nest with a soft liner, and a sled drives the pad into its exposed side, pushing it gently into the curved back of the nest.
 
 - **Push:** a $2 geared stepper turns a printed lead screw that moves the sled along a channel in the base in tiny, known steps, so step count = travel.
 - **Feel:** a thin printed blade standing up from the sled carries the pad. It bends back as the avocado pushes. A magnet on its back and a $0.50 hall sensor on the sled measure the bend, which gives the force.
 - **Result:** a force-vs-squish curve. Its slope (stiffness) drops day by day as the avocado ripens.
 
-The base (with its guide channel, trough and backstop), the lead screw, the sled and the blade are all 3D printed. There are no bearings and no metal load cell, and everything runs on 5 V from a phone charger.
+The base (with its guide channel and nest pedestal), the nest, the lead screw, the sled and the blade are all 3D printed. There are no bearings and no metal load cell, and everything runs on 5 V from a phone charger.
 
 ### Measurement routine
 
@@ -28,7 +28,7 @@ The base (with its guide channel, trough and backstop), the lead screw, the sled
 2. **Tare** the hall sensor with the pad in the air.
 3. **Approach** to just short of the last known contact position, then creep slowly.
 4. **Detect contact** when force rises above ~0.1 N for 3 readings in a row.
-5. **Preload** to ~0.2 N to seat the avocado against the backstop; call this zero.
+5. **Preload** to ~0.2 N to seat the avocado into the back of the nest; call this zero.
 6. **Measure** step by step up to a force cap (~2.5 N), logging force at each step. Avocado squish = travel minus the blade's own bend.
 7. **Back off** and record the stiffness (slope of force vs. squish).
 
@@ -38,7 +38,7 @@ See [`docs/measurement.md`](docs/measurement.md) for details.
 
 ### Being gentle
 
-Squeezing can bruise avocados, especially ripe ones. Ripe-O-Matic limits **force**, not just distance, and uses a **wide soft pad** (about 2 cm) to spread the load. The reaction goes into a broad soft backstop rather than small cradle pins. Rotate the avocado between tests where possible.
+Squeezing can bruise avocados, especially ripe ones. Ripe-O-Matic limits **force**, not just distance, and uses a **wide soft pad** (about 2 cm) to spread the load. The reaction spreads over the nest's soft curved back rather than small cradle pins. Rotate the avocado between tests where possible.
 
 ## Hardware (planned)
 
@@ -48,7 +48,7 @@ Squeezing can bruise avocados, especially ripe ones. Ripe-O-Matic limits **force
 | ESP32 dev board | Brains, Wi-Fi notifications | $3–6 |
 | SS49E hall sensor + 3 × 2 mm magnet | Force, via the printed blade | ~$1 (sold in packs) |
 | USB cable + phone charger | 5 V power for everything | have |
-| Base (channel, trough, backstop), lead screw, sled, blade, pad | Everything else | printed |
+| Base (channel, pedestal), nest, lead screw, sled, blade, pad | Everything else | printed |
 
 Approximate total: **$15–20** plus about 150 g of filament. Full list, print notes and wiring in [`hardware/`](hardware/).
 
@@ -67,6 +67,10 @@ ripeomatic/
 ## Data wanted!
 
 The most useful thing anyone can contribute is **readings from real avocados**: daily stiffness values plus a note of when it was actually perfect to eat. See [`data/README.md`](data/README.md) for the format.
+
+## Planned: tipping nest (v2)
+
+The nest is hinged at its rear bottom edge through a GoPro-style knuckle. A $2 micro servo on that axis will tip the nest backward when the avocado is ripe, so it rolls off the back of the base into a bowl below. The notification becomes physical.
 
 ## Prior art
 
