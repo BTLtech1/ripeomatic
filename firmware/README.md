@@ -10,7 +10,7 @@ ESP32 firmware will live here.
 - [ ] Preload, then measure force vs. travel up to a force cap
 - [ ] Subtract the blade bend from the travel to get the avocado squish
 - [ ] Stiffness calculation (linear fit)
-- [ ] Detect new avocado / empty trough from contact position
+- [ ] Detect new avocado / empty nest from contact position
 - [ ] Scheduled readings (e.g. twice a day)
 - [ ] Log readings to CSV (see `../data/README.md`)
 - [ ] Wi-Fi notification when ripe
