@@ -54,6 +54,16 @@ Approximate total: **$15–20** plus about 150 g of filament. Full list, print n
 
 Optional upgrade if the printed blade drifts: a 1 kg load cell + HX711 (~$7) mounts in the same spot.
 
+## Build it
+
+1. **Print** the parts in [`hardware/stl/`](hardware/stl/) (base and sled first; test the slide before printing the rest).
+2. **Assemble** in the order in [`hardware/stl/README.md`](hardware/stl/README.md#assembly-order), wire per [`hardware/README.md`](hardware/README.md#wiring) (don't forget the 0.1 µF capacitor on the hall sensor).
+3. **Flash** `firmware/ripeomatic/ripeomatic.ino` from the Arduino IDE or PlatformIO; no libraries needed. Join the `RipeOMatic-xxxxxx` Wi-Fi it creates and give it your network.
+4. **Calibrate** from the web page: blade (press a jar), then force (coins on the pad). Ten minutes.
+5. **First avocado.** Tap *Measure now*, then let it run twice a day. When you eat it, tap how it was.
+
+Steps 3–5 in detail: [`firmware/README.md`](firmware/README.md#first-run).
+
 ## Firmware and app
 
 There is no app to install. The ESP32 serves its own web app at `http://ripeomatic.local`: the verdict (hard / softening / almost ripe / ripe), the ripening curve, one-tap "how was it?" buttons, calibration, settings. Add it to your phone's home screen and it behaves like an app. Push notifications ("almost ripe", "ripe", "nest is empty") go through [ntfy](https://ntfy.sh), free, no account. Readings are logged on the device in a shared format and downloadable as CSV. Details, first-run steps and the HTTP API in [`firmware/`](firmware/).
