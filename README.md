@@ -14,29 +14,31 @@ Store ripeness scanners (NIR, acoustic, laser vibrometry) judge a stranger's avo
 
 A soft pad presses very gently on the avocado once or twice a day and measures **how much it squishes for a given force**, the same way you'd test it with your thumb. As the avocado ripens, it gets softer, and when it crosses your threshold you get a notification.
 
-- **Push:** a $2 geared stepper turns a printed lead screw that lowers the pad in tiny, known steps, so step count = travel.
-- **Feel:** a printed leaf spring (flexure) between the carriage and the pad bends as the avocado pushes back. A magnet on its tip and a $0.50 hall sensor measure the bend, which gives the force.
+The machine is a low, horizontal press about 7 cm tall. The avocado lies across a V-trough with its side against a soft backstop, and a sled drives the pad into its other side.
+
+- **Push:** a $2 geared stepper turns a printed lead screw that moves the sled along a channel in the base in tiny, known steps, so step count = travel.
+- **Feel:** a thin printed blade standing up from the sled carries the pad. It bends back as the avocado pushes. A magnet on its back and a $0.50 hall sensor on the sled measure the bend, which gives the force.
 - **Result:** a force-vs-squish curve. Its slope (stiffness) drops day by day as the avocado ripens.
 
-The whole frame, the guide posts, the lead screw, the carriage and the flexure are 3D printed. There are no bearings and no metal load cell, and everything runs on 5 V from a phone charger.
+The base (with its guide channel, trough and backstop), the lead screw, the sled and the blade are all 3D printed. There are no bearings and no metal load cell, and everything runs on 5 V from a phone charger.
 
 ### Measurement routine
 
-1. **Home** to the top (microswitch, or just run gently against the top plate).
+1. **Home** by running the sled gently back against the printed end stop.
 2. **Tare** the hall sensor with the pad in the air.
-3. **Approach** to just above the last known contact height, then creep slowly.
+3. **Approach** to just short of the last known contact position, then creep slowly.
 4. **Detect contact** when force rises above ~0.1 N for 3 readings in a row.
-5. **Preload** to ~0.2 N to seat the avocado in the cradle; call this zero.
-6. **Measure** step by step up to a force cap (~2.5 N), logging force at each step. Avocado squish = travel minus the flexure's own bend.
+5. **Preload** to ~0.2 N to seat the avocado against the backstop; call this zero.
+6. **Measure** step by step up to a force cap (~2.5 N), logging force at each step. Avocado squish = travel minus the blade's own bend.
 7. **Back off** and record the stiffness (slope of force vs. squish).
 
-Because everything is measured from the contact point, avocado size and cradle fit don't matter. Contact height is logged too, so the device can tell when an avocado has been swapped (height jumps) or removed (no contact).
+Because everything is measured from the contact point, avocado size doesn't matter. Contact position is logged too, so the device can tell when an avocado has been swapped (position jumps) or removed (no contact).
 
 See [`docs/measurement.md`](docs/measurement.md) for details.
 
 ### Being gentle
 
-Squeezing can bruise avocados, especially ripe ones. Ripe-O-Matic limits **force**, not just distance, and uses a **wide soft pad** (about 2 cm) to spread the load. Rotate the avocado between tests where possible.
+Squeezing can bruise avocados, especially ripe ones. Ripe-O-Matic limits **force**, not just distance, and uses a **wide soft pad** (about 2 cm) to spread the load. The reaction goes into a broad soft backstop rather than small cradle pins. Rotate the avocado between tests where possible.
 
 ## Hardware (planned)
 
@@ -44,14 +46,13 @@ Squeezing can bruise avocados, especially ripe ones. Ripe-O-Matic limits **force
 |---|---|---|
 | 28BYJ-48 stepper + ULN2003 driver | Pushing + distance (2048 steps/turn) | $2–4 |
 | ESP32 dev board | Brains, Wi-Fi notifications | $3–6 |
-| SS49E hall sensor + 3 × 2 mm magnet | Force, via the printed flexure | ~$1 (sold in packs) |
-| Microswitch (optional) | Homing | $0–1 |
+| SS49E hall sensor + 3 × 2 mm magnet | Force, via the printed blade | ~$1 (sold in packs) |
 | USB cable + phone charger | 5 V power for everything | have |
-| Frame, posts, lead screw, carriage, flexure, pad, cradle | Everything else | printed |
+| Base (channel, trough, backstop), lead screw, sled, blade, pad | Everything else | printed |
 
 Approximate total: **$15–20** plus about 150 g of filament. Full list, print notes and wiring in [`hardware/`](hardware/).
 
-Optional upgrade if the printed flexure drifts: a 1 kg load cell + HX711 (~$7) bolts into the same spot.
+Optional upgrade if the printed blade drifts: a 1 kg load cell + HX711 (~$7) mounts in the same spot.
 
 ## Repo layout
 
