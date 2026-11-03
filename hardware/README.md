@@ -78,6 +78,8 @@ If the printed blade drifts too much (PLA creeps and softens a little when warm)
 
 ## Wiring
 
+![Wiring: ESP32 to ULN2003 to 28BYJ-48, and the SS49E hall sensor with its capacitor](wiring.svg)
+
 | From | To |
 |---|---|
 | ESP32 5V (VIN), GND | ULN2003 VCC, GND |
