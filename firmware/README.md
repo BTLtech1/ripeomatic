@@ -21,7 +21,7 @@ ESP32 firmware will live here.
 
 | Setting | Starting value | Notes |
 |---|---|---|
-| `steps_per_mm` | 683 | 28BYJ-48 at 2048 full steps/turn on a 3 mm pitch screw |
+| `steps_per_mm` | 1024 | 28BYJ-48 at 2048 full steps/turn on the TR10×2 screw (2 mm pitch) |
 | `hall_n_per_count` | from calibration | Newtons per ADC count. Calibrate with coins (US nickel = 5.000 g = 0.049 N) |
 | `blade_k` | ~3 N/mm | Blade stiffness, from the same calibration. Used to subtract the bend from the travel |
 | `contact_threshold` | 0.1 N | Must be above sensor noise |
