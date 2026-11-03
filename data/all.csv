@@ -1,0 +1,1 @@
+schema,device_id,fw_version,hw_version,timestamp,fruit_id,variety,fruit_mass_g,room_temp_c,contact_pos_mm,stiffness_n_per_mm,squish_at_cap_mm,force_cap_n,blade_k_n_per_mm,cal_points,curve,human_rating,cut_open,notes
