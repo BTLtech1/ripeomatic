@@ -2,7 +2,7 @@
 
 **An open-source countertop gadget that watches your avocado and tells you when it's ripe, so you stop forgetting about them until they're brown mush.**
 
-> **Status: early / experimental.** The design is being worked out and nothing has been fully built or calibrated yet. Expect things to change.
+> **Status: designed, not yet built.** The CAD is done and the STLs are in [`hardware/stl/`](hardware/stl/), the firmware is written and tested in simulation, and the data pipeline and dashboard are live. Nothing has been printed, flashed or calibrated on a real avocado yet. Expect the first build to turn up small fixes.
 
 ---
 
@@ -40,7 +40,7 @@ See [`docs/measurement.md`](docs/measurement.md) for details.
 
 Squeezing can bruise avocados, especially ripe ones. Ripe-O-Matic limits **force**, not just distance, and uses a **wide soft pad** (about 2 cm) to spread the load. The reaction spreads over the nest's soft curved back rather than small cradle pins. Rotate the avocado between tests where possible.
 
-## Hardware (planned)
+## Hardware
 
 | Part | Purpose | Rough cost |
 |---|---|---|
@@ -54,19 +54,33 @@ Approximate total: **$15–20** plus about 150 g of filament. Full list, print n
 
 Optional upgrade if the printed blade drifts: a 1 kg load cell + HX711 (~$7) mounts in the same spot.
 
+## Firmware and app
+
+There is no app to install. The ESP32 serves its own web app at `http://ripeomatic.local`: the verdict (hard / softening / almost ripe / ripe), the ripening curve, one-tap "how was it?" buttons, calibration, settings. Add it to your phone's home screen and it behaves like an app. Push notifications ("almost ripe", "ripe", "nest is empty") go through [ntfy](https://ntfy.sh), free, no account. Readings are logged on the device in a shared format and downloadable as CSV. Details, first-run steps and the HTTP API in [`firmware/`](firmware/).
+
+## Pooled data and the dashboard
+
+Every build measures stiffness in the same units (N/mm, after a coin calibration and a blade correction), so readings from different machines are comparable. Contributed logs go through a pull request into [`data/contrib/`](data/), get validated and merged by CI, and show up on the dashboard:
+
+**https://btltech1.github.io/ripeomatic/** — every avocado's ripening curve, the stiffness people called *perfect*, days-to-ripe vs. room temperature.
+
+That pooled "perfect" number is what replaces the placeholder ripeness threshold in the firmware. See [`docs/data-sharing.md`](docs/data-sharing.md).
+
 ## Repo layout
 
 ```
 ripeomatic/
-├── firmware/   ESP32 code
-├── hardware/   STL / Fusion 360 exports, BOM, wiring
-├── docs/       How it works, calibration, build notes
-└── data/       Logged readings from real avocados
+├── firmware/   ESP32 sketch (ripeomatic/), web UI source (ui/), host tests (test/)
+├── hardware/   STLs, print and assembly guide, BOM, wiring (CAD: Fusion 360)
+├── dashboard/  The community data page (GitHub Pages)
+├── data/       Contributed readings, merged all.csv, synthetic sample
+├── docs/       Measurement routine, data sharing plan
+└── tools/      merge_data.py, make_sample.py, build_ui.py, mock_device.py
 ```
 
 ## Data wanted!
 
-The most useful thing anyone can contribute is **readings from real avocados**: daily stiffness values plus a note of when it was actually perfect to eat. See [`data/README.md`](data/README.md) for the format.
+The most useful thing anyone can contribute is **readings from real avocados**, and above all the tap that says it was *perfect* to eat. Download the CSV from your device's page and open a pull request into `data/contrib/<device id>/`; CI checks the format. See [`data/README.md`](data/README.md).
 
 ## Planned: tipping nest (v2)
 
