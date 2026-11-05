@@ -170,9 +170,10 @@ details[open] summary::after{content:"–"}
   <details id="d-wifi">
     <summary>Wi-Fi &amp; device</summary>
     <div class="form">
-      <div class="full"><label>Network</label><select id="ssid"><option value="">scanning…</option></select></div>
-      <div class="full"><label>Password</label><input id="pass" type="password" placeholder="(unchanged)"></div>
-      <div class="full row"><button id="btnWifi" class="primary">Save &amp; reboot</button><button id="btnScan" class="quiet">Rescan</button></div>
+      <div class="hint" id="wifinow" style="margin:0"></div>
+      <div class="full"><label>Change to network</label><select id="ssid"><option value="">scanning…</option></select></div>
+      <div class="full"><label>Its password</label><input id="pass" type="password" placeholder="leave blank to keep the saved one"></div>
+      <div class="full row"><button id="btnWifi" class="primary">Switch network &amp; reboot</button><button id="btnScan" class="quiet">Rescan</button></div>
       <div class="hint" id="devinfo"></div>
       <div class="full row">
         <button id="btnSetupShow2" class="quiet">Show setup checklist</button>
@@ -291,6 +292,7 @@ function render() {
   $('pos').textContent = fmt(s.pos_mm, 2); $('forcenow').textContent = fmt(s.force_n, 3);
   const rawEl = $('raw'); if (rawEl) rawEl.textContent = s.raw != null ? Math.round(s.raw) : '—';
   $('calstate').innerHTML = 'blade_k: <b>' + (s.blade_calibrated ? fmt(s.blade_k) + ' N/mm' : 'not measured') + '</b> · force: <b>' + (s.calibrated ? fmt(s.n_per_count * 1000, 3) + ' mN/count, ' + s.cal_points_n + ' point' + (s.cal_points_n === 1 ? '' : 's') : 'not calibrated') + '</b>';
+  $('wifinow').textContent = s.ap_mode ? 'Not on a Wi-Fi network yet: pick yours below.' : 'Connected to ' + (settings && settings.wifi_ssid ? settings.wifi_ssid : 'your Wi-Fi') + '. Only change this if the router or password changes, or the machine moves house.';
   $('devinfo').textContent = 'id ' + s.device_id + ' · ' + (s.ip || '') + (s.rssi ? ' · ' + s.rssi + ' dBm' : '') + ' · log ' + Math.round((s.log_bytes || 0) / 1024) + ' kB · free ' + Math.round((s.fs_free || 0) / 1024) + ' kB · up ' + hms(s.uptime_s);
   document.querySelectorAll('#rate button').forEach(b => b.classList.toggle('on', b.dataset.r === f.rating));
 }
