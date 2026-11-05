@@ -53,7 +53,8 @@ details.tip p{margin:8px 0 0}
   <h2>2 · Install</h2>
   <p>Click <b>Install</b>. A list of ports pops up: pick the board, click <b>Connect</b>, and wait about a minute. When it asks, type your Wi-Fi; it then links straight to your device.</p>
   <details class="tip"><summary>Which one in the list is the board?</summary>
-    <p>It's the one called <span class="dev">serial port (COMx)</span>, <span class="dev">CP210x</span>, <span class="dev">Silicon Labs</span>, <span class="dev">CH340</span>, <span class="dev">USB Single Serial</span> or <span class="dev">USB-SERIAL</span>. Ignore anything that says <span class="dev">Bluetooth</span>, and headsets, speakers or printers you recognise.</p>
+    <p>It's the one called <span class="dev">CP2102 USB to UART Bridge Controller</span>, <span class="dev">Silicon Labs CP210x</span>, <span class="dev">CH340</span>, <span class="dev">USB Single Serial</span> or <span class="dev">USB-SERIAL</span>. Ignore anything that says <span class="dev">Bluetooth</span> or ends in <span class="dev">– Paired</span> (that tag means a Bluetooth device, even if it's called "serial port"), and headsets, speakers or printers you recognise.</p>
+    <p>Board not in the list at all, even though Windows chimed when you plugged it in? It needs the USB driver: install the <a href="https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers" rel="noopener">CP210x Universal Windows Driver</a> (unzip, right-click <code>silabser.inf</code> → Install), unplug and replug, try again.</p>
     <p>Still not sure? Click Cancel, unplug the board, click Install again and look at the list: the one that disappeared is your board. Plug it back in and pick that one.</p>
     <p>Picked the wrong one? No harm done. The installer checks it's talking to an ESP32 before it writes anything.</p>
   </details>
