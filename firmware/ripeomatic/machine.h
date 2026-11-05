@@ -239,7 +239,7 @@ class Machine {
       case Job::Jog:      guardedMove(jobParam_, S.t.force_cap_n); homed_ = false; stepper.release(); break;
       case Job::Home:     home(); stepper.release(); break;
       case Job::Tip:      servo.tip(S.servo_rest_deg, S.servo_tip_deg, S.servo_hold_ms); break;
-      case Job::Notify:   net.ntfy(pendingTitle, pendingMsg, 2, "white_check_mark"); pendingTitle[0] = 0; pendingMsg[0] = 0; break;
+      case Job::Notify:   net.notify(pendingTitle, pendingMsg, 2, "white_check_mark"); pendingTitle[0] = 0; pendingMsg[0] = 0; break;
       default: break;
     }
   }
@@ -359,7 +359,7 @@ class Machine {
         if (FR.loaded) {
           FR.loaded = false;
           fruitSave();
-          net.ntfy("Nest is empty", "The avocado is gone. Put the next one in.", 2, "avocado");
+          net.notify("Nest is empty", "The avocado is gone. Put the next one in.", 2, "avocado");
         }
         break;
       case ripe::Outcome::Aborted:
@@ -420,11 +420,11 @@ class Machine {
     char msg[160];
     if (v == ripe::Verdict::Ripe && !FR.notified_ripe) {
       snprintf(msg, sizeof msg, "Stiffness %.2f N/mm (%.0f%% of day 1). Eat it today or fridge it.", FR.last_k, FR.first_k > 0 ? 100 * FR.last_k / FR.first_k : 0);
-      if (net.ntfy("Avocado is ripe", msg, 4, "avocado,tada")) FR.notified_ripe = true;
+      if (net.notify("Avocado is ripe", msg, 4, "avocado,tada")) FR.notified_ripe = true;
     } else if (v == ripe::Verdict::Nearly && S.notify_nearly && !FR.notified_nearly) {
       float d = ripe::daysToRipe(FR.first_k, FR.last_k, elapsedDays(), thresholdNow());
       snprintf(msg, sizeof msg, "Stiffness %.2f N/mm. Probably ripe %s.", FR.last_k, d > 0 && d < 1.5f ? "tomorrow" : "in a day or two");
-      if (net.ntfy("Avocado almost ripe", msg, 3, "avocado")) FR.notified_nearly = true;
+      if (net.notify("Avocado almost ripe", msg, 3, "avocado")) FR.notified_nearly = true;
     }
     fruitSave();
   }

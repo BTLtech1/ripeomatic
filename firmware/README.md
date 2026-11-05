@@ -10,7 +10,7 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 - **Reports stiffness in N/mm** with the blade's own bend subtracted, fits a line, and judges `hard / softening / almost ripe / ripe`. Guesses days-to-ripe from the fruit's own decay once it has two readings a day apart.
 - **Knows when you swap avocados** (contact position jumps, or the fruit got much stiffer) and starts a new fruit id. Notices an empty nest.
 - **Logs** every reading to a CSV on the ESP32's flash in the shared schema (`docs/data-sharing.md`), downloadable from the page as `/data.csv`.
-- **Pushes to your phone** through [ntfy](https://ntfy.sh): "almost ripe", "ripe", "nest is empty". Free, no account: pick a topic name, subscribe in the ntfy app.
+- **Alerts** to your phone through [ntfy](https://ntfy.sh) (free, no account) and/or to a **Discord channel** through a webhook: "almost ripe", "ripe", "nest is empty". Both are set up from the page's checklist.
 - **Web app** at `http://ripeomatic.local`: verdict, trend chart, last press curve, one-tap rating buttons (the labels that make pooled data useful), calibration wizard, motor jog, all settings, Wi-Fi. Add it to your home screen and it behaves like an app.
 - **BOOT button**: short press = measure now, hold 2 s = "it was perfect".
 - **Wi-Fi setup** without editing code: the web installer asks for it over USB (Improv); otherwise first boot opens an access point `RipeOMatic-xxxxxx`; join it and pick your network.
@@ -36,7 +36,7 @@ No libraries to install. If you edit `ui/index.html`, run `python3 tools/build_u
 
 The device page opens with a **setup checklist** that walks through everything, one step at a time:
 
-1. **Phone alerts.** *Set up alerts* creates a private ntfy topic; install the free ntfy app, tap the link to subscribe, *Send a test alert*. (Or skip.)
+1. **Alerts.** Phone: *Set up phone alerts* creates a private ntfy topic; install the free ntfy app, tap the link to subscribe. Discord: paste a channel webhook URL (channel settings → Integrations → Webhooks). One or both, then *Send a test alert*. (Or skip.)
 2. **Motor direction.** *Nudge the sled 1 mm*, then answer *Toward the nest* or *Away from the nest*; the firmware flips the direction itself if needed.
 3. **Force calibration.** Machine on its motor end, bottle cap on the pad: *Capture zero*; add nickels (5.000 g each), type the grams, *Capture*. Two amounts are better than one.
 4. **Blade calibration.** Machine upright, a glass jar in the nest: *Measure the blade*. Records the machine's own spring (`blade_k`) so it can be subtracted from every reading. (If you redo the force calibration later, `blade_k` is rescaled automatically.)
@@ -81,6 +81,7 @@ Everything the page does. Handy for Home Assistant or a script.
 | POST | `/api/rate` | `r=hard|firm|ready|perfect|overripe`, optional `cut=no_bruise|bruise_at_pad|bruise_elsewhere`, `notes=` |
 | GET | `/data.csv` | Current fruit's rows. `?fruit=all` for everything, `&old=1` to include the rotated file |
 | GET/POST | `/api/settings` | All settings as JSON; POST form fields to change any of them |
+| POST | `/api/alerts/discord` | `url=` a Discord webhook (blank to remove); `/api/ntfy/new` makes a phone topic; `/api/ntfy/test` sends a test to every channel set |
 | POST | `/api/jog` | `mm=±5` manual move |
 | POST | `/api/home` | Home against the end stop |
 | POST | `/api/cal/zero`, `/api/cal/mass` (`g=`), `/api/cal/clear`, `/api/cal/blade` | Calibration |

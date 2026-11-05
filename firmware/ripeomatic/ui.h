@@ -343,7 +343,7 @@ let stepsKey = '', testPending = false, testResult = '';
 function renderSetup(s) {
 const skippedNtfy = ls.get('ntfySkipped') === '1';
 const steps = [
-{ id: 'ntfy', title: 'Phone alerts', done: !!s.ntfy_ok || skippedNtfy },
+{ id: 'ntfy', title: 'Alerts', done: !!s.ntfy_ok || skippedNtfy },
 { id: 'motor', title: 'Motor direction', done: !!s.motor_checked || !!s.simulate },
 { id: 'force', title: 'Force calibration', done: (s.cal_points_n || 0) >= 2 || (!!s.calibrated && ls.get('forceCalDone') === '1') },
 { id: 'blade', title: 'Blade calibration', done: !!s.blade_calibrated },
@@ -356,7 +356,7 @@ $('setupcount').textContent = allDone ? '· done' : '· ' + nDone + ' of ' + ste
 $('setupbar').style.width = (100 * nDone / steps.length) + '%';
 if (card.hidden) return;
 // only rebuild the markup when the step states change, so typing in inputs survives polling
-const key = steps.map(x => x.done ? 1 : 0).join('') + '|' + (s.ntfy_topic || '') + '|' + s.motor_invert + '|' + s.online + '|' + testPending + testResult + '|' + s.cal_points_n;
+const key = steps.map(x => x.done ? 1 : 0).join('') + '|' + (s.ntfy_topic || '') + '|' + s.discord_set + '|' + s.motor_invert + '|' + s.online + '|' + testPending + testResult + '|' + s.cal_points_n;
 if (key === stepsKey) return;
 stepsKey = key;
 let firstOpen = steps.findIndex(x => !x.done);
@@ -364,9 +364,15 @@ $('steps').innerHTML = steps.map((st, i) => {
 const locked = !st.done && i > firstOpen;   // one thing at a time: later steps show their title only
 let body = '';
 if (st.id === 'ntfy') {
-if (st.done) body = `<p><b>Phone alerts</b> · ${s.ntfy_ok ? 'working' : 'skipped'}${s.ntfy_topic ? ' · topic <code>' + esc(s.ntfy_topic) + '</code>' : ''}</p>`;
-else if (!s.ntfy_topic) body = `<p><b>Phone alerts.</b> Get a push on your phone when the avocado is almost ripe and when it's ready. Free, no account, through the ntfy app.</p><div class="row"><button class="primary" data-act="ntfynew">Set up alerts</button><button class="quiet" data-act="ntfyskip">Skip for now</button></div>`;
-else body = `<p><b>Phone alerts.</b> On your phone: install <b>ntfy</b> (<a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iPhone</a> · <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">Android</a>), then open this link and tap <b>Subscribe</b>:</p><p><a href="https://ntfy.sh/${esc(s.ntfy_topic)}" target="_blank" rel="noopener">https://ntfy.sh/${esc(s.ntfy_topic)}</a></p><p>Then:</p><div class="row"><button class="primary" data-act="ntfytest" ${testPending || !s.online ? 'disabled' : ''}>${testPending ? 'Sending…' : 'Send a test alert'}</button><button class="quiet" data-act="ntfyskip">Skip for now</button></div>${testResult === 'fail' ? '<p class="bad" style="margin-top:8px">It didn\'t go through. Is the device online? Try again in a few seconds.</p>' : ''}${!s.online ? '<p class="kv" style="margin-top:6px">The device isn\'t online yet, so it can\'t send.</p>' : ''}`;
+const test = `<div class="row" style="margin-top:10px"><button class="primary" data-act="ntfytest" ${testPending || !s.online ? 'disabled' : ''}>${testPending ? 'Sending…' : 'Send a test alert'}</button><button class="quiet" data-act="ntfyskip">Skip for now</button></div>${testResult === 'fail' ? '<p class="bad" style="margin-top:8px">It didn\'t go through. Is the device online? Is the webhook URL right? Try again in a few seconds.</p>' : ''}${!s.online ? '<p class="kv" style="margin-top:6px">The device isn\'t online yet, so it can\'t send.</p>' : ''}`;
+const phone = !s.ntfy_topic
+? `<p><b>Phone.</b> A push notification through the free ntfy app, no account.</p><div class="row"><button data-act="ntfynew">Set up phone alerts</button></div>`
+: `<p><b>Phone.</b> Install <b>ntfy</b> (<a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iPhone</a> · <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">Android</a>), then open this link on the phone and tap <b>Subscribe</b>:<br><a href="https://ntfy.sh/${esc(s.ntfy_topic)}" target="_blank" rel="noopener">https://ntfy.sh/${esc(s.ntfy_topic)}</a></p>`;
+const discord = s.discord_set
+? `<p><b>Discord.</b> Webhook saved. <button class="quiet" data-act="discordclear" style="padding:2px 8px;min-height:0">remove</button></p>`
+: `<p><b>Discord.</b> In your server: channel settings → <i>Integrations</i> → <i>Webhooks</i> → <i>New Webhook</i> → <i>Copy Webhook URL</i>, paste it here:</p><div class="row"><input id="discordurl" type="url" placeholder="https://discord.com/api/webhooks/…" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button data-act="discordsave" style="flex:0 0 auto">Save</button></div>`;
+if (st.done) body = `<p><b>Alerts</b> · ${s.ntfy_ok ? 'working' : 'skipped'}${s.ntfy_topic ? ' · phone' : ''}${s.discord_set ? ' · Discord' : ''}</p>`;
+else body = `<p><b>Alerts.</b> Hear about it when the avocado is almost ripe and when it's ready. Pick one or both:</p>${phone}${discord}${(s.ntfy_topic || s.discord_set) ? '<p style="margin-top:8px">Then:</p>' + test : '<div class="row" style="margin-top:8px"><button class="quiet" data-act="ntfyskip">Skip for now</button></div>'}`;
 } else if (st.id === 'motor') {
 if (st.done) body = `<p><b>Motor direction</b> · ${s.simulate ? 'no motor in simulation' : 'checked'}</p>`;
 else body = `<p><b>Motor direction.</b> Tap <b>Nudge</b> and watch the sled.</p><div class="row"><button class="primary" data-act="nudge">Nudge the sled 1 mm</button></div><p style="margin-top:10px">Which way did it move?</p><div class="row"><button data-act="motorok">Toward the nest</button><button data-act="motorbad">Away from the nest</button></div>${s.motor_invert ? '<p class="kv" style="margin-top:6px">Direction is currently flipped.</p>' : ''}`;
@@ -391,6 +397,8 @@ const a = b.dataset.act;
 try {
 if (a === 'ntfynew') { await post('/api/ntfy/new'); toast('Alert channel created'); }
 else if (a === 'ntfyskip') { ls.set('ntfySkipped', '1'); }
+else if (a === 'discordsave') { const u = ($('discordurl').value || '').trim(); if (!u) return toast('Paste the webhook URL first'); await post('/api/alerts/discord', {url: u}); toast('Discord webhook saved'); }
+else if (a === 'discordclear') { await post('/api/alerts/discord', {url: ''}); toast('Removed'); }
 else if (a === 'ntfytest') { testPending = true; testResult = ''; await post('/api/ntfy/test'); waitForTest(); }
 else if (a === 'nudge') { await post('/api/jog', {mm: 1}); toast('Nudging'); }
 else if (a === 'motorok') { await post('/api/motor/checked', {ok: 1}); toast('Direction confirmed'); }
@@ -423,6 +431,8 @@ const FIELDS = [
 ['Notifications', null],
 ['ntfy_topic', 'ntfy topic', 'Pick any unguessable name, subscribe to it in the ntfy app (free, Android/iOS), and the device pushes "ripe" to your phone.'],
 ['ntfy_server', 'ntfy server'], ['notify_nearly', 'Also notify when almost ripe', 'bool'],
+['Discord', null],
+['discord_note', 'The Discord webhook is set in the setup checklist (Show the setup checklist, below). Alerts go to every channel that is set.', 'note'],
 ['Schedule', null],
 ['auto_enabled', 'Automatic readings', 'bool'], ['interval_h', 'Hours between readings'],
 ['variety', 'Variety (for the log)'],
@@ -446,6 +456,7 @@ const f = $('settings'); let h = '';
 for (const [k, label, extra] of FIELDS) {
 if (label === null) { h += `<div class="full"><h2 style="margin:10px 0 0">${k}</h2></div>`; continue; }
 const v = settings[k];
+if (extra === 'note') { h += `<div class="hint">${label}</div>`; continue; }
 if (extra === 'bool') h += `<div><label>${label}</label><select name="${k}"><option value="1"${v ? ' selected' : ''}>on</option><option value="0"${v ? '' : ' selected'}>off</option></select></div>`;
 else h += `<div${k === 'ntfy_topic' || k === 'host' ? ' class="full"' : ''}><label>${label}</label><input name="${k}" value="${esc(v)}" ${typeof v === 'number' ? 'type="number" step="any" inputmode="decimal"' : ''}></div>`;
 if (extra && extra !== 'bool') h += `<div class="hint">${extra}</div>`;

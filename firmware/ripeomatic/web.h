@@ -56,8 +56,16 @@ class Web {
     server.on("/api/cal/clear", HTTP_POST, [this] { M.clearCalibration(); ok(); });
     // first-run checklist
     server.on("/api/ntfy/new", HTTP_POST, [this] { M.newNtfyTopic(); json(200, String("{\"ok\":true,\"topic\":\"") + S.ntfy_topic + "\"}"); });
+    server.on("/api/alerts/discord", HTTP_POST, [this] {
+      String url = server.arg("url"); url.trim();
+      if (url.length() && !(url.startsWith("https://discord.com/api/webhooks/") || url.startsWith("https://discordapp.com/api/webhooks/"))) return fail(400, "that isn't a Discord webhook URL (it starts with https://discord.com/api/webhooks/)");
+      if (url.length() >= sizeof S.discord_webhook) return fail(400, "URL too long");
+      strlcpy(S.discord_webhook, url.c_str(), sizeof S.discord_webhook);
+      if (url.length()) S.ntfy_ok = false;
+      settingsSave(); ok();
+    });
     server.on("/api/ntfy/test", HTTP_POST, [this] {
-      if (!S.ntfy_topic[0]) return fail(400, "no topic set");
+      if (!S.ntfy_topic[0] && !S.discord_webhook[0]) return fail(400, "set up phone alerts or a Discord webhook first");
       if (!M.net.online()) return fail(400, "not online");
       if (M.busy()) return fail(409, "busy");
       M.net.lastOk = false;
@@ -137,7 +145,7 @@ class Web {
     addBool(o, "blade_calibrated", S.t.blade_k_n_per_mm > 0.01f);
     addBool(o, "setup_done", M.calibrated());
     addBool(o, "simulate", SIMULATE);
-    addStr(o, "ntfy_topic", S.ntfy_topic); addBool(o, "ntfy_ok", S.ntfy_ok); addBool(o, "notify_pending", M.pendingTitle[0] != 0); addBool(o, "notify_last_ok", M.net.lastOk);
+    addStr(o, "ntfy_topic", S.ntfy_topic); addBool(o, "ntfy_ok", S.ntfy_ok); addBool(o, "discord_set", S.discord_webhook[0] != 0); addBool(o, "notify_pending", M.pendingTitle[0] != 0); addBool(o, "notify_last_ok", M.net.lastOk);
     addBool(o, "motor_checked", S.motor_checked); addBool(o, "motor_invert", S.motor_invert);
     addBool(o, "online", M.net.online());
     addInt(o, "fruit_count", FR.counter);
@@ -196,7 +204,7 @@ class Web {
     int unknown = 0;
     for (int i = 0; i < server.args(); i++) {
       String n = server.argName(i);
-      if (n == "wifi_pass" || n == "wifi_ssid" || n == "device_id" || n == "plain") continue;   // not through this route
+      if (n == "wifi_pass" || n == "wifi_ssid" || n == "device_id" || n == "discord_webhook" || n == "plain") continue;   // not through this route
       if (n == "host" && server.arg(i) != S.host) hostChanged = true;
       if (!settingsSet(n.c_str(), server.arg(i).c_str())) unknown++;
     }

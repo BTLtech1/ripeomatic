@@ -71,6 +71,36 @@ class Net {
     strftime(out, len, "%Y-%m-%dT%H:%M:%SZ", &tm);
   }
 
+  // Send an alert everywhere that's configured (ntfy and/or a Discord webhook).
+  // True if at least one went through.
+  bool notify(const char* title, const char* message, int priority = 3, const char* tags = "avocado") {
+    bool a = ntfy(title, message, priority, tags);
+    bool b = discord(title, message);
+    lastOk = a || b;
+    if (lastOk && !S.ntfy_ok) { S.ntfy_ok = true; settingsSave(); }   // the setup checklist ticks "alerts work"
+    return lastOk;
+  }
+
+  // Post to a Discord channel webhook. Returns true on 2xx (Discord answers 204).
+  bool discord(const char* title, const char* message) {
+    if (!online() || !S.discord_webhook[0]) return false;
+    String body = "{\"content\":\"**";
+    jsonEscape(title, body); body += "**\\n"; jsonEscape(message, body); body += "\"}";
+    WiFiClientSecure client;
+    client.setInsecure();
+    HTTPClient http;
+    bool ok = http.begin(client, String(S.discord_webhook));
+    if (ok) {
+      http.addHeader("Content-Type", "application/json");
+      http.setTimeout(8000);
+      int code = http.POST(body);
+      Serial.printf("discord %d: %s\n", code, title);
+      ok = code >= 200 && code < 300;
+    }
+    http.end();
+    return ok;
+  }
+
   // Push a notification through ntfy (https://ntfy.sh). Returns true on 2xx.
   // priority 1-5; tags are emoji shortcodes, e.g. "avocado".
   bool ntfy(const char* title, const char* message, int priority = 3, const char* tags = "avocado") {
@@ -100,10 +130,7 @@ class Net {
     http.setTimeout(8000);
     int code = http.POST((uint8_t*)message, strlen(message));
     Serial.printf("ntfy %d: %s\n", code, title);
-    bool ok = code >= 200 && code < 300;
-    if (ok && !S.ntfy_ok) { S.ntfy_ok = true; settingsSave(); }   // the setup checklist ticks "alerts work"
-    lastOk = ok;
-    return ok;
+    return code >= 200 && code < 300;
   }
 
   DNSServer dns;

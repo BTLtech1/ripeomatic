@@ -66,7 +66,7 @@ Steps 3–5 in detail: [`firmware/README.md`](firmware/README.md#first-run).
 
 ## Firmware and app
 
-There is no app to install, and no IDE needed either: the [web installer](https://btltech1.github.io/ripeomatic/install/) flashes the ESP32 from Chrome or Edge and sets its Wi-Fi over the same USB cable. The ESP32 then serves its own web app at `http://ripeomatic.local`: the verdict (hard / softening / almost ripe / ripe), the ripening curve, one-tap "how was it?" buttons, calibration, settings. Add it to your phone's home screen and it behaves like an app. Push notifications ("almost ripe", "ripe", "nest is empty") go through [ntfy](https://ntfy.sh), free, no account. Readings are logged on the device in a shared format and downloadable as CSV. Details, first-run steps and the HTTP API in [`firmware/`](firmware/).
+There is no app to install, and no IDE needed either: the [web installer](https://btltech1.github.io/ripeomatic/install/) flashes the ESP32 from Chrome or Edge and sets its Wi-Fi over the same USB cable. The ESP32 then serves its own web app at `http://ripeomatic.local`: the verdict (hard / softening / almost ripe / ripe), the ripening curve, one-tap "how was it?" buttons, calibration, settings. Add it to your phone's home screen and it behaves like an app. Alerts ("almost ripe", "ripe", "nest is empty") go to your phone through [ntfy](https://ntfy.sh) (free, no account) and/or to a Discord channel through a webhook. Readings are logged on the device in a shared format and downloadable as CSV. Details, first-run steps and the HTTP API in [`firmware/`](firmware/).
 
 ## Pooled data and the dashboard
 

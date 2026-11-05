@@ -72,6 +72,7 @@ class String {
   float toFloat() const { return (float)atof(s_.c_str()); }
   int toInt() const { return atoi(s_.c_str()); }
   int indexOf(char c) const { auto p = s_.find(c); return p == std::string::npos ? -1 : (int)p; }
+  void trim() { auto a = s_.find_first_not_of(" \t\r\n"); auto b = s_.find_last_not_of(" \t\r\n"); s_ = a == std::string::npos ? "" : s_.substr(a, b - a + 1); }
   std::string s_;
 };
 template <typename T> inline String operator+(String a, const T& b) { a += b; return a; }
