@@ -23,7 +23,7 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 **Arduino IDE**
 
 1. Boards manager: install *esp32 by Espressif* (2.0.x or 3.x both work).
-2. Open `ripeomatic/ripeomatic.ino`. Board: *ESP32 Dev Module*. Partition scheme: *Default*.
+2. Open `ripeomatic/ripeomatic.ino`. Board: *ESP32 Dev Module*. Partition scheme: **Minimal SPIFFS (1.9MB APP with OTA/190KB SPIFFS)**: the sketch is ~1.25 MB, too big for the default scheme.
 3. Upload. Open the serial monitor at 115200.
 
 **PlatformIO**: `cd firmware && pio run -t upload && pio device monitor`.

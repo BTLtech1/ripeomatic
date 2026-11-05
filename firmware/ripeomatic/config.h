@@ -65,10 +65,12 @@
 #define HALL_SAMPLES_LIVE 48
 
 // Log file on LittleFS. When it passes LOG_MAX_BYTES it is rotated once
-// to readings.old.csv (so you never lose the current fruit).
+// to readings.old.csv (so you never lose the current fruit). The "Minimal
+// SPIFFS" partition scheme leaves ~190 kB for the filesystem: 80 kB per file
+// is ~200 readings each, about 100 days at two a day, plus the old file.
 #define LOG_PATH "/readings.csv"
 #define LOG_OLD_PATH "/readings.old.csv"
-#define LOG_MAX_BYTES 400000
+#define LOG_MAX_BYTES 80000
 
 // Wi-Fi setup access point when no network is stored or it can't be joined.
 #define AP_SSID_PREFIX "RipeOMatic-"

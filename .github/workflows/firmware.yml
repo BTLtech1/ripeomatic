@@ -21,6 +21,8 @@ jobs:
           cd firmware/test
           g++ -std=c++17 -Wall -Wextra -Werror -I../ripeomatic test_measure.cpp -o test_measure
           ./test_measure
+          g++ -std=c++17 -Wall -Wextra -Werror -I../ripeomatic test_improv.cpp -o test_improv
+          ./test_improv
       - name: Type-check the sketch
         run: ./firmware/test/check_sketch.sh
       - name: ui.h matches ui/index.html

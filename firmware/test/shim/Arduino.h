@@ -87,6 +87,11 @@ class Print {
   void print(const char* s) { ::printf("%s", s); }
   void print(const String& s) { ::printf("%s", s.c_str()); }
   void print(char c) { ::printf("%c", c); }
+  int available() { return 0; }
+  int read() { return -1; }
+  size_t write(const uint8_t*, size_t n) { return n; }
+  size_t write(uint8_t) { return 1; }
+  void flush() {}
 };
 static Print Serial;
 

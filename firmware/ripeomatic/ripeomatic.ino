@@ -8,7 +8,7 @@
 
   Board: ESP32 Dev Module (any WROOM DevKit). Arduino-ESP32 core 2.0.x or 3.x.
   Libraries: none beyond the core (WiFi, WebServer, Preferences, LittleFS, HTTPClient, ESPmDNS, DNSServer, ArduinoOTA).
-  Partition scheme: Default (1.2 MB app, 1.5 MB SPIFFS/LittleFS).
+  Partition scheme: Minimal SPIFFS (1.9 MB app with OTA, 190 kB LittleFS). The default 1.25 MB app partition is too small.
 
   Files:
     config.h    pins and compile-time options (SIMULATE, ENABLE_SERVO)
@@ -20,15 +20,19 @@
     net.h       Wi-Fi, setup AP, mDNS, NTP, ntfy push
     machine.h   the job task: home, tare, press, log, notify
     web.h       HTTP API
+    improv.h    Improv Wi-Fi over serial, for the web installer
     ui.h        the web page (generated from ../ui/index.html by tools/build_ui.py)
 
   First boot: no Wi-Fi stored -> it starts an open access point "RipeOMatic-xxxxxx".
   Join it, a setup page opens (or go to http://192.168.4.1), pick your network.
+  Or flash from the web installer, which asks for Wi-Fi over USB (Improv) and
+  then links straight to the device.
 */
 #include "config.h"
 #include "settings.h"
 #include "machine.h"
 #include "web.h"
+#include "improv.h"
 #if ENABLE_OTA
 #include <ArduinoOTA.h>
 #endif
@@ -37,6 +41,7 @@ Settings S;
 FruitState FR;
 Machine M;
 Web web;
+ImprovSerial improvSerial;   // Wi-Fi setup over USB from the web installer
 
 static void ledOn(bool on) {
 #if PIN_LED >= 0
@@ -110,6 +115,7 @@ void setup() {
 
 void loop() {
   web.loop();
+  improvSerial.loop();
   M.net.loop();
   M.tick();
   pollButton();
