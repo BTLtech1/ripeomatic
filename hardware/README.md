@@ -43,7 +43,7 @@ Fallback if the printed lead screw is rough: an **M8 threaded rod and nut** from
 | Qty | Part | Notes | Rough cost |
 |---|---|---|---|
 | 1 | 28BYJ-48 stepper + ULN2003 driver | Sold as a pair. 5 V, geared 64:1, 2048 steps/turn. | $2–4 |
-| 1 | ESP32 dev board | Any ESP32-WROOM board (an ESP8266 D1 mini or ESP32-C3 also works). | $3–6 |
+| 1 | ESP32 dev board | Tested: ELEGOO ESP32-WROOM-32 DevKit, 30-pin, CP2102 USB chip (Windows needs the free CP210x driver, which the installer page links). Any ESP32-WROOM DevKit works. | $3–6 |
 | 1 | SS49E linear hall sensor | Sold in 10- or 20-packs. 49E / OH49E clones work the same. | $4–6 / pack |
 | 1 | Neodymium magnet, 3 × 2 mm | The size in every "magnets for 3D printing" kit. Glue to the back of the blade tip. | ~$3 / 50 |
 | ~8 | M3 screws | Motor ears, blade clamp. Or design printed dovetails/snap fits. | ~$1 |

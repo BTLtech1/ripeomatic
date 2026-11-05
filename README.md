@@ -58,7 +58,7 @@ Optional upgrade if the printed blade drifts: a 1 kg load cell + HX711 (~$7) mou
 
 1. **Print** the parts in [`hardware/stl/`](hardware/stl/) (base and sled first; test the slide before printing the rest).
 2. **Assemble** in the order in [`hardware/stl/README.md`](hardware/stl/README.md#assembly-order), wire per [`hardware/README.md`](hardware/README.md#wiring) (the 0.1 µF capacitor on the hall sensor is optional; add it if readings are noisy).
-3. **Flash** from the browser: plug the ESP32 into your computer and open **https://btltech1.github.io/ripeomatic/install/** in Chrome or Edge. One click, pick the port, type your Wi-Fi, done. (Or build it yourself from [`firmware/`](firmware/) with the Arduino IDE.)
+3. **Flash** from the browser: plug the ESP32 into your computer and open **https://btltech1.github.io/ripeomatic/install/** in Chrome or Edge. One click, pick the port, type your Wi-Fi, done. On Windows the board needs the CP210x USB driver first; the page links it and it takes 30 seconds. (Or build it yourself from [`firmware/`](firmware/) with the Arduino IDE.)
 4. **Calibrate** from the web page: force (coins on the pad), then blade (press a jar). Ten minutes. Automatic readings switch on once both are done.
 5. **First avocado.** Tap *Measure now*, then let it run twice a day. When you eat it, tap how it was.
 

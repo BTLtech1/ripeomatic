@@ -14,6 +14,7 @@ html,body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 system-
 .wrap{max-width:720px;margin:0 auto;padding:28px 16px 56px}
 h1{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
 h1 span{color:var(--ink-2);font-weight:400}
+h2 .note{font-weight:400;color:var(--muted);font-size:14px}
 .sub{color:var(--ink-2);margin:0 0 20px}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:14px}
 .card h2{font-size:16px;margin:0 0 8px}
@@ -46,15 +47,26 @@ details.tip p{margin:8px 0 0}
 
 <div class="card">
   <h2>1 · Plug the ESP32 into this computer</h2>
-  <p>Any ESP32 DevKit (WROOM, 30- or 38-pin). Use a USB cable that carries data: many charging cables don't, and the board then never shows up.</p>
+  <p>The tested board is the <b>ELEGOO ESP32-WROOM-32</b> DevKit (30-pin); any ESP32 DevKit works. Use a USB cable that carries data: many charging cables don't, and the board then never shows up. Windows plays its chime when it sees the board.</p>
+</div>
+
+<div class="card">
+  <h2>1b · Windows only: install the USB driver <span class="note">(30 seconds)</span></h2>
+  <p>The ELEGOO board (and most ESP32 DevKits) talk over a <b>CP2102</b> chip, and Windows usually doesn't ship its driver, so the board chimes but never appears in the port list. Mac and Linux need nothing.</p>
+  <ol>
+    <li>Download <a href="https://www.silabs.com/documents/public/software/CP210x_Universal_Windows_Driver.zip" rel="noopener">CP210x_Universal_Windows_Driver.zip</a> (Silicon Labs, free; if that link moves, it's on <a href="https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers" rel="noopener">this page</a> under Downloads).</li>
+    <li>Open the zip. Right-click <span class="dev">silabser.inf</span> (Type: <i>Setup Information</i>) → <b>Install</b>. On Windows 11, click <i>Show more options</i> first if you don't see Install. Say yes to the admin prompt; it ends with "The operation completed successfully".</li>
+    <li>Unplug the board and plug it back in.</li>
+  </ol>
+  <p class="note">Already have it? Then the port list in step 2 shows a <span class="dev">CP2102 USB to UART Bridge Controller (COMx)</span> entry and you can skip this.</p>
 </div>
 
 <div class="card">
   <h2>2 · Install</h2>
-  <p>Click <b>Install</b>. A list of ports pops up: pick the board, click <b>Connect</b>, and wait about a minute. When it asks, type your Wi-Fi; it then links straight to your device.</p>
+  <p>Click <b>Install</b>. A list of ports pops up: pick <span class="dev">CP2102 USB to UART Bridge Controller (COMx)</span> (on a Mac, <span class="dev">cu.usbserial-…</span>), click <b>Connect</b>, and wait about a minute. When it asks, type your Wi-Fi; it then links straight to your device.</p>
   <details class="tip"><summary>Which one in the list is the board?</summary>
     <p>It's the one called <span class="dev">CP2102 USB to UART Bridge Controller</span>, <span class="dev">Silicon Labs CP210x</span>, <span class="dev">CH340</span>, <span class="dev">USB Single Serial</span> or <span class="dev">USB-SERIAL</span>. Ignore anything that says <span class="dev">Bluetooth</span> or ends in <span class="dev">– Paired</span> (that tag means a Bluetooth device, even if it's called "serial port"), and headsets, speakers or printers you recognise.</p>
-    <p>Board not in the list at all, even though Windows chimed when you plugged it in? It needs the USB driver: install the <a href="https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers" rel="noopener">CP210x Universal Windows Driver</a> (unzip, right-click <code>silabser.inf</code> → Install), unplug and replug, try again.</p>
+    <p>Board not in the list at all, even though Windows chimed when you plugged it in? Do step 1b.</p>
     <p>Still not sure? Click Cancel, unplug the board, click Install again and look at the list: the one that disappeared is your board. Plug it back in and pick that one.</p>
     <p>Picked the wrong one? No harm done. The installer checks it's talking to an ESP32 before it writes anything.</p>
   </details>
@@ -81,7 +93,7 @@ details.tip p{margin:8px 0 0}
 <div class="card">
   <h2>If it doesn't go</h2>
   <ul>
-    <li><b>No port in the list:</b> try another cable or USB port. On Windows the board may need the <a href="https://www.silabs.com/developer-tools/usb-to-uart-bridge-vcp-drivers" rel="noopener">CP210x</a> or <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" rel="noopener">CH340</a> driver, depending on the little chip next to the USB connector.</li>
+    <li><b>No port in the list:</b> on Windows, do step 1b. If your board isn't an ELEGOO and the chip next to its USB connector says <b>CH340</b>, it needs the <a href="https://www.wch-ic.com/downloads/CH341SER_EXE.html" rel="noopener">CH340 driver</a> instead. Otherwise try another cable or USB port.</li>
     <li><b>"Failed to initialize" / stuck at connecting:</b> hold the board's <b>BOOT</b> button, click Install, release BOOT once it starts writing.</li>
     <li><b>Another program has the port:</b> close the Arduino IDE serial monitor or any other terminal.</li>
     <li><b>Skipped the Wi-Fi step, or it failed:</b> the device starts its own network, <code>RipeOMatic-xxxxxx</code>. Join it from your phone and a setup page opens.</li>
