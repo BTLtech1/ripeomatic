@@ -23,6 +23,32 @@ const shots = process.argv[2] || require('os').tmpdir();
   out.settingsInputs = await page.locator('#settings input, #settings select').count();
   out.chart0 = await page.textContent('#chart');
 
+  // first-run checklist: walk every step on the mock
+  await page.waitForSelector('#setup:not([hidden])', { timeout: 5000 });
+  out.setup0 = await page.textContent('#setupcount');
+  const step = async (act, after) => { await page.click(`#steps button[data-act="${act}"]`); await page.waitForTimeout(after || 400); };
+  await step('ntfynew', 600);
+  out.topicLink = await page.getAttribute('#steps a[href^="https://ntfy.sh/"]', 'href');
+  await step('ntfytest', 200);
+  await page.waitForFunction(() => /Phone alerts · working/.test(document.getElementById('steps').textContent), null, { timeout: 8000 });
+  await step('nudge', 3500);
+  await step('motorbad', 500);
+  out.flipped = /currently flipped/.test(await page.textContent('#steps'));
+  await step('nudge', 3500);
+  await step('motorok', 500);
+  await step('zero', 500);
+  await page.fill('#grams', '100');
+  await step('mass', 500);
+  await page.fill('#grams', '200');
+  await step('mass', 500);
+  page.once('dialog', dlg => dlg.accept());
+  await step('blade', 500);
+  await page.waitForFunction(() => /Blade calibration · /.test(document.getElementById('steps').textContent) && !document.querySelector('#steps .sstep:nth-child(4):not(.done)'), null, { timeout: 30000 });
+  out.setup4 = await page.textContent('#setupcount');
+  await step('measure', 500);
+  await page.waitForFunction(() => document.getElementById('setup').hidden, null, { timeout: 30000 });
+  out.setupDone = true;
+
   // measure
   await page.click('#btnMeasure');
   await page.waitForFunction(() => !document.getElementById('live').hidden, null, { timeout: 5000 });
@@ -77,6 +103,7 @@ const shots = process.argv[2] || require('os').tmpdir();
   if (errors.length) problems.push('console/network errors');
   if (!/N\/mm/.test(out.kval) || out.kval.startsWith('—')) problems.push('no stiffness shown after measuring');
   if (out.trendPoints2 < 2) problems.push('trend chart has fewer than 2 points');
+  if (!out.setupDone || !out.flipped || !out.topicLink) problems.push('setup checklist did not complete');
   if (out.savedInterval !== 8) problems.push('settings round trip failed');
   if (!/you said: firm/.test(out.rated)) problems.push('rating not reflected');
   if (problems.length) { console.error('SMOKE TEST FAILED: ' + problems.join('; ')); process.exit(1); }

@@ -31,8 +31,9 @@ settings = {
     "contact_threshold_n": 0.1, "preload_force_n": 0.2, "force_cap_n": 2.5, "blade_k_n_per_mm": 0.0, "sample_step_mm": 0.05,
     "approach_step_mm": 0.5, "safety_margin_mm": 2.0, "max_travel_mm": 42.0, "max_squish_mm": 12.0, "ripe_abs_n_per_mm": 1.5,
     "ripe_pct_of_first": 45.0, "swap_contact_mm": 6.0, "swap_stiffer_pct": 60.0, "servo_rest_deg": 0, "servo_tip_deg": 110,
-    "servo_hold_ms": 1500, "wifi_pass_set": True,
+    "servo_hold_ms": 1500, "wifi_pass_set": True, "ntfy_ok": False, "motor_checked": False,
 }
+notify = {"pending": False, "last_ok": False}
 state = {
     "job": "idle", "stage": "idle", "pos": 0.0, "force": 0.0, "raw": 2001.0, "error": "",
     "fruit": {"counter": 7, "loaded": False, "n": 0, "first_k": 0.0, "last_k": 0.0, "first_contact": 0.0, "last_contact": 0.0, "start": 0.0, "rating": "", "nr": False},
@@ -211,6 +212,8 @@ class H(BaseHTTPRequestHandler):
                     "job": state["job"], "stage": state["stage"], "pos_mm": state["pos"], "force_n": state["force"], "raw": state["raw"] + state["force"] / settings["hall_n_per_count"],
                     "calibrated": bool(settings["cal_points"]), "n_per_count": settings["hall_n_per_count"], "cal_points_n": settings["cal_points"].count(":"),
                     "blade_calibrated": settings["blade_k_n_per_mm"] > 0.01, "blade_k": settings["blade_k_n_per_mm"], "setup_done": bool(settings["cal_points"]) and settings["blade_k_n_per_mm"] > 0.01, "servo": False,
+                    "simulate": False, "ntfy_topic": settings["ntfy_topic"], "ntfy_ok": settings["ntfy_ok"], "notify_pending": notify["pending"], "notify_last_ok": notify["last_ok"],
+                    "motor_checked": settings["motor_checked"], "motor_invert": settings["motor_invert"], "online": True, "fruit_count": f["counter"],
                     "log_bytes": sum(len(r) + 1 for r in state["rows"]), "fs_free": 1400000, "next_auto_s": nxt, "error": state["error"],
                     "fruit": {"id": fruit_id(), "loaded": f["loaded"], "n": f["n"], "first_k": f["first_k"], "last_k": f["last_k"],
                               "first_contact": f["first_contact"], "last_contact": f["last_contact"], "start_epoch": int(f["start"]),
@@ -279,6 +282,28 @@ class H(BaseHTTPRequestHandler):
                 return self._json(400, {"ok": False, "error": "bad mass"})
             settings["cal_points"] += ("" if not settings["cal_points"] else ";") + f"{g:.1f}:{2001 + g / 1000 * 9.81 / 0.0035:.0f}"
             return self._json(200, {"ok": True, "n_per_count": 0.0035})
+        if u.path == "/api/ntfy/new":
+            settings["ntfy_topic"] = f"ripe-{settings['device_id']}-{random.randrange(10**6):06d}"
+            settings["ntfy_ok"] = False
+            return self._json(200, {"ok": True, "topic": settings["ntfy_topic"]})
+        if u.path == "/api/ntfy/test":
+            if not settings["ntfy_topic"]:
+                return self._json(400, {"ok": False, "error": "no topic set"})
+            notify["pending"] = True
+
+            def deliver():
+                time.sleep(1.5)
+                settings["ntfy_ok"] = True
+                notify.update({"pending": False, "last_ok": True})
+            threading.Thread(target=deliver, daemon=True).start()
+            return self._json(200, {"ok": True})
+        if u.path == "/api/motor/checked":
+            if d.get("ok") == "0":
+                settings["motor_invert"] = not settings["motor_invert"]
+                settings["motor_checked"] = False
+            else:
+                settings["motor_checked"] = True
+            return self._json(200, {"ok": True})
         if u.path == "/api/cal/clear":
             settings["cal_points"] = ""
             return self._json(200, {"ok": True})

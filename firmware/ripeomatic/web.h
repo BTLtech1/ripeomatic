@@ -54,6 +54,22 @@ class Web {
       json(200, String("{\"ok\":true,\"n_per_count\":") + String(S.hall_n_per_count, 6) + "}");
     });
     server.on("/api/cal/clear", HTTP_POST, [this] { M.clearCalibration(); ok(); });
+    // first-run checklist
+    server.on("/api/ntfy/new", HTTP_POST, [this] { M.newNtfyTopic(); json(200, String("{\"ok\":true,\"topic\":\"") + S.ntfy_topic + "\"}"); });
+    server.on("/api/ntfy/test", HTTP_POST, [this] {
+      if (!S.ntfy_topic[0]) return fail(400, "no topic set");
+      if (!M.net.online()) return fail(400, "not online");
+      if (M.busy()) return fail(409, "busy");
+      M.net.lastOk = false;
+      M.queueNotify("Ripe-O-Matic says hi", "Alerts are working. You'll hear from me when the avocado is ready.");
+      ok();   // sent from the job task; the page polls status.ntfy_ok
+    });
+    server.on("/api/motor/checked", HTTP_POST, [this] {
+      String r = server.arg("ok");
+      if (r == "0") { S.motor_invert = !S.motor_invert; S.motor_checked = false; }
+      else S.motor_checked = true;
+      settingsSave(); M.applySettings(); ok();
+    });
     server.on("/api/cal/blade", HTTP_POST, [this] { startJob(Job::BladeCal); });
     server.on("/api/scan", HTTP_GET, [this] { scan(); });
     server.on("/api/wifi", HTTP_POST, [this] { wifi(); });
@@ -120,6 +136,11 @@ class Web {
     addInt(o, "cal_points_n", M.calPointCount());
     addBool(o, "blade_calibrated", S.t.blade_k_n_per_mm > 0.01f);
     addBool(o, "setup_done", M.calibrated());
+    addBool(o, "simulate", SIMULATE);
+    addStr(o, "ntfy_topic", S.ntfy_topic); addBool(o, "ntfy_ok", S.ntfy_ok); addBool(o, "notify_pending", M.pendingTitle[0] != 0); addBool(o, "notify_last_ok", M.net.lastOk);
+    addBool(o, "motor_checked", S.motor_checked); addBool(o, "motor_invert", S.motor_invert);
+    addBool(o, "online", M.net.online());
+    addInt(o, "fruit_count", FR.counter);
     addNum(o, "blade_k", S.t.blade_k_n_per_mm, 2);
     addBool(o, "servo", ENABLE_SERVO);
     addInt(o, "log_bytes", M.store.logSize()); addInt(o, "fs_free", M.store.freeBytes());

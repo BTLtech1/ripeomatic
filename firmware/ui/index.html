@@ -70,6 +70,24 @@ details[open] summary::after{content:"–"}
 .step:first-child{border-top:0}
 .step .n{flex:none;width:24px;height:24px;border-radius:50%;background:var(--line);text-align:center;font-size:13px;line-height:24px;font-weight:600}
 .step p{margin:0 0 6px;font-size:14px}
+.setup{border-color:var(--green)}
+.setuphead{display:flex;align-items:center;justify-content:space-between}
+.setuphead h2{font-size:15px;text-transform:none;letter-spacing:0;color:var(--ink)}
+.setuphead h2 span{color:var(--mute);font-weight:500}
+.sstep{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.sstep:first-child{border-top:0}
+.sstep .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--line);text-align:center;font-size:13px;line-height:26px;font-weight:600}
+.sstep.done .n{background:var(--green);color:#fff}
+.sstep.done .body{color:var(--mute)}
+.sstep.done .body b{color:var(--mute)}
+.sstep .body{flex:1;min-width:0}
+.sstep .body p{margin:0 0 8px;font-size:14px}
+.sstep .body .row{margin-top:6px}
+.sstep .body a{color:var(--green);word-break:break-all}
+.sstep.locked{opacity:.5}
+.sstep.locked .row{display:none}
+.ok{color:var(--green);font-weight:600}
+.bad{color:var(--danger);font-weight:600}
 .warn{background:color-mix(in srgb,var(--ripe) 15%,transparent);border:1px solid var(--ripe);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;max-width:90vw}
 #toast.show{opacity:1;transform:translateX(-50%)}
@@ -85,7 +103,11 @@ details[open] summary::after{content:"–"}
   <span class="pill" id="pill">…</span>
 </header>
 
-<div class="warn" id="calwarn" hidden>Not calibrated yet: readings are in made-up units until you run the force (coins) and blade (jar) calibrations below, and the force cap is a guess, so go easy on the first fruit. Automatic readings stay off until both are done.</div>
+<div class="card setup" id="setup" hidden>
+  <div class="setuphead"><h2 style="margin:0">Set up <span id="setupcount"></span></h2><button class="quiet" id="setupHide" style="padding:4px 8px;min-height:0">hide</button></div>
+  <div class="bar" style="margin:8px 0 12px"><i id="setupbar"></i></div>
+  <div id="steps"></div>
+</div>
 
 <div class="card">
   <div class="hero">
@@ -125,11 +147,9 @@ details[open] summary::after{content:"–"}
   <details id="d-cal">
     <summary>Calibration</summary>
     <div class="kv" id="calstate" style="margin-bottom:8px"></div>
-    <div class="step"><span class="n">1</span><div><p><b>Force zero.</b> Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad. Nothing else on it, then:</p><button id="btnZero">Capture zero</button> <span class="kv">raw: <b id="raw">—</b></span></div></div>
-    <div class="step"><span class="n">2</span><div><p><b>Known mass.</b> Add coins to the cap (US nickel = 5.000 g; 20 nickels = 100 g) and enter the total grams. Two or three different masses give a better fit.</p>
-      <div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button id="btnMass" style="flex:0 0 auto">Capture</button><button id="btnCalClear" class="quiet">Clear points</button></div></div></div>
-    <div class="step"><span class="n">3</span><div><p><b>Blade.</b> Stand the machine back up, put something hard in the nest (a jar, a can) and press it. The slope is the machine's own spring, <code>blade_k</code>, which gets subtracted from every reading. Redo it if you reprint the blade or sled.</p><button id="btnBlade">Measure blade stiffness</button></div></div>
-    <p class="kv" style="margin:8px 0 4px">Alternative to coins: put a kitchen scale in the nest and press it. Read the peak grams and compare with the force the device reports; adjust <code>hall_n_per_count</code> by the ratio.</p>
+    <p class="kv">Both calibrations are in the setup checklist at the top of the page. Redo them after reprinting the blade or sled, or if readings look off.</p>
+    <div class="row" style="padding:4px 0 10px"><button id="btnSetupShow">Show the setup checklist</button><button id="btnCalClear" class="quiet">Clear force points</button></div>
+    <p class="kv">Alternative to coins: put a kitchen scale in the nest and press it. Read the peak grams and compare with the force the device reports; adjust <code>hall_n_per_count</code> by the ratio.</p>
   </details>
 
   <details id="d-motor">
@@ -155,6 +175,7 @@ details[open] summary::after{content:"–"}
       <div class="full row"><button id="btnWifi" class="primary">Save &amp; reboot</button><button id="btnScan" class="quiet">Rescan</button></div>
       <div class="hint" id="devinfo"></div>
       <div class="full row">
+        <button id="btnSetupShow2" class="quiet">Show setup checklist</button>
         <button id="btnReboot" class="quiet">Reboot</button>
         <button id="btnResetFruit" class="quiet">Forget this avocado</button>
         <button id="btnWipe" class="quiet" style="color:var(--danger)">Erase all readings</button>
@@ -228,7 +249,7 @@ function render() {
   $('pill').textContent = busy ? (s.job === 'measure' ? 'measuring: ' + s.stage : s.job) : (s.next_auto_s > 0 ? 'next in ' + hms(s.next_auto_s) : 'idle');
   $('pill').className = 'pill' + (busy ? ' busy' : '');
   $('ver').textContent = 'fw ' + s.fw + ' · ' + s.hw + ' · id ' + s.device_id;
-  $('calwarn').hidden = !!s.setup_done;
+  renderSetup(s);
   $('servo').hidden = !s.servo;
 
   const v = $('verdict');
@@ -257,7 +278,8 @@ function render() {
 
   $('live').hidden = !busy;
   $('btnAbort').hidden = !busy;
-  $('btnMeasure').disabled = busy; $('btnNew').disabled = busy; $('btnBlade').disabled = busy; $('btnHome').disabled = busy;
+  $('btnMeasure').disabled = busy; $('btnNew').disabled = busy; $('btnHome').disabled = busy;
+  document.querySelectorAll('#steps button').forEach(b => { if (!b.classList.contains('nobusy')) b.disabled = busy; });
   document.querySelectorAll('[data-jog]').forEach(b => b.disabled = busy);
   if (busy) {
     const stageTxt = {homing: 'Homing against the end stop', taring: 'Zeroing the sensor', approach: 'Approaching', creep: 'Feeling for the skin', preload: 'Seating the fruit', measure: 'Pressing', retract: 'Backing off', done: 'Done'}[s.stage] || s.stage;
@@ -267,7 +289,7 @@ function render() {
     if (tab === 'curve') drawCurve(true);
   }
   $('pos').textContent = fmt(s.pos_mm, 2); $('forcenow').textContent = fmt(s.force_n, 3);
-  $('raw').textContent = s.raw != null ? Math.round(s.raw) : '—';
+  const rawEl = $('raw'); if (rawEl) rawEl.textContent = s.raw != null ? Math.round(s.raw) : '—';
   $('calstate').innerHTML = 'blade_k: <b>' + (s.blade_calibrated ? fmt(s.blade_k) + ' N/mm' : 'not measured') + '</b> · force: <b>' + (s.calibrated ? fmt(s.n_per_count * 1000, 3) + ' mN/count, ' + s.cal_points_n + ' point' + (s.cal_points_n === 1 ? '' : 's') : 'not calibrated') + '</b>';
   $('devinfo').textContent = 'id ' + s.device_id + ' · ' + (s.ip || '') + (s.rssi ? ' · ' + s.rssi + ' dBm' : '') + ' · log ' + Math.round((s.log_bytes || 0) / 1024) + ' kB · free ' + Math.round((s.fs_free || 0) / 1024) + ' kB · up ' + hms(s.uptime_s);
   document.querySelectorAll('#rate button').forEach(b => b.classList.toggle('on', b.dataset.r === f.rating));
@@ -323,11 +345,87 @@ $('btnMeasure').onclick = act('/api/measure', null, 'Measuring…');
 $('btnNew').onclick = async () => { if (!confirm('Start tracking a new avocado? The current one is kept in the log.')) return; act('/api/newfruit', null, 'New avocado. Measuring…')(); };
 $('btnAbort').onclick = act('/api/abort', null, 'Stopping');
 $('btnHome').onclick = act('/api/home', null, 'Homing');
-$('btnBlade').onclick = async () => { if (!confirm('Is something hard (jar, can) in the nest?')) return; act('/api/cal/blade', null, 'Measuring the blade…')(); };
-$('btnZero').onclick = act('/api/cal/zero', null, 'Zero captured');
-$('btnMass').onclick = () => { const g = parseFloat($('grams').value); if (!(g > 0)) return toast('Enter the grams on the pad'); act('/api/cal/mass', {g}, 'Point captured')(); };
 $('btnCalClear').onclick = act('/api/cal/clear', null, 'Calibration points cleared');
+$('btnSetupShow').onclick = () => { setupHidden(false); $('setup').hidden = false; window.scrollTo({top: 0, behavior: 'smooth'}); };
+$('setupHide').onclick = () => { setupHidden(true); $('setup').hidden = true; };
+
+// ---- first-run checklist ----------------------------------------------------
+const ls = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+const setupHidden = v => { if (v === undefined) return ls.get('setupHidden') === '1'; ls.set('setupHidden', v ? '1' : '0'); };
+let stepsKey = '', testPending = false, testResult = '';
+function renderSetup(s) {
+  const skippedNtfy = ls.get('ntfySkipped') === '1';
+  const steps = [
+    { id: 'ntfy', title: 'Phone alerts', done: !!s.ntfy_ok || skippedNtfy },
+    { id: 'motor', title: 'Motor direction', done: !!s.motor_checked || !!s.simulate },
+    { id: 'force', title: 'Force calibration', done: (s.cal_points_n || 0) >= 2 || (!!s.calibrated && ls.get('forceCalDone') === '1') },
+    { id: 'blade', title: 'Blade calibration', done: !!s.blade_calibrated },
+    { id: 'fruit', title: 'First avocado', done: (s.fruit_count || 0) > 0 && !!s.fruit && s.fruit.n > 0 },
+  ];
+  const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
+  const card = $('setup');
+  card.hidden = allDone || setupHidden();
+  $('setupcount').textContent = allDone ? '· done' : '· ' + nDone + ' of ' + steps.length;
+  $('setupbar').style.width = (100 * nDone / steps.length) + '%';
+  if (card.hidden) return;
+  // only rebuild the markup when the step states change, so typing in inputs survives polling
+  const key = steps.map(x => x.done ? 1 : 0).join('') + '|' + (s.ntfy_topic || '') + '|' + s.motor_invert + '|' + s.online + '|' + testPending + testResult + '|' + s.cal_points_n;
+  if (key === stepsKey) return;
+  stepsKey = key;
+  let firstOpen = steps.findIndex(x => !x.done);
+  $('steps').innerHTML = steps.map((st, i) => {
+    const locked = !st.done && i > firstOpen;   // one thing at a time: later steps show their title only
+    let body = '';
+    if (st.id === 'ntfy') {
+      if (st.done) body = `<p><b>Phone alerts</b> · ${s.ntfy_ok ? 'working' : 'skipped'}${s.ntfy_topic ? ' · topic <code>' + esc(s.ntfy_topic) + '</code>' : ''}</p>`;
+      else if (!s.ntfy_topic) body = `<p><b>Phone alerts.</b> Get a push on your phone when the avocado is almost ripe and when it's ready. Free, no account, through the ntfy app.</p><div class="row"><button class="primary" data-act="ntfynew">Set up alerts</button><button class="quiet" data-act="ntfyskip">Skip for now</button></div>`;
+      else body = `<p><b>Phone alerts.</b> On your phone: install <b>ntfy</b> (<a href="https://apps.apple.com/app/ntfy/id1625396347" target="_blank" rel="noopener">iPhone</a> · <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy" target="_blank" rel="noopener">Android</a>), then open this link and tap <b>Subscribe</b>:</p><p><a href="https://ntfy.sh/${esc(s.ntfy_topic)}" target="_blank" rel="noopener">https://ntfy.sh/${esc(s.ntfy_topic)}</a></p><p>Then:</p><div class="row"><button class="primary" data-act="ntfytest" ${testPending || !s.online ? 'disabled' : ''}>${testPending ? 'Sending…' : 'Send a test alert'}</button><button class="quiet" data-act="ntfyskip">Skip for now</button></div>${testResult === 'fail' ? '<p class="bad" style="margin-top:8px">It didn\'t go through. Is the device online? Try again in a few seconds.</p>' : ''}${!s.online ? '<p class="kv" style="margin-top:6px">The device isn\'t online yet, so it can\'t send.</p>' : ''}`;
+    } else if (st.id === 'motor') {
+      if (st.done) body = `<p><b>Motor direction</b> · ${s.simulate ? 'no motor in simulation' : 'checked'}</p>`;
+      else body = `<p><b>Motor direction.</b> Tap <b>Nudge</b> and watch the sled.</p><div class="row"><button class="primary" data-act="nudge">Nudge the sled 1 mm</button></div><p style="margin-top:10px">Which way did it move?</p><div class="row"><button data-act="motorok">Toward the nest</button><button data-act="motorbad">Away from the nest</button></div>${s.motor_invert ? '<p class="kv" style="margin-top:6px">Direction is currently flipped.</p>' : ''}`;
+    } else if (st.id === 'force') {
+      if (st.done) body = `<p><b>Force calibration</b> · ${s.cal_points_n} point${s.cal_points_n === 1 ? '' : 's'}</p>`;
+      else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p><p>1 · Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad, nothing else, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cap (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Two different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${s.cal_points_n ? '<p class="ok" style="margin-top:8px">' + s.cal_points_n + ' point captured. Add a second amount, or:</p><div class="row"><button data-act="forcedone">Continue with one point</button></div>' : ''}`;
+    } else if (st.id === 'blade') {
+      if (st.done) body = `<p><b>Blade calibration</b> · ${fmt(s.blade_k)} N/mm</p>`;
+      else body = `<p><b>Blade calibration</b> measures the machine's own flex so it can be subtracted from every reading.</p><p>Stand the machine back up. Put something hard in the nest where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade</button></div>`;
+    } else if (st.id === 'fruit') {
+      if (st.done) body = `<p><b>First avocado</b> · measured</p>`;
+      else body = `<p><b>First avocado.</b> Take the jar out, put an avocado in the nest with its side toward the pad, then:</p><div class="row"><button class="primary" data-act="measure">Measure now</button></div><p class="kv" style="margin-top:6px">After this, readings run on their own every 12 hours.</p>`;
+    }
+    if (locked) body = `<p><b>${st.title}</b></p>`;
+    return `<div class="sstep${st.done ? ' done' : ''}${locked ? ' locked' : ''}"><span class="n">${st.done ? '✓' : i + 1}</span><div class="body">${body}</div></div>`;
+  }).join('');
+  if (allDone) $('steps').innerHTML += '<p class="ok" style="margin:8px 0 0">All set. Readings run automatically; you\'ll get an alert when it\'s ready.</p>';
+}
+$('steps').addEventListener('click', async ev => {
+  const b = ev.target.closest('button[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  try {
+    if (a === 'ntfynew') { await post('/api/ntfy/new'); toast('Alert channel created'); }
+    else if (a === 'ntfyskip') { ls.set('ntfySkipped', '1'); }
+    else if (a === 'ntfytest') { testPending = true; testResult = ''; await post('/api/ntfy/test'); waitForTest(); }
+    else if (a === 'nudge') { await post('/api/jog', {mm: 1}); toast('Nudging'); }
+    else if (a === 'motorok') { await post('/api/motor/checked', {ok: 1}); toast('Direction confirmed'); }
+    else if (a === 'motorbad') { await post('/api/motor/checked', {ok: 0}); toast('Flipped. Nudge again to check.'); }
+    else if (a === 'zero') { await post('/api/cal/zero'); ls.set('forceCalDone', '0'); toast('Zero captured'); }
+    else if (a === 'forcedone') { ls.set('forceCalDone', '1'); }
+    else if (a === 'mass') { const g = parseFloat($('grams').value); if (!(g > 0)) return toast('Type the grams on the pad'); await post('/api/cal/mass', {g}); toast('Captured'); }
+    else if (a === 'blade') { if (!confirm('Is something hard (a jar, a can) in the nest?')) return; await post('/api/cal/blade'); toast('Measuring the blade…'); }
+    else if (a === 'measure') { await post('/api/measure'); toast('Measuring…'); }
+    stepsKey = ''; poll();
+  } catch (e) { toast(e.message); }
+});
+async function waitForTest() {
+  for (let i = 0; i < 20; i++) {
+    await new Promise(r => setTimeout(r, 1000));
+    let st; try { st = await api('/api/status'); } catch (e) { continue; }
+    if (!st.notify_pending) { testPending = false; testResult = st.ntfy_ok ? 'ok' : 'fail'; if (st.ntfy_ok) toast('Delivered'); stepsKey = ''; poll(); return; }
+  }
+  testPending = false; testResult = 'fail'; stepsKey = ''; poll();
+}
 $('btnTip').onclick = act('/api/tip', null, 'Tipping');
+$('btnSetupShow2').onclick = () => $('btnSetupShow').onclick();
 $('btnReboot').onclick = () => { if (confirm('Reboot the device?')) act('/api/reboot')(); };
 $('btnResetFruit').onclick = () => { if (confirm('Forget the current avocado? Its readings stay in the log.')) act('/api/reset', {what: 'fruit'}, 'Forgotten')(); };
 $('btnWipe').onclick = () => { if (confirm('Erase ALL readings on the device? Download the CSV first if you want them.')) act('/api/reset', {what: 'data'}, 'Erased')(); };

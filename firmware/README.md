@@ -34,15 +34,15 @@ No libraries to install. If you edit `ui/index.html`, run `python3 tools/build_u
 
 ## First run
 
-1. Wi-Fi. If you used the web installer you already did this. Otherwise the serial monitor prints `Setup AP: RipeOMatic-xxxxxx`: join that Wi-Fi from your phone; the setup page pops up (or open `http://192.168.4.1`). Open *Wi-Fi & device*, pick your network, *Save & reboot*.
-2. Back on your own Wi-Fi, open `http://ripeomatic.local` (or the IP from the serial monitor). Add to home screen.
-3. *Motor*: tap **1 ▶**. The sled must move **toward the nest**. If it goes the other way, flip `motor_invert` in Settings.
-4. *Calibration*, in order:
-   - **Force**: stand the machine on its motor end so the pad points up, balance a bottle cap on the pad, *Capture zero*; add nickels (5.000 g each), enter the grams, *Capture*. Two or three masses are better than one.
-   - **Blade**: stand it back up, put a glass jar in the nest, *Measure blade stiffness*. This records the machine's own spring (`blade_k`, ~3 N/mm) so it can be subtracted from every reading. Redo it if you reprint the blade or sled. (If you redo the force calibration later, `blade_k` is rescaled automatically.)
-   Until both are done the page shows a warning, the force cap is a guess, the squish backstop is shortened to 3 mm, and **automatic readings stay off**: you press *Measure now* yourself.
-5. Put an avocado in, **Measure now**. Readings then run on the schedule.
-6. Settings → `ntfy topic`: any unguessable name. Install the ntfy app, subscribe to the same topic. That's the notification setup.
+The device page opens with a **setup checklist** that walks through everything, one step at a time:
+
+1. **Phone alerts.** *Set up alerts* creates a private ntfy topic; install the free ntfy app, tap the link to subscribe, *Send a test alert*. (Or skip.)
+2. **Motor direction.** *Nudge the sled 1 mm*, then answer *Toward the nest* or *Away from the nest*; the firmware flips the direction itself if needed.
+3. **Force calibration.** Machine on its motor end, bottle cap on the pad: *Capture zero*; add nickels (5.000 g each), type the grams, *Capture*. Two amounts are better than one.
+4. **Blade calibration.** Machine upright, a glass jar in the nest: *Measure the blade*. Records the machine's own spring (`blade_k`) so it can be subtracted from every reading. (If you redo the force calibration later, `blade_k` is rescaled automatically.)
+5. **First avocado.** Put one in, *Measure now*. From then on readings run every 12 h.
+
+Until steps 3 and 4 are done the force cap is a guess, the squish backstop is shortened to 3 mm, and automatic readings stay off. Wi-Fi was already set by the installer; without it, the device starts an access point `RipeOMatic-xxxxxx` with a setup page (or open `http://192.168.4.1`).
 
 When you eat the avocado, tap how it was (**Perfect** is the label that matters), and whether it bruised if you looked. That row is what turns everyone's readings into a real ripeness threshold.
 

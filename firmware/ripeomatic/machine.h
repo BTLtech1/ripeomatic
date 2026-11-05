@@ -94,6 +94,17 @@ class Machine {
 
   void abort() { if (busy()) stepper.requestAbort(); }
 
+  // A fresh, unguessable ntfy topic: ripe-<device id>-<6 random chars>.
+  void newNtfyTopic() {
+    static const char* alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+    char rnd[7];
+    for (int i = 0; i < 6; i++) rnd[i] = alphabet[esp_random() % 31];
+    rnd[6] = 0;
+    snprintf(S.ntfy_topic, sizeof S.ntfy_topic, "ripe-%s-%s", S.device_id, rnd);
+    S.ntfy_ok = false;
+    settingsSave();
+  }
+
   // Queue a push notification; sent from the job task when it is free.
   void queueNotify(const char* title, const char* msg) {
     strlcpy(pendingTitle, title, sizeof pendingTitle);

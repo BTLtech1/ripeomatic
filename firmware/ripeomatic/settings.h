@@ -19,6 +19,9 @@ struct Settings {
   char ntfy_server[64] = "https://ntfy.sh";
   char ntfy_topic[48]  = "";
   bool notify_nearly   = true;
+  bool ntfy_ok         = false;        // a push has gone through at least once
+  // first-run checklist
+  bool motor_checked   = false;        // user confirmed the sled moves toward the nest
   // fruit
   char variety[24]     = "hass";
   // schedule
@@ -63,6 +66,8 @@ inline const FieldDef* settingsFields(int& count) {
     {"ntfy_server",       "ntfy_srv", F_STR,   S.ntfy_server,        sizeof S.ntfy_server, false},
     {"ntfy_topic",        "ntfy_top", F_STR,   S.ntfy_topic,         sizeof S.ntfy_topic,  false},
     {"notify_nearly",     "ntf_near", F_BOOL,  &S.notify_nearly,     0, false},
+    {"ntfy_ok",           "ntfy_ok",  F_BOOL,  &S.ntfy_ok,           0, false},
+    {"motor_checked",     "mot_chk",  F_BOOL,  &S.motor_checked,     0, false},
     {"variety",           "variety",  F_STR,   S.variety,            sizeof S.variety,     false},
     {"auto_enabled",      "auto",     F_BOOL,  &S.auto_enabled,      0, false},
     {"interval_h",        "interval", F_FLOAT, &S.interval_h,        0, false},

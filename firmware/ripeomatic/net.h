@@ -90,6 +90,7 @@ class Net {
   }
 
   char apSsid[40] = "";
+  bool lastOk = false;   // result of the most recent push attempt
 
  private:
   bool post(HTTPClient& http, const char* title, const char* message, int priority, const char* tags) {
@@ -99,7 +100,10 @@ class Net {
     http.setTimeout(8000);
     int code = http.POST((uint8_t*)message, strlen(message));
     Serial.printf("ntfy %d: %s\n", code, title);
-    return code >= 200 && code < 300;
+    bool ok = code >= 200 && code < 300;
+    if (ok && !S.ntfy_ok) { S.ntfy_ok = true; settingsSave(); }   // the setup checklist ticks "alerts work"
+    lastOk = ok;
+    return ok;
   }
 
   DNSServer dns;
