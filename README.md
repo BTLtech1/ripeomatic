@@ -98,7 +98,6 @@ The nest hangs on two side pins through the avocado's centre of gravity, at the 
 
 ## Prior art
 
-- **AvoRipe** (2020): a DIY ESP8266 gripper with a force sensor and a color sensor. Different approach: it squeezes with a servo and reads a load cell once, with no travel measurement, no repeat readings over days and no shared data.
 - Commercial retail and packhouse scanners (NIR, acoustic tap, laser vibrometry) work on the same physics but are built for stores.
 
 ## License
