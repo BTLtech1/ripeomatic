@@ -45,7 +45,7 @@ class Hall {
     if (pen > 0) f = pen * (k_fruit * k_blade) / (k_fruit + k_blade);
     float npc = S.hall_n_per_count != 0 ? S.hall_n_per_count : 0.0035f;
     float noise = ((int)(esp_random() % 1000) - 500) / 500.0f * 1.5f / sqrtf((float)samples);
-    delay(samples / 10);   // roughly what the real ADC takes
+    delay(samples / 50);   // a little of what the real ADC takes
     return 2000.0f + f / npc + noise;
   }
 #endif

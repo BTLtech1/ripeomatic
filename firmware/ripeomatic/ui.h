@@ -237,7 +237,7 @@ pollTimer = setTimeout(poll, st && st.job !== 'idle' ? 1000 : 3000);
 function render() {
 const s = st, f = s.fruit || {}, busy = s.job !== 'idle';
 $('sub').textContent = (s.ap_mode ? 'setup mode: ' + s.ap_ssid : 'http://' + s.host + '.local') + (s.time ? '' : ' · clock not set');
-$('pill').textContent = busy ? (s.job === 'measure' ? 'measuring: ' + s.stage : s.job) : (s.next_auto_s > 0 ? 'next in ' + hms(s.next_auto_s) : 'idle');
+$('pill').textContent = busy ? (s.job === 'measure' ? 'measuring: ' + s.stage : s.job) : (s.next_auto_s > 0 ? 'next in ' + hms(s.next_auto_s) : (s.simulate ? 'simulation · idle' : 'idle'));
 $('pill').className = 'pill' + (busy ? ' busy' : '');
 $('ver').textContent = 'fw ' + s.fw + ' · ' + s.hw + ' · id ' + s.device_id;
 renderSetup(s);
@@ -245,7 +245,7 @@ $('servo').hidden = !s.servo;
 const v = $('verdict');
 const names = {unknown: '—', hard: 'Hard', firming: 'Softening', nearly: 'Almost ripe', ripe: 'Ripe!'};
 let verdict = f.verdict || 'unknown', msg = '';
-if (!f.loaded && !busy) { verdict = 'unknown'; msg = s.last && s.last.outcome === 'empty' ? 'The nest is empty. Put an avocado in and tap Measure now.' : 'No reading yet. Put an avocado in the nest and tap Measure now.'; }
+if (!f.loaded && !busy) { verdict = 'unknown'; msg = s.last && s.last.outcome === 'empty' ? 'The nest is empty. Put an avocado in and tap Measure now.' : (s.simulate ? 'Simulation: a virtual avocado is in the nest. Tap Measure now to press it.' : 'No reading yet. Put an avocado in the nest and tap Measure now.'); }
 else if (f.n === 1) msg = 'First reading taken. The trend starts with the next one.';
 else if (verdict === 'ripe') msg = 'Eat it today or move it to the fridge.';
 else if (verdict === 'nearly') msg = 'Probably ready tomorrow. Checking more often now.';
@@ -372,13 +372,13 @@ if (st.done) body = `<p><b>Motor direction</b> · ${s.simulate ? 'no motor in si
 else body = `<p><b>Motor direction.</b> Tap <b>Nudge</b> and watch the sled.</p><div class="row"><button class="primary" data-act="nudge">Nudge the sled 1 mm</button></div><p style="margin-top:10px">Which way did it move?</p><div class="row"><button data-act="motorok">Toward the nest</button><button data-act="motorbad">Away from the nest</button></div>${s.motor_invert ? '<p class="kv" style="margin-top:6px">Direction is currently flipped.</p>' : ''}`;
 } else if (st.id === 'force') {
 if (st.done) body = `<p><b>Force calibration</b> · ${s.cal_points_n} point${s.cal_points_n === 1 ? '' : 's'}</p>`;
-else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p><p>1 · Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad, nothing else, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cap (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Two different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${s.cal_points_n ? '<p class="ok" style="margin-top:8px">' + s.cal_points_n + ' point captured. Add a second amount, or:</p><div class="row"><button data-act="forcedone">Continue with one point</button></div>' : ''}`;
+else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<p>1 · Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad, nothing else, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cap (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Two different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${s.cal_points_n ? '<p class="ok" style="margin-top:8px">' + s.cal_points_n + ' point captured. Add a second amount, or:</p><div class="row"><button data-act="forcedone">Continue with one point</button></div>' : ''}`;
 } else if (st.id === 'blade') {
 if (st.done) body = `<p><b>Blade calibration</b> · ${fmt(s.blade_k)} N/mm</p>`;
-else body = `<p><b>Blade calibration</b> measures the machine's own flex so it can be subtracted from every reading.</p><p>Stand the machine back up. Put something hard in the nest where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade</button></div>`;
+else body = `<p><b>Blade calibration</b> measures the machine's own flex so it can be subtracted from every reading.</p>${s.simulate ? '<p class="kv">Simulation: tap it and watch the status pill; a pretend press runs in about ten seconds.</p>' : ''}<p>Stand the machine back up. Put something hard in the nest where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade</button></div>`;
 } else if (st.id === 'fruit') {
 if (st.done) body = `<p><b>First avocado</b> · measured</p>`;
-else body = `<p><b>First avocado.</b> Take the jar out, put an avocado in the nest with its side toward the pad, then:</p><div class="row"><button class="primary" data-act="measure">Measure now</button></div><p class="kv" style="margin-top:6px">After this, readings run on their own every 12 hours.</p>`;
+else body = `<p><b>First avocado.</b> ${s.simulate ? 'A virtual avocado is already in the nest; it softens over about 20 minutes, so take a few readings and watch the chart.' : 'Take the jar out, put an avocado in the nest with its side toward the pad, then:'}</p><div class="row"><button class="primary" data-act="measure">Measure now</button></div><p class="kv" style="margin-top:6px">After this, readings run on their own every 12 hours.</p>`;
 }
 if (locked) body = `<p><b>${st.title}</b></p>`;
 return `<div class="sstep${st.done ? ' done' : ''}${locked ? ' locked' : ''}"><span class="n">${st.done ? '✓' : i + 1}</span><div class="body">${body}</div></div>`;

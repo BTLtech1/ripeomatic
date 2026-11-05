@@ -15,6 +15,9 @@ class Stepper28BYJ {
     if (mm_s < 0.01f) mm_s = 0.01f;
     step_us_ = (uint32_t)(1e6f / (mm_s * spmm_));
     if (step_us_ < 900) step_us_ = 900;   // ~1100 half-steps/s is already past what a 28BYJ-48 does reliably at 5 V
+#if SIMULATE
+    step_us_ /= 20;                       // no real motor: a whole reading in ~10 s instead of 3 min
+#endif
   }
 
   float posMm() const { return steps_ / spmm_; }
