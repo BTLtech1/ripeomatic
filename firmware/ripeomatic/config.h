@@ -25,7 +25,9 @@
 #define PIN_LED 2
 
 // v2: SG90 servo that tips the nest. Set ENABLE_SERVO 1 once it is fitted.
+#ifndef ENABLE_SERVO
 #define ENABLE_SERVO 0
+#endif
 #define PIN_SERVO 25
 
 // Optional DS18B20 for room_temp_c. Not implemented yet; reserved pin.
@@ -34,7 +36,10 @@
 // ---- Behaviour -------------------------------------------------------------
 // Run without any hardware: a virtual avocado that softens over time.
 // Lets you try the web UI on a bare ESP32 before the printer finishes.
+// (CI builds both variants with -DSIMULATE=1 / 0, hence the #ifndef.)
+#ifndef SIMULATE
 #define SIMULATE 0
+#endif
 
 // Arduino OTA updates (upload from the IDE over Wi-Fi). Hostname = mDNS name.
 #define ENABLE_OTA 1

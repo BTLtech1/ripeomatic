@@ -1,0 +1,70 @@
+# Compiles the firmware with the real ESP32 toolchain and keeps the binaries
+# as artifacts: ripeomatic-<variant>.bin is a single image flashable at 0x0
+# (that's what the web installer uses).
+name: build
+
+on:
+  pull_request:
+    paths: ["firmware/ripeomatic/**", ".github/workflows/build.yml"]
+  push:
+    branches: [main]
+    paths: ["firmware/ripeomatic/**", ".github/workflows/build.yml"]
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: ripeomatic
+            flags: "-DSIMULATE=0"
+          - variant: ripeomatic-simulate
+            flags: "-DSIMULATE=1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arduino/setup-arduino-cli@v2
+      - name: Cache the ESP32 core
+        uses: actions/cache@v4
+        with:
+          path: ~/.arduino15
+          key: arduino15-esp32-${{ runner.os }}-v1
+      - name: Install the ESP32 core
+        run: |
+          arduino-cli config init --overwrite
+          arduino-cli config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32
+          arduino-cli core list
+      - name: Compile (${{ matrix.variant }})
+        run: |
+          arduino-cli compile \
+            --fqbn esp32:esp32:esp32:PartitionScheme=default,FlashSize=4M \
+            --build-property "compiler.cpp.extra_flags=${{ matrix.flags }}" \
+            --export-binaries --warnings default \
+            firmware/ripeomatic
+          ls -la firmware/ripeomatic/build/esp32.esp32.esp32/
+      - name: Merge into one image
+        run: |
+          pip install -q esptool
+          B=firmware/ripeomatic/build/esp32.esp32.esp32
+          CORE=$(ls -d ~/.arduino15/packages/esp32/hardware/esp32/* | tail -1)
+          BOOT_APP0=$(find ~/.arduino15/packages/esp32 -name boot_app0.bin | head -1)
+          mkdir -p out
+          if [ -f "$B/ripeomatic.ino.merged.bin" ]; then
+            cp "$B/ripeomatic.ino.merged.bin" out/${{ matrix.variant }}.bin
+          else
+            python3 -m esptool --chip esp32 merge_bin -o out/${{ matrix.variant }}.bin --flash_mode dio --flash_freq 40m --flash_size 4MB \
+              0x1000 "$B/ripeomatic.ino.bootloader.bin" 0x8000 "$B/ripeomatic.ino.partitions.bin" 0xe000 "$BOOT_APP0" 0x10000 "$B/ripeomatic.ino.bin"
+          fi
+          cp "$B/ripeomatic.ino.bin" out/${{ matrix.variant }}.app.bin
+          echo "core: $CORE" > out/${{ matrix.variant }}.txt
+          echo "commit: ${{ github.sha }}" >> out/${{ matrix.variant }}.txt
+          ls -la out
+      - uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.variant }}
+          path: out/
+          retention-days: 90
