@@ -30,6 +30,7 @@ esp-web-install-button button{font:inherit;font-weight:600;font-size:15px;paddin
 details.tip{margin:4px 0 12px;font-size:15px}
 details.tip summary{cursor:pointer;color:var(--green);font-weight:600}
 details.tip p{margin:8px 0 0}
+.dev{white-space:nowrap;font-weight:600;background:var(--border);padding:1px 7px;border-radius:6px}
 .unsupported{color:var(--accent);font-size:14px}
 .note{font-size:14px;color:var(--ink-2)}
 .foot{color:var(--muted);font-size:13px;margin-top:18px}
@@ -52,7 +53,7 @@ details.tip p{margin:8px 0 0}
   <h2>2 · Install</h2>
   <p>Click <b>Install</b>. A list of ports pops up: pick the board, click <b>Connect</b>, and wait about a minute. When it asks, type your Wi-Fi; it then links straight to your device.</p>
   <details class="tip"><summary>Which one in the list is the board?</summary>
-    <p>It's usually called <b>CP210x</b>, <b>Silicon Labs</b>, <b>CH340</b>, <b>USB Single Serial</b>, <b>USB-SERIAL</b> or just <b>serial port (COMx)</b>. Ignore anything that says <b>Bluetooth</b>, and headsets, speakers or printers you recognise.</p>
+    <p>It's the one called <span class="dev">serial port (COMx)</span>, <span class="dev">CP210x</span>, <span class="dev">Silicon Labs</span>, <span class="dev">CH340</span>, <span class="dev">USB Single Serial</span> or <span class="dev">USB-SERIAL</span>. Ignore anything that says <span class="dev">Bluetooth</span>, and headsets, speakers or printers you recognise.</p>
     <p>Still not sure? Click Cancel, unplug the board, click Install again and look at the list: the one that disappeared is your board. Plug it back in and pick that one.</p>
     <p>Picked the wrong one? No harm done. The installer checks it's talking to an ESP32 before it writes anything.</p>
   </details>
