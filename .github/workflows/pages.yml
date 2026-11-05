@@ -50,7 +50,7 @@ jobs:
           cp data/all.csv _site/data/all.csv 2>/dev/null || true
           cp data/sample/sample.csv _site/data/sample/sample.csv
           cp install/index.html _site/install/index.html
-          cp fw/ripeomatic.bin fw/ripeomatic-simulate.bin _site/install/firmware/
+          cp fw/*.bin _site/install/firmware/
           VERSION=$(sed -n 's/^#define FW_VERSION "\(.*\)"/\1/p' firmware/ripeomatic/config.h)
           BUILD="$(date -u +%Y-%m-%d) · ${GITHUB_SHA:0:7}"
           for v in ripeomatic ripeomatic-simulate; do
@@ -63,7 +63,12 @@ jobs:
             "new_install_prompt_erase": false,
             "new_install_improv_wait_time": 20,
             "builds": [
-              { "chipFamily": "ESP32", "improv": true, "parts": [ { "path": "${v}.bin", "offset": 0 } ] }
+              { "chipFamily": "ESP32", "improv": true, "parts": [
+                { "path": "${v}.bootloader.bin", "offset": 4096 },
+                { "path": "${v}.partitions.bin", "offset": 32768 },
+                { "path": "boot_app0.bin", "offset": 57344 },
+                { "path": "${v}.app.bin", "offset": 65536 }
+              ] }
             ]
           }
           EOF
