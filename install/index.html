@@ -26,6 +26,10 @@ code{font:13px ui-monospace,Menlo,Consolas,monospace;background:var(--border);pa
 .variant h3{margin:0 0 4px;font-size:15px}
 .variant p{font-size:14px;margin:0 0 10px}
 esp-web-install-button{--esp-tools-button-color:var(--green);--esp-tools-button-text-color:#fff;--esp-tools-button-border-radius:10px}
+esp-web-install-button button{font:inherit;font-weight:600;font-size:15px;padding:11px 18px;border-radius:10px;border:0;background:var(--green);color:#fff;cursor:pointer}
+details.tip{margin:4px 0 12px;font-size:15px}
+details.tip summary{cursor:pointer;color:var(--green);font-weight:600}
+details.tip p{margin:8px 0 0}
 .unsupported{color:var(--accent);font-size:14px}
 .note{font-size:14px;color:var(--ink-2)}
 .foot{color:var(--muted);font-size:13px;margin-top:18px}
@@ -46,17 +50,22 @@ esp-web-install-button{--esp-tools-button-color:var(--green);--esp-tools-button-
 
 <div class="card">
   <h2>2 · Install</h2>
-  <p>Click, pick the board's port in the popup (usually the only one listed, "CP2102" or "CH340"), and wait about a minute. When it asks, enter your Wi-Fi; it then links straight to your device.</p>
+  <p>Click <b>Install</b>. A list of ports pops up: pick the board, click <b>Connect</b>, and wait about a minute. When it asks, type your Wi-Fi; it then links straight to your device.</p>
+  <details class="tip"><summary>Which one in the list is the board?</summary>
+    <p>It's usually called <b>CP210x</b>, <b>Silicon Labs</b>, <b>CH340</b>, <b>USB Single Serial</b>, <b>USB-SERIAL</b> or just <b>serial port (COMx)</b>. Ignore anything that says <b>Bluetooth</b>, and headsets, speakers or printers you recognise.</p>
+    <p>Still not sure? Click Cancel, unplug the board, click Install again and look at the list: the one that disappeared is your board. Plug it back in and pick that one.</p>
+    <p>Picked the wrong one? No harm done. The installer checks it's talking to an ESP32 before it writes anything.</p>
+  </details>
   <div class="variants">
     <div class="variant">
       <h3>Real machine</h3>
       <p>For a built Ripe-O-Matic with the motor and sensor wired.</p>
-      <esp-web-install-button manifest="firmware/manifest.json"><span slot="unsupported" class="unsupported">This browser can't talk to USB devices. Open this page in Chrome or Edge on a computer.</span><span slot="not-allowed" class="unsupported">Needs an https page (or localhost).</span></esp-web-install-button>
+      <esp-web-install-button manifest="firmware/manifest.json"><button slot="activate">Install</button><span slot="unsupported" class="unsupported">This browser can't talk to USB devices. Open this page in Chrome or Edge on a computer.</span><span slot="not-allowed" class="unsupported">Needs an https page (or localhost).</span></esp-web-install-button>
     </div>
     <div class="variant">
       <h3>Simulation</h3>
       <p>A bare ESP32, no parts yet: a virtual avocado that softens over 20 minutes, so you can try the app and notifications.</p>
-      <esp-web-install-button manifest="firmware/manifest-simulate.json"><span slot="unsupported" class="unsupported">This browser can't talk to USB devices. Open this page in Chrome or Edge on a computer.</span><span slot="not-allowed" class="unsupported">Needs an https page (or localhost).</span></esp-web-install-button>
+      <esp-web-install-button manifest="firmware/manifest-simulate.json"><button slot="activate">Install simulation</button><span slot="unsupported" class="unsupported">This browser can't talk to USB devices. Open this page in Chrome or Edge on a computer.</span><span slot="not-allowed" class="unsupported">Needs an https page (or localhost).</span></esp-web-install-button>
     </div>
   </div>
   <p class="note" style="margin-top:12px" id="buildinfo"></p>
@@ -64,7 +73,7 @@ esp-web-install-button{--esp-tools-button-color:var(--green);--esp-tools-button-
 
 <div class="card">
   <h2>3 · Open it</h2>
-  <p>After the Wi-Fi step the dialog shows a <b>Visit device</b> button. Bookmark it, or open <code>http://ripeomatic.local</code> on your phone and add it to the home screen. The device page then walks you through the rest one step at a time: phone alerts, a motor direction check, the two calibrations, the first avocado.</p>
+  <p>When it asks for Wi-Fi, use your <b>2.4 GHz</b> network: if your router shows two names, pick the one without "5G" in it (the ESP32 can't see 5 GHz). After the Wi-Fi step the dialog shows a <b>Visit device</b> button. Bookmark it, or open <code>http://ripeomatic.local</code> on your phone and add it to the home screen. The device page then walks you through the rest one step at a time: phone alerts, a motor direction check, the two calibrations, the first avocado.</p>
 </div>
 
 <div class="card">
