@@ -113,7 +113,7 @@ All in the Settings panel; defaults in `measure.h` and `config.h`.
 
 ## Hall sensor notes
 
-- **Wiring:** 0.1 µF capacitor from the SS49E output to GND, right at the sensor, before the ESP32 ADC pin. Use GPIO 34 (ADC1); ADC2 pins stop working when Wi-Fi is on.
+- **Wiring (optional):** a 0.1 µF ceramic capacitor ("104") from the SS49E output to GND, right at the sensor, before the ESP32 ADC pin. The averaging below handles most noise; add the cap if readings jump around, especially while Wi-Fi is busy. Use GPIO 34 (ADC1); ADC2 pins stop working when Wi-Fi is on.
 - The ADC is noisy; the firmware averages 48 samples per live reading and 256 for the tare, at 11 dB attenuation.
 - It tares before every reading with the pad in the air, so temperature drift in the sensor and the PLA blade cancels.
 - If a press aborts with *force reads negative*, the magnet is the wrong way round or `hall_n_per_count` needs its sign flipped. The coin calibration sets the sign automatically.

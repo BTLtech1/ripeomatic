@@ -86,6 +86,6 @@ If the printed blade drifts too much (PLA creeps and softens a little when warm)
 | ESP32 GPIO 16, 17, 18, 19 | ULN2003 IN1–IN4 |
 | ULN2003 motor header | 28BYJ-48 plug |
 | ESP32 3V3, GND | SS49E pins 1, 2 |
-| SS49E pin 3 (out) | ESP32 GPIO 34 (ADC1, input-only), with a 0.1 µF capacitor from the output to GND next to the sensor |
+| SS49E pin 3 (out) | ESP32 GPIO 34 (ADC1, input-only), optionally with a 0.1 µF ceramic capacitor (marked "104") from the output to GND next to the sensor; the firmware averages heavily, so start without and add it if readings jump around |
 
 Keep the hall sensor on GPIO 32–39 (ADC1); the ADC2 pins stop working while Wi-Fi is on. Pins are suggestions; change them in the firmware config.

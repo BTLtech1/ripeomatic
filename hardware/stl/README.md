@@ -49,7 +49,7 @@ The board cover is a 1.2 mm lid, 104 × 43 × 23 mm, that drops over both cradle
 7. Fit the liner (or foam) into the nest.
 8. Set the U-yoke into its recess and screw it from below.
 9. Hang the nest between the arms: M5 bolt through each arm into the nest ear. Fit the knob on one bolt head and snug it so the nest rests on the stop tab.
-10. Boards: slide the ESP32 (USB toward the nest) and the ULN2003 into their rails. Wire per `../README.md`, including the 0.1 µF capacitor on the hall sensor output. Route the motor ribbon and the hall wires out through the gap on the cover's inner edge.
+10. Boards: slide the ESP32 (USB toward the nest) and the ULN2003 into their rails. Wire per `../README.md`. The 0.1 µF capacitor on the hall sensor output is optional. Route the motor ribbon and the hall wires out through the gap on the cover's inner edge.
 11. Hook the cover's tab into the base window at the nest end, lower it over the boards, and fit the M3 × 8 from below.
 
 ## v2
