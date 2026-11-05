@@ -1,11 +1,19 @@
-# Publishes the dashboard to GitHub Pages: https://btltech1.github.io/ripeomatic/
-# The site is dashboard/index.html at the root plus data/ next to it.
+# Publishes the project site to GitHub Pages: https://btltech1.github.io/ripeomatic/
+#   /            the community dashboard (dashboard/index.html + data/)
+#   /install/    the web installer (install/index.html + freshly built firmware)
 name: pages
 
 on:
   push:
     branches: [main]
-    paths: ["dashboard/**", "data/all.csv", "data/sample/**", ".github/workflows/pages.yml"]
+    paths:
+      - "dashboard/**"
+      - "install/**"
+      - "data/all.csv"
+      - "data/sample/**"
+      - "firmware/ripeomatic/**"
+      - ".github/workflows/pages.yml"
+      - ".github/workflows/build.yml"
   workflow_dispatch:
 
 permissions:
@@ -18,19 +26,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  firmware:
+    uses: ./.github/workflows/build.yml
+
   deploy:
+    needs: firmware
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: firmware-*
+          path: fw
+          merge-multiple: true
       - name: Assemble the site
         run: |
-          mkdir -p _site/data/sample
+          set -e
+          mkdir -p _site/data/sample _site/install/firmware
           cp dashboard/index.html _site/index.html
           cp data/all.csv _site/data/all.csv 2>/dev/null || true
           cp data/sample/sample.csv _site/data/sample/sample.csv
+          cp install/index.html _site/install/index.html
+          cp fw/ripeomatic.bin fw/ripeomatic-simulate.bin _site/install/firmware/
+          VERSION=$(sed -n 's/^#define FW_VERSION "\(.*\)"/\1/p' firmware/ripeomatic/config.h)
+          BUILD="$(date -u +%Y-%m-%d) · ${GITHUB_SHA:0:7}"
+          for v in ripeomatic ripeomatic-simulate; do
+            suffix=""; [ "$v" = "ripeomatic-simulate" ] && suffix="-simulate"
+            cat > "_site/install/firmware/manifest${suffix}.json" <<EOF
+          {
+            "name": "BTL Ripe-O-Matic",
+            "version": "${VERSION}${suffix}",
+            "build": "${BUILD}",
+            "new_install_prompt_erase": false,
+            "new_install_improv_wait_time": 20,
+            "builds": [
+              { "chipFamily": "ESP32", "improv": true, "parts": [ { "path": "${v}.bin", "offset": 0 } ] }
+            ]
+          }
+          EOF
+          done
+          ls -laR _site | head -40
       - uses: actions/configure-pages@v5
         with:
           enablement: true

@@ -13,12 +13,14 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 - **Pushes to your phone** through [ntfy](https://ntfy.sh): "almost ripe", "ripe", "nest is empty". Free, no account: pick a topic name, subscribe in the ntfy app.
 - **Web app** at `http://ripeomatic.local`: verdict, trend chart, last press curve, one-tap rating buttons (the labels that make pooled data useful), calibration wizard, motor jog, all settings, Wi-Fi. Add it to your home screen and it behaves like an app.
 - **BOOT button**: short press = measure now, hold 2 s = "it was perfect".
-- **Wi-Fi setup** without editing code: first boot opens an access point `RipeOMatic-xxxxxx`; join it and pick your network.
+- **Wi-Fi setup** without editing code: the web installer asks for it over USB (Improv); otherwise first boot opens an access point `RipeOMatic-xxxxxx`; join it and pick your network.
 - **OTA** updates from the IDE after the first USB flash.
 - **Simulation mode** (`SIMULATE 1` in `config.h`) runs the whole thing on a bare ESP32 with a virtual avocado so you can try the UI before the printer is done.
 - **v2 servo** (`ENABLE_SERVO 1`): "Tip the nest" button and an `/api/tip` endpoint.
 
 ## Flashing
+
+**Easiest: the web installer.** Plug the ESP32 into a computer, open **https://btltech1.github.io/ripeomatic/install/** in Chrome or Edge, click *Install*, pick the port. It flashes the latest build from `main` (GitHub Actions compiles it on every change), then asks for your Wi-Fi over the same cable and shows a link to the device. There is a second button that installs the simulation build for a bare board. The whole thing is about two minutes and needs nothing installed.
 
 **Arduino IDE**
 
@@ -28,11 +30,11 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 
 **PlatformIO**: `cd firmware && pio run -t upload && pio device monitor`.
 
-No libraries to install. If you edit `ui/index.html`, run `python3 tools/build_ui.py` to regenerate `ripeomatic/ui.h` (committed, so Arduino IDE users never need Python).
+No libraries to install. If you edit `ui/index.html`, run `python3 tools/build_ui.py` to regenerate `ripeomatic/ui.h` (committed, so Arduino IDE users never need Python). CI (`.github/workflows/build.yml`) compiles both variants with the real toolchain and keeps the merged `.bin` files as artifacts; the `pages` workflow puts them behind the installer.
 
 ## First run
 
-1. The serial monitor prints `Setup AP: RipeOMatic-xxxxxx`. Join that Wi-Fi from your phone; the setup page pops up (or open `http://192.168.4.1`). Open *Wi-Fi & device*, pick your network, *Save & reboot*.
+1. Wi-Fi. If you used the web installer you already did this. Otherwise the serial monitor prints `Setup AP: RipeOMatic-xxxxxx`: join that Wi-Fi from your phone; the setup page pops up (or open `http://192.168.4.1`). Open *Wi-Fi & device*, pick your network, *Save & reboot*.
 2. Back on your own Wi-Fi, open `http://ripeomatic.local` (or the IP from the serial monitor). Add to home screen.
 3. *Motor*: tap **1 ▶**. The sled must move **toward the nest**. If it goes the other way, flip `motor_invert` in Settings.
 4. *Calibration*, in order:
@@ -59,8 +61,9 @@ When you eat the avocado, tap how it was (**Perfect** is the label that matters)
 | `ripeomatic/net.h` | Wi-Fi, setup AP + captive portal, mDNS, NTP, ntfy |
 | `ripeomatic/web.h` | HTTP API (below) and the captive-portal redirects |
 | `ripeomatic/servo.h` | v2 SG90 on LEDC |
+| `ripeomatic/improv.h` | Improv Wi-Fi over serial: what the web installer talks to. Framing is host-tested in `test/test_improv.cpp` |
 | `ripeomatic/ui.h` | generated from `ui/index.html` |
-| `test/test_measure.cpp` | `cd test && g++ -std=c++17 -I../ripeomatic test_measure.cpp && ./a.out` |
+| `test/test_measure.cpp`, `test/test_improv.cpp` | `cd test && g++ -std=c++17 -I../ripeomatic test_measure.cpp && ./a.out` (same for improv) |
 | `test/check_sketch.sh` | type-checks the whole sketch with a desktop g++ against `test/shim/` |
 | `../tools/mock_device.py` | fake device for working on the page: `python3 tools/mock_device.py`, open localhost:8080 |
 
