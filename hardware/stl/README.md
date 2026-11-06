@@ -1,24 +1,26 @@
 # Printing and assembly (v1)
 
-STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project). Everything fits a 180 × 180 mm bed (Bambu A1 mini). Designed for 0.4 mm nozzle, 0.2 mm layers, no supports.
+STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) and **already rotated into print orientation** (`tools/orient_stl.py`): drop them on the plate as they are. Everything fits a 180 × 180 mm bed (Bambu A1 mini). Designed for 0.4 mm nozzle, 0.2 mm layers.
 
 ## Print list
 
-| File | Material | Orientation | Settings | ~Time |
+| File | Material | How it sits | Settings | ~Time |
 |---|---|---|---|---|
-| `base.stl` | PLA/PETG | As is (flat) | 3 walls, 15 % infill | 3–4 h |
-| `board-cover.stl` | PLA/PETG | **Open side up** (roof on the bed) | 2 walls, 10 % | 20 min |
-| `u-yoke.stl` | PLA/PETG | **Lay flat** on the big face (the U lying down) | 4 walls, 20 % | 45 min |
-| `nest.stl` | PLA/PETG | **Opening up**, like a cup (rotate so the flat cut face is on top) | 3 walls, 10 %, 3 mm wall is mostly perimeters | 2 h |
-| `sled.stl` | PETG preferred | As is (runner pads down) | 4 walls, 30 % | 1 h |
-| `lead-screw-TR10x2.stl` | PETG preferred | Standing, socket end down | 100 % infill or 6 walls, 0.12 mm layers for a smoother thread | 40 min |
-| `blade.stl` | PLA | **Flat** on its 12 mm face (thickness in Z, stem pointing up) | 100 % infill | 10 min |
+| `base.stl` | PLA/PETG | Flat | 3 walls, 15 % infill, no supports | 3–4 h |
+| `board-cover.stl` | PLA/PETG | Open side up | 2 walls, 10 %, no supports | 20 min |
+| `u-yoke.stl` | PLA/PETG | Standing on its cross-bar | 4 walls, 20 %, **supports: on build plate only** (for the servo boss, which overhangs the arm) | 50 min |
+| `nest.stl` | PLA/PETG | Upside down: the flat top edge on the bed, the shell's back up | 3 walls, 10 %, no supports. The front lip overhangs at ~45°, which is fine | 2 h |
+| `sled.stl` | PETG preferred | Runner pads down | 4 walls, 30 %, **supports: on build plate only** (the 1 mm gap under the body between the four pads) | 1 h |
+| `lead-screw-TR10x2.stl` | PETG preferred | Standing, socket end down | 100 % infill or 6 walls, 0.12 mm layers for a smoother thread, **brim** | 40 min |
+| `blade.stl` | PLA | Flat on its 12 mm face, stem up | 100 % infill. The magnet pocket faces the bed | 10 min |
 | `thumbscrew-knob.stl` | any | Flat | default | 5 min |
-| `pad-TPU.stl` | TPU 95A | Dome down or socket down | 2 walls, 15 % | 10 min |
-| `nest-liner-TPU.stl` | TPU 95A (or skip: use 3 mm craft foam) | Opening up, same as the nest | 2 walls, vase-ish | 1.5 h |
+| `pad-TPU.stl` | TPU 95A | Socket down, dome up | 2 walls, 15 % | 10 min |
+| `nest-liner-TPU.stl` | TPU 95A (or skip: use 3 mm craft foam) | Upside down, same as the nest | 2 walls, vase-ish, **brim** (it stands on a 2 mm edge) | 1.5 h |
 | `servo-horn-v2.stl` | any | Flat | default | 5 min — **v2 only** |
 
 Print the base and the sled first and test the slide before printing the rest. If the sled binds, scale it 99.5 % in X/Y or sand the lips. If the lead screw won't turn in the sled's nut, print the screw at 98 % X/Y.
+
+If you re-export from Fusion, run `python3 tools/orient_stl.py` afterwards to put the new files back into print orientation.
 
 ## Hardware
 
