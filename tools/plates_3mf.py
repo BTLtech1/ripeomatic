@@ -2,6 +2,10 @@
 """Pack the print-oriented STLs into one 3MF, grouped by plate, for a 180 x 180 bed.
 
     python3 tools/plates_3mf.py [out.3mf]
+    python3 tools/plates_3mf.py --split [out_dir]   # one 3MF per plate, each on its own bed
+
+The --split files are the safer ones: some Bambu Studio versions crash opening a
+single file with objects spread ~1 m along X.
 
 Plates sit side by side 200 mm apart in X. Open the file in Bambu Studio and
 each group lands on its own plate (add plates with the + button if it shows
@@ -33,8 +37,11 @@ PLATES = {
 
 
 def main():
-    out = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else STL / "ripeomatic-all-parts.3mf"
+    split = "--split" in sys.argv
+    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    out = pathlib.Path(args[0]) if args else (STL / "plates" if split else STL / "ripeomatic-all-parts.3mf")
     scene = trimesh.Scene()
+    scenes = {}
     boxes = {}
     for k, items in PLATES.items():
         for name, cx, cy, rot in items:
@@ -45,6 +52,8 @@ def main():
             lo, hi = m.bounds
             m.apply_translation([(k - 1) * STRIDE + cx - (lo[0] + hi[0]) / 2, cy - (lo[1] + hi[1]) / 2, -lo[2]])
             scene.add_geometry(m, node_name=label, geom_name=label)
+            mp = m.copy(); mp.apply_translation([-(k - 1) * STRIDE, 0, 0])
+            scenes.setdefault(k, trimesh.Scene()).add_geometry(mp, node_name=label, geom_name=label)
             lo, hi = m.bounds
             boxes.setdefault(k, []).append((label, lo[0] - (k - 1) * STRIDE, hi[0] - (k - 1) * STRIDE, lo[1], hi[1]))
     ok = True
@@ -62,6 +71,14 @@ def main():
         print(f"plate {k}: " + ", ".join(f"{n} [{x0:.0f}-{x1:.0f}, {y0:.0f}-{y1:.0f}]" for n, x0, x1, y0, y1 in bl))
     if not ok:
         sys.exit(1)
+    if split:
+        out.mkdir(parents=True, exist_ok=True)
+        names = {1: "base", 2: "nest-blade-knob-horn", 3: "yoke-sled-screw", 4: "TPU-liner-pad", 5: "electronics-boxes"}
+        for k, sc in scenes.items():
+            f = out / f"plate{k}-{names.get(k, k)}.3mf"
+            sc.export(f)
+            print(f"wrote {f} ({f.stat().st_size // 1024} kB, {len(sc.geometry)} objects)")
+        return
     scene.export(out)
     print(f"wrote {out} ({out.stat().st_size // 1024} kB, {len(trimesh.load(out).geometry)} objects)")
 
