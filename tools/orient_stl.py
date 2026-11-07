@@ -10,6 +10,10 @@ rewrites the file in place.
     python3 tools/orient_stl.py base.stl   # one part
     python3 tools/orient_stl.py --check    # just report orientation, don't write
 
+Run it on fresh Fusion exports only: the files in hardware/stl/ are already
+oriented, so running it on them again (with or without --check) turns them
+on their side.
+
 "down" below is the model-space axis that should face the bed. "auto" tries both
 signs of that axis and keeps whichever puts more flat area on the bed.
 """
@@ -25,7 +29,6 @@ STL = ROOT / "hardware" / "stl"
 DOWN = {
     "base.stl":              (0, -1, 0),   # flat, bottom face down
     "sled.stl":              (0, -1, 0),   # runner pads down
-    "board-cover.stl":       (0, +1, 0),   # roof on the bed, open side up
     "u-yoke.stl":            (0, -1, 0),   # standing on its cross-bar (the servo boss is wider than the arm, so it can't lie flat)
     "nest.stl":              (0, +1, 0),   # upside down: the flat top-cut face on the bed, the shell's back is a dome on top
     "nest-liner-TPU.stl":    (0, +1, 0),

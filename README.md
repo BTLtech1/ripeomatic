@@ -2,7 +2,7 @@
 
 **An open-source countertop gadget that watches your avocado and tells you when it's ripe, so you stop forgetting about them until they're brown mush.**
 
-> **Status: designed, not yet built.** The CAD is done and the STLs are in [`hardware/stl/`](hardware/stl/), the firmware is written and tested in simulation, and the data pipeline and dashboard are live. Nothing has been printed, flashed or calibrated on a real avocado yet. Expect the first build to turn up small fixes.
+> **Status: first build in progress.** The CAD is done and the STLs are in [`hardware/stl/`](hardware/stl/), the firmware runs on a real ESP32 (flashed from the [web installer](https://btltech1.github.io/ripeomatic/install/), so far in simulation mode), and the data pipeline and dashboard are live. The first printed parts are being test-fitted and have already turned up fixes (thread clearance, the board mounting); nothing has been calibrated on a real avocado yet. The electronics box is still to be drawn: see [`hardware/keyhole-mount.md`](hardware/keyhole-mount.md).
 
 ---
 
@@ -57,7 +57,7 @@ Optional upgrade if the printed blade drifts: a 1 kg load cell + HX711 (~$7) mou
 ## Build it
 
 1. **Print** the parts in [`hardware/stl/`](hardware/stl/) (base and sled first; test the slide before printing the rest).
-2. **Assemble** in the order in [`hardware/stl/README.md`](hardware/stl/README.md#assembly-order), wire per [`hardware/README.md`](hardware/README.md#wiring) (the 0.1 µF capacitor on the hall sensor is optional; add it if readings are noisy).
+2. **Assemble** in the order in [`hardware/stl/README.md`](hardware/stl/README.md#assembly-order), wire per [`hardware/README.md`](hardware/README.md#wiring) (the 0.1 µF capacitor on the hall sensor is optional; add it if readings are noisy). The boards go in a box that slides onto two keyhole studs on the base ([`hardware/keyhole-mount.md`](hardware/keyhole-mount.md)).
 3. **Flash** from the browser: plug the ESP32 into your computer and open **https://btltech1.github.io/ripeomatic/install/** in Chrome or Edge. One click, pick the port, type your Wi-Fi, done. On Windows the board needs the CP210x USB driver first; the page links it and it takes 30 seconds. (Or build it yourself from [`firmware/`](firmware/) with the Arduino IDE.)
 4. **Calibrate** from the web page: force (coins on the pad), then blade (press a jar). Ten minutes. Automatic readings switch on once both are done.
 5. **First avocado.** Tap *Measure now*, then let it run twice a day. When you eat it, tap how it was.
