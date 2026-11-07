@@ -28,7 +28,7 @@ STL = ROOT / "hardware" / "stl"
 # part -> model axis that goes DOWN (toward the bed)
 DOWN = {
     "base.stl":              (0, -1, 0),   # flat, bottom face down
-    "sled.stl":              (0, -1, 0),   # runner pads down
+    "sled.stl":              (-1, 0, 0),   # standing on its motor-end face: thread vertical, post and riser reach the bed, no supports
     "driver-box.stl":        (0, -1, 0),   # keyhole floor on the bed, open top up
     "driver-box-lid.stl":    (0, +1, 0),   # upside down: flat top on the bed, lip and pegs up
     "u-yoke.stl":            (0, -1, 0),   # standing on its cross-bar (the servo boss is wider than the arm, so it can't lie flat)

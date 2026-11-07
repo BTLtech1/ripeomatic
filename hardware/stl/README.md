@@ -14,7 +14,7 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 | `esp32-case/esp32-case-keycap.stl` + one `mx-adapter` | any | As supplied | default. Print the 1.30 adapter first; 1.25 / 1.35 are looser / tighter on the keycap stem | 10 min |
 | `u-yoke.stl` | PLA/PETG | Standing on its cross-bar | 4 walls, 20 %, **supports: on build plate only** (for the servo boss, which overhangs the arm) | 50 min |
 | `nest.stl` | PLA/PETG | Upside down: the flat top edge on the bed, the shell's back up | 3 walls, 10 %, no supports. The front lip overhangs at ~45°, which is fine | 2 h |
-| `sled.stl` | PETG preferred | Runner pads down | 4 walls, 30 %, **supports: on build plate only** (the 1 mm gap under the body between the four pads) | 1 h |
+| `sled.stl` | PETG preferred | Standing on its motor end (already oriented): the nut thread prints vertical like the screw's | 4 walls, 30 %, **no supports** | 1 h |
 | `lead-screw-TR10x2.stl` | PETG preferred | Standing, socket end down | 100 % infill or 6 walls, 0.12 mm layers for a smoother thread, **brim** | 40 min |
 | `blade.stl` | PLA | Flat on its 12 mm face, stem up | 100 % infill. The magnet pocket faces the bed | 10 min |
 | `thumbscrew-knob.stl` | any | Flat | default | 5 min |
@@ -22,7 +22,7 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 | `nest-liner-TPU.stl` | TPU 95A (or skip: use 3 mm craft foam) | Upside down, same as the nest | 2 walls, vase-ish, **brim** (it stands on a 2 mm edge) | 1.5 h |
 | `servo-horn-v2.stl` | any | Flat | default | 5 min — **v2 only** |
 
-Print the base and the sled first and test the slide before printing the rest. If the sled binds, scale it 99.5 % in X/Y or sand the lips. If the lead screw jams in the sled's nut (the first print did, halfway in), reprint the screw with an X–Y contour compensation of −0.15 mm (Bambu Studio: the object's *Quality → Precision* settings) rather than scaling it, so the motor socket stays 5.0 mm; 0.12 mm layers and a random seam help too.
+Print the base and the sled first and test the slide before printing the rest. If the sled binds, scale it 99.5 % in X/Y or sand the lips. The sled's nut is threaded only for its first 10 mm at the motor end (the rest is a Ø10.8 clearance bore), since a 50 mm long printed nut got tighter and tighter as the screw went in. If the screw still binds, reprint the screw with an X–Y contour compensation of −0.15 mm (Bambu Studio: the object's *Quality → Precision* settings) rather than scaling it, so the motor socket stays 5.0 mm; 0.12 mm layers and a random seam help too.
 
 **The boards live in two boxes** that slide onto keyhole studs on the base: the ESP32 in BTL's *ESP32 case v6* (`esp32-case/`, with the keycap on the lid for the BOOT button), the ULN2003 in the driver box. Stud and keyhole dimensions, positions and how the boxes go on: [`../keyhole-mount.md`](../keyhole-mount.md). Any box with those two keyholes fits either spot.
 
