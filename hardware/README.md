@@ -24,8 +24,10 @@ All PLA or PETG unless noted. Roughly 150 g of filament total.
 
 | Part | Qty | Print notes |
 |---|---|---|
-| Base plate | 1 | Flat, 165 × 165 × 5 mm with three lightening windows. One print carries the guide channel (two rails with 2 mm inward lips), motor plate with gussets, end stop, a 3 mm recess for the U-yoke, and two keyhole studs on the flat shelf beside the channel for the electronics box. The nest hangs clear of the base; the v2 servo overhangs the edge by a few mm, which is fine. |
-| Electronics box | 1 | Holds the ESP32 and the ULN2003 and slides onto the base's two studs through keyholes in its bottom: the *BTL universal mount*, shared with other BTL projects, so any box with those keyholes fits. Dimensions and the shelf it has to fit in [`keyhole-mount.md`](keyhole-mount.md). A Ripe-O-Matic box is not drawn yet. |
+| Base plate | 1 | Flat, 165 × 165 × 5 mm with lightening windows. One print carries the guide channel (two rails with 2 mm inward lips), motor plate with gussets, end stop, a 3 mm recess for the U-yoke, and two pairs of keyhole studs at the motor end, one each side of the channel, for the two electronics boxes. The nest hangs clear of the base; the v2 servo overhangs the edge by a few mm, which is fine. |
+| ESP32 case | 1 | BTL's *ESP32 case for the ELEGOO DevKit v6* ([`stl/esp32-case/`](stl/esp32-case/)): base, snap lid with a flexing key and an MX keycap over the BOOT button, USB-C opening in one end, keyholes in the floor. Slides onto the board-side studs with the USB end toward the motor. |
+| Driver box | 1 | 48 × 37 × 26 mm box for the ULN2003 with the same keyholes, board ledges, two wire notches and a snap lid with hold-down pegs and vents. Slides onto the studs on the far side of the channel. |
+| | | The studs and keyholes are the *BTL universal mount*, shared with other BTL projects, so any box with those two keyholes fits either spot: [`keyhole-mount.md`](keyhole-mount.md). |
 | Avocado nest | 1 | An avocado-shell scoop with flat ends: the back half of a spheroid shell, ends cut flat 132 mm apart, top cut off 15° above the equator so the fruit rolls out after ~110° of tip (a full half-shell would need ~200°, beyond a standard servo). Cavity 80 × 80 × 112 mm at the liner surface (takes up to an 80 mm fruit; a 55 mm one just sits deeper), 3 mm side wall, 8 mm flat end walls, 2 mm liner, with a low front lip (cut 43° below the equator so the sled's post clears it at full travel). The M5 pin bores (4.6 mm × 7 deep, so the bolt self-taps and turns with the nest) go straight into the flat end walls, 3 mm behind the cavity centre; nothing protrudes. Print bowl-up like a cup, no supports. |
 | U-yoke | 1 | Two 16 × 72 × 6 mm arms 136 mm apart (they sit against the nest's flat ends) joined by a 3 mm cross-bar that sits flush in a recess in the base, printed as one piece standing on the cross-bar, then screwed from below. Both 5.5 mm pin bores are coaxial. (The servo boss is wider than the arm, which is why it can't lie flat; a later revision widens the arm under the boss so it can.) On the servo-side arm: a small stop tab on the inside face that the nest's end wall rests on so it hangs upright, and on the outside a 40 × 20 × 9 mm boss with a Ø13 bore for the horn and the SG90's gear housing, plus its two M2 holes 28 mm apart, for v2. |
 | Nest liner | 1 | 2 mm TPU shell matching the cavity (STL provided), or 3 mm craft foam glued in. The fruit only needs to touch at the back and bottom, so one liner fits all sizes. |
@@ -53,6 +55,7 @@ Fallback if the printed lead screw is rough: an **M8 threaded rod and nut** from
 | 2 | M4 × 8 | Motor ears | — |
 | 1 | SG90 micro servo (v2 only) | Tips the nest ~110°, within its 180° range. Needs ~10 N·mm, has ~170. Add a 470 µF cap on 5 V. | ~$2 |
 | 1 | USB cable + phone charger | Powers everything at 5 V. | have |
+| 1 | MX-style keycap (optional) | For the BOOT key on the ESP32 case lid; or print the supplied keycap. | ~$0.50 |
 
 **Total: about $15–20** plus filament.
 

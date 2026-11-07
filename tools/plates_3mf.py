@@ -24,6 +24,11 @@ PLATES = {
         ("thumbscrew-knob.stl", 150, 30, 0), ("servo-horn-v2.stl", 150, 60, 0)],
     3: [("u-yoke.stl", 90, 30, 0), ("sled.stl", 60, 95, 0), ("lead-screw-TR10x2.stl", 120, 95, 0)],
     4: [("nest-liner-TPU.stl", 65, 45, 0), ("pad-TPU.stl", 150, 45, 0)],
+    # the two electronics boxes (the ESP32 case is BTL's v6 case, printed as supplied)
+    5: [("esp32-case/esp32-case-base.stl", 25, 36, 0), ("esp32-case/esp32-case-lid-firm-key.stl", 25, 102, 0),
+        ("driver-box.stl", 75, 32, 0), ("driver-box-lid.stl", 75, 88, 0),
+        ("esp32-case/esp32-case-keycap.stl", 125, 30, 0), ("esp32-case/esp32-case-mx-adapter-1.25.stl", 125, 55, 0),
+        ("esp32-case/esp32-case-mx-adapter-1.30.stl", 125, 72, 0), ("esp32-case/esp32-case-mx-adapter-1.35.stl", 125, 89, 0)],
 }
 
 
@@ -34,13 +39,14 @@ def main():
     for k, items in PLATES.items():
         for name, cx, cy, rot in items:
             m = trimesh.load(STL / name, force="mesh")
+            label = pathlib.Path(name).stem
             if rot:
                 m.apply_transform(trimesh.transformations.rotation_matrix(np.radians(rot), [0, 0, 1]))
             lo, hi = m.bounds
             m.apply_translation([(k - 1) * STRIDE + cx - (lo[0] + hi[0]) / 2, cy - (lo[1] + hi[1]) / 2, -lo[2]])
-            scene.add_geometry(m, node_name=name[:-4], geom_name=name[:-4])
+            scene.add_geometry(m, node_name=label, geom_name=label)
             lo, hi = m.bounds
-            boxes.setdefault(k, []).append((name[:-4], lo[0] - (k - 1) * STRIDE, hi[0] - (k - 1) * STRIDE, lo[1], hi[1]))
+            boxes.setdefault(k, []).append((label, lo[0] - (k - 1) * STRIDE, hi[0] - (k - 1) * STRIDE, lo[1], hi[1]))
     ok = True
     for k, bl in boxes.items():
         for n, x0, x1, y0, y1 in bl:

@@ -29,6 +29,8 @@ STL = ROOT / "hardware" / "stl"
 DOWN = {
     "base.stl":              (0, -1, 0),   # flat, bottom face down
     "sled.stl":              (0, -1, 0),   # runner pads down
+    "driver-box.stl":        (0, -1, 0),   # keyhole floor on the bed, open top up
+    "driver-box-lid.stl":    (0, +1, 0),   # upside down: flat top on the bed, lip and pegs up
     "u-yoke.stl":            (0, -1, 0),   # standing on its cross-bar (the servo boss is wider than the arm, so it can't lie flat)
     "nest.stl":              (0, +1, 0),   # upside down: the flat top-cut face on the bed, the shell's back is a dome on top
     "nest-liner-TPU.stl":    (0, +1, 0),

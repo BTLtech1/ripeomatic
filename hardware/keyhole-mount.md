@@ -1,33 +1,55 @@
-# The electronics box and the keyhole mount
+# The electronics boxes and the keyhole mount
 
-The base does not hold the boards itself. Instead the electronics shelf (the flat area beside the channel, on the opposite side from the yoke) carries **two mushroom studs**, and the box with the ESP32 and ULN2003 in it has two matching **keyholes** in its bottom. Drop the box over the studs, slide it 6 mm along the press axis, and the cone under each stud head pulls the box down flat. Slide it back to lift it off. No screws, no tools, and any box with these two keyholes fits: the same mount is used on other BTL projects (it is the *BTL universal mount v3* stud, unchanged), so a box designed for one of them slides onto the Ripe-O-Matic too.
+The base does not hold the boards itself. Each board lives in its own box, and each box slides onto a pair of **mushroom studs** printed into the base through two **keyholes** in its floor: drop the box over the studs, push it toward the motor end until it clicks, done. Push it back the other way to lift it off. No screws, no tools. The stud and keyhole are the *BTL universal mount* (the v3 stud and the v6 keyhole), shared with other BTL projects, so any box with those two keyholes fits either spot.
 
-Why a box and not rails in the base: dev boards have their pin headers right at the board edge, so there is no edge for a groove to grip. A box can hold the board any way it likes (pin-row slots, standoffs, a lid pressing it down) and can be swapped without reprinting the 3–4 hour base.
+Two boxes, one on each side of the channel at the motor end:
 
-## The studs (on the base, print them with it)
+| Box | Holds | Where | Files |
+|---|---|---|---|
+| **ESP32 case** | the ELEGOO ESP32 DevKit, USB-C out the motor end of the base, BOOT keycap on the lid (short press = measure now, hold = "it was perfect") | the board side of the base (the side with the hall-sensor wiring) | [`stl/esp32-case/`](stl/esp32-case/): BTL's *ESP32 case for the ELEGOO DevKit v6*, printed as supplied: base, lid with the firm key, keycap and one of the three MX adapters |
+| **Driver box** | the ULN2003 board | the other side of the base, on the filled-in part of the window | [`stl/driver-box.stl`](stl/driver-box.stl) and [`stl/driver-box-lid.stl`](stl/driver-box-lid.stl) |
 
-Two identical studs, **26 mm apart** on a line parallel to the press axis, standing up from the shelf (the 5 mm deck).
+Why boxes and not rails in the base: dev boards have their pin headers right at the board edge, so there is no edge for a groove to grip. A box can hold the board any way it likes and can be swapped without reprinting the 3–4 hour base.
+
+## The studs (on the base, printed with it)
+
+Two pairs, each pair 26 mm apart on a line parallel to the press axis, standing on the 5 mm deck. Each stud:
 
 | | mm |
 |---|---|
 | Stem | Ø 5.0, 1.4 tall |
 | Head | 45° cone from Ø 5.0 to Ø 8.0 over the next 1.5 |
 | Crown | Ø 8.0, 0.4 tall, 0.35 chamfer on the top edge |
-| Total height above the shelf | 3.3 |
+| Total height above the deck | 3.3 |
 
-Where they are, measured from the base's corner at the motor end on the shelf side (X along the press axis toward the nest, Z across toward the channel): stud centres at X = 36 and X = 62, Z = 27.5. The usable shelf around them is **98 mm along the press axis** (from the motor end of the base to 4 mm short of where the nest swings) by **56 mm across** (from the base edge to the channel's outer wall), with nothing above it, so the box can be as tall as it needs. The stud line runs down the middle of that strip.
+Positions, measured from the base's corner at the motor end on the board side (X along the press axis toward the nest, Z across toward the other side):
 
-## The keyholes (in the bottom of any box)
+| Pair | Stud centres (X) | Z from the board-side edge | Box when seated (X) |
+|---|---|---|---|
+| ESP32 case | 20 and 46 | 28.25 | 4 to 62 |
+| Driver box | 16 and 42 | 136.75 (28.25 from the far edge) | 0 to 48 |
+
+Each box is dropped on 9 mm toward the nest from where it ends up and slid toward the motor end. The ESP32 case's USB-C end then sits 4 mm inside the end of the base, so the plug stands out of the machine's end next to the motor.
+
+## The keyholes (in the floor of any box)
+
+Measured from the v6 case. The floor is **4 mm** thick where the keyholes are, and the stud disappears into it completely, so the board above is unaffected.
 
 | | mm |
 |---|---|
-| Round opening | Ø 8.6, centred on each stud position (26 mm apart) |
-| Slot | 5.4 wide, running 6 mm from the round's centre, full-round end; both slots point the same way, along the 26 mm line |
-| Wall thickness at the keyholes | 1.6 (that is where the cone meets the slot edge: the box is pulled flat as it slides) |
+| Round opening | Ø 8.8, through the floor |
+| Slot | 5.4 wide, running from the round toward the nest end of the box (the round is the end nearer the motor); slot-end centre **9.0** from the round's centre, full-round end |
+| 45° flare | from 1.5 above the floor's underside the slot widens at 45° until it is 8.8 wide (at 3.2), then stays 8.8 up to the floor top: the stud's cone seats in it and pulls the box flat |
+| Detent nibs | two half-round bumps, r 0.35, on the slot's sides 2.45 before the slot-end centre, in the bottom 1.5 mm; the stem clicks past them and is held between them and the slot end |
+| Spacing | the two slot-end centres 26 apart; the box ends up with the studs at the slot ends |
 
-Tuning after the first print: if the box won't slide home, open the slot to 5.6; if it rattles, thicken the wall to 1.8 or print the box 0.5 % smaller in X–Y. The studs are symmetric, so the box can be put on facing either way.
+The pattern takes 42 mm of floor length (4.4 beyond the first round, 2.7 beyond the second slot end), so a box is at least 46 mm long. The driver box is 48 × 37 × 26 mm with the pattern 2.6 mm from its motor end.
 
-The box's outside can be anything. For the Ripe-O-Matic it needs the ESP32 (28.3 × 51.6 mm, 30-pin, USB-C on one short end) and the ULN2003 board (32 × 35 mm), a cut-out for the USB cable, and an exit for the motor ribbon and the three hall-sensor wires toward the channel. Stacking the ULN2003 above the ESP32 keeps the footprint within the shelf; side by side they are too wide.
+## The driver box
+
+Shell 48 × 37 × 26 mm, 2.2 mm walls, R4 corners, keyhole floor; inside, four 3 mm ledges in the corners of the board pocket and a rib behind it, so the ULN2003 (32 × 35 mm) lies on the ledges with its solder side clear of the floor and cannot slide. Two notches open to the top: one in the motor-end wall for the six wires to the ESP32 (IN1–IN4, 5 V, GND), one in the channel-side wall near the nest end for the motor's ribbon. The lid snaps in: a 1.3 mm lip with 0.4 mm bumps on the long sides that drop into a groove inside the walls, four Ø3 pegs that come down to 0.4 mm above the board's corners and keep it on its ledges, five vent slots over the chip. Print the lid upside down (flat top on the bed, pegs up), no supports. If the lid is hard to push on, scale it 99.5 % in X–Y; if it rattles, 100.5 %.
+
+Wiring: the six wires leave the driver box at the motor end, go round the end of the base past the motor and enter the ESP32 case through its USB opening alongside the plug (the opening is 11 × 23 mm; a USB-C plug uses less than half of it). The three hall-sensor wires take the same door. The motor's own ribbon plugs straight into the ULN2003's white connector through the channel-side notch.
 
 ## If you printed a base without the studs
 

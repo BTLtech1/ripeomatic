@@ -6,7 +6,12 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 
 | File | Material | How it sits | Settings | ~Time |
 |---|---|---|---|---|
-| `base.stl` | PLA/PETG | Flat | 3 walls, 15 % infill, no supports. The two keyhole studs on the board shelf print with it | 3–4 h |
+| `base.stl` | PLA/PETG | Flat | 3 walls, 15 % infill, no supports. The four keyhole studs for the two boxes print with it | 3–4 h |
+| `driver-box.stl` | PLA/PETG | Flat, keyhole floor down | 2 walls, 10 %, no supports | 45 min |
+| `driver-box-lid.stl` | PLA/PETG | Upside down: flat top on the bed, pegs up | 2 walls, 10 %, no supports | 20 min |
+| `esp32-case/esp32-case-base.stl` | PLA/PETG | As supplied (floor down) | 2 walls, 10 %, no supports | 1 h |
+| `esp32-case/esp32-case-lid-firm-key.stl` | PLA/PETG | As supplied (top down) | 2 walls, 10 %, no supports | 25 min |
+| `esp32-case/esp32-case-keycap.stl` + one `mx-adapter` | any | As supplied | default. Print the 1.30 adapter first; 1.25 / 1.35 are looser / tighter on the keycap stem | 10 min |
 | `u-yoke.stl` | PLA/PETG | Standing on its cross-bar | 4 walls, 20 %, **supports: on build plate only** (for the servo boss, which overhangs the arm) | 50 min |
 | `nest.stl` | PLA/PETG | Upside down: the flat top edge on the bed, the shell's back up | 3 walls, 10 %, no supports. The front lip overhangs at ~45°, which is fine | 2 h |
 | `sled.stl` | PETG preferred | Runner pads down | 4 walls, 30 %, **supports: on build plate only** (the 1 mm gap under the body between the four pads) | 1 h |
@@ -19,7 +24,7 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 
 Print the base and the sled first and test the slide before printing the rest. If the sled binds, scale it 99.5 % in X/Y or sand the lips. If the lead screw jams in the sled's nut (the first print did, halfway in), reprint the screw with an X–Y contour compensation of −0.15 mm (Bambu Studio: the object's *Quality → Precision* settings) rather than scaling it, so the motor socket stays 5.0 mm; 0.12 mm layers and a random seam help too.
 
-**Electronics box: not in this folder yet.** The boards live in a separate box that slides onto two keyhole studs on the base; see [`../keyhole-mount.md`](../keyhole-mount.md) for the stud and keyhole dimensions. Any box with those two keyholes in its bottom fits.
+**The boards live in two boxes** that slide onto keyhole studs on the base: the ESP32 in BTL's *ESP32 case v6* (`esp32-case/`, with the keycap on the lid for the BOOT button), the ULN2003 in the driver box. Stud and keyhole dimensions, positions and how the boxes go on: [`../keyhole-mount.md`](../keyhole-mount.md). Any box with those two keyholes fits either spot.
 
 If you re-export from Fusion, run `python3 tools/orient_stl.py` afterwards to put the new files back into print orientation.
 
@@ -34,7 +39,7 @@ If you re-export from Fusion, run `python3 tools/orient_stl.py` afterwards to pu
 | 1 | 3 × 2 mm magnet | Blade back face, in the shallow pocket at pad height |
 | 1 | SS49E hall sensor | Post front pocket, legs out the top |
 
-The boards go in a box of their own that slides onto the two keyhole studs on the base's shelf (drop it over the studs, slide it 6 mm along the press axis, the cone under each stud head pulls it flat). Nothing on the base needs to match your particular boards; only the box does. Stud and keyhole dimensions: [`../keyhole-mount.md`](../keyhole-mount.md).
+Each box goes on the same way: set it over its pair of studs 9 mm toward the nest from its final spot, push it toward the motor end until it clicks (the cone under each stud head pulls it flat, two little nibs in the slots hold it), lift the lid, put the board in. Nothing on the base needs to match your particular boards; only the box does. Details: [`../keyhole-mount.md`](../keyhole-mount.md).
 
 ## Assembly order
 
@@ -47,8 +52,8 @@ The boards go in a box of their own that slides onto the two keyhole studs on th
 7. Fit the liner (or foam) into the nest.
 8. Set the U-yoke into its recess and screw it from below.
 9. Hang the nest between the arms: M5 bolt through each arm into the nest ear. Fit the knob on one bolt head and snug it so the nest rests on the stop tab.
-10. Boards: fit the ESP32 and the ULN2003 in the electronics box, wire per `../README.md` (the 0.1 µF capacitor on the hall sensor output is optional), and bring the motor ribbon and the three hall wires out of the box on the channel side.
-11. Set the box over the two studs on the shelf and slide it along the press axis until it stops. Plug the motor ribbon into the ULN2003 and the hall wires into the ESP32.
+10. Boxes: click the ESP32 case onto the studs on the board side (USB opening toward the motor end) and the driver box onto the studs on the other side. ESP32 on its pins in the case, ULN2003 on the ledges in the driver box.
+11. Wire per `../README.md` (the 0.1 µF capacitor on the hall sensor output is optional): the six driver wires leave the driver box through its motor-end notch, go round the end of the base and enter the ESP32 case through the USB opening next to the plug; the hall wires use the same opening. The motor's ribbon plugs into the ULN2003 through the driver box's channel-side notch. Snap both lids on; keycap on the ESP32 lid.
 
 ## v2
 
