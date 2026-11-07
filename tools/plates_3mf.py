@@ -50,7 +50,8 @@ def main():
     ok = True
     for k, bl in boxes.items():
         for n, x0, x1, y0, y1 in bl:
-            if not (x0 >= 2 and x1 <= BED - 2 and y0 >= 2 and y1 <= BED - 2):
+            mg = 0.5 if n == "base" else 2
+            if not (x0 >= mg and x1 <= BED - mg and y0 >= mg and y1 <= BED - mg):
                 ok = False; print(f"plate {k}: {n} is outside the bed [{x0:.0f}-{x1:.0f}, {y0:.0f}-{y1:.0f}]")
         for i in range(len(bl)):
             for j in range(i + 1, len(bl)):
