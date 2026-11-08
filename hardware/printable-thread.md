@@ -38,11 +38,16 @@ If your printer is tighter or looser, print the test, pick the tightest nut that
 | File | What | Print |
 |---|---|---|
 | `stl/v45/v45-lead-screw.stl` | 90 mm screw, double-D socket for the 28BYJ-48 shaft (Ø5.2, flats 3.2 apart, 10 deep) | standing, socket down, brim |
-| `stl/v45/v45-sled.stl` | the sled with its nut replaced (0.4 clearance), and a zig-zag blade-slot roof: five small 45° peaks instead of one flat 12 mm bridge, so the slot needs no support and the blade slides in and is held by the fit, no clamp screw | standing on its motor end, no supports |
+| `stl/v45/v45-sled.stl` | the sled with its nut replaced (0.4 clearance), and the blade slot roofed with a 45° arch instead of a flat 12 mm bridge (no support needed; the riser grows 7.5 mm toward the pad to hold it) | standing on its motor end, no supports |
+| `stl/v45/v45-blade.stl` | the blade with a matching 45° ridge on its tongue (0.25 mm clearance to the arch) and the pad stem 5 mm longer. Slides into the arch slot and is held by the fit, no clamp screw | lying on its back as supplied |
 | `stl/v45/v45-test-screw-30mm.stl` | short screw for the clearance test | standing |
 | `stl/v45/v45-test-nuts.stl` | 0.3 / 0.4 / 0.5 test nuts | as supplied |
 
 Regenerate everything: `python3 tools/v45_thread.py hardware/stl/v45` (needs `pip install build123d bd_warehouse manifold3d trimesh`). The thread itself is `bd_warehouse.thread.Thread(apex_radius, apex_width, root_radius, root_width, pitch, length)`: external `(4.95, 0.2, 4.15, 1.8, 2.0, L)`, internal `(4.15+c, 0.2, 4.95+c, 1.8, 2.0, L)` for radial clearance `c`.
+
+## Arch slot and the longer stem: set max travel to 37
+
+The longer stem puts the pad 5 mm further forward, so the sled needs 5 mm less travel to reach the same point; the bigger riser would otherwise touch the nest's front at full travel with the nest empty. With the V45 sled and blade, set **`max_travel_mm` to 37** on the device's Settings page (firmware default is 42 for the original blade). The largest avocado the pad clears at home becomes about 78 mm across (was about 83).
 
 ## Rules of thumb (for any printed thread printed axis-vertical)
 

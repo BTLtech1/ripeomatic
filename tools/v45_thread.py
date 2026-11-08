@@ -12,7 +12,8 @@ clearance into the nut.
 writes
     v45-lead-screw.stl        90 mm screw, double-D socket for the 28BYJ-48, standing
     v45-sled.stl              hardware/stl/sled.stl with its nut replaced (motor-end 10 mm)
-                              and a zig-zag (no-bridge) blade slot roof, no clamp screw needed
+                              and a 45-degree arch blade slot (no bridge, no clamp screw)
+    v45-blade.stl             the blade with a matching ridge on its tongue and a 5 mm longer pad stem
     v45-test-screw-30mm.stl   short screw for a quick fit test
     v45-test-nuts.stl         three 10 mm nuts, radial clearance 0.3 / 0.4 / 0.5 mm
                               (1, 2, 3 notches on the rim)
@@ -92,37 +93,56 @@ def nut_block(clear, notches):
     return T(blk)
 
 
-def zigzag_slot(s, y_off=36.5):
-    """Blade slot roof made of five small 45-degree peaks instead of one flat 12 mm bridge,
-    so the sled prints standing on its motor end with no support in the slot. The flat blade
-    slides in under the peaks' lower edges (0.1 mm clearance) and is held by the fit, no screw.
-    The front wall gets 1 mm thicker to keep 2 mm of wall over the peaks.
-    Built in model coordinates (x = press axis, y = up, z = across) and mapped to the
-    sled's print orientation: print = (-z, y - y_off, x + 2)."""
-    def to_print(m):
-        v = m.vertices.copy()
-        m.vertices = np.column_stack([-v[:, 2], v[:, 1] - y_off, v[:, 0] + 2.0])
-        # (-z, y, x) is a proper rotation (det +1), so the winding stays valid
-        return m
-    wall = trimesh.creation.box(extents=[1.1, 7.0, 16.0]); wall.apply_translation([27.45, 22.5, 0])
-    W, X0, n = 6.25, 24.7, 5   # 6.25: just off the old slot's side faces (coplanar booleans leave slivers)
-    h = 2 * W / (2 * n)
-    roof = [(W, X0)]
-    for k in range(n):
-        zc = W - h * (2 * k + 1)
-        roof += [(zc, X0 + h), (zc - h, X0)]
-    prof = [(-W, 21.95), (W, 21.95)] + roof
-    prof = [(z, x) for z, x in prof]
-    # extrude the (z, x) profile along y 19.05 .. 26.6
+STEM_EXTRA = 5.0   # pad stem lengthened by this much (firmware max_travel_mm drops 42 -> 37 to match)
+SLOT_W = 6.25      # half width of the blade slot (blade is +-6)
+ROOF_X = 24.7      # slot roof springline, model x (blade front face is 24.6)
+
+
+def to_print_sled(m, y_off=36.5):
+    """model (x = press axis, y = up, z = across) -> the sled's print orientation (standing on its motor end).
+    (-z, y - y_off, x + 2) is a proper rotation, so the winding stays valid."""
+    v = m.vertices.copy()
+    m.vertices = np.column_stack([-v[:, 2], v[:, 1] - y_off, v[:, 0] + 2.0])
+    return m
+
+
+def prism_zx(profile, y0, y1):
+    """extrude a (z, x) polygon along model y from y0 to y1, in model coordinates"""
     import shapely.geometry as sg
-    poly = sg.Polygon(prof)
-    cut = trimesh.creation.extrude_polygon(poly, 26.6 - 19.05)   # profile in its local xy = (z, x), extruded along local z
-    cut.apply_translation([0, 0, 19.05])
-    v = cut.vertices.copy()                                       # local (z, x, y) -> model (x, y, z)
-    cut.vertices = np.column_stack([v[:, 1], v[:, 2], v[:, 0]])   # cyclic swap: proper rotation
-    s = s + M(to_print(wall))
-    s = s - M(to_print(cut))
+    pr = trimesh.creation.extrude_polygon(sg.Polygon(profile), y1 - y0)
+    pr.apply_translation([0, 0, y0])
+    v = pr.vertices.copy()                                   # local (z, x, y) -> model (x, y, z): cyclic, proper
+    pr.vertices = np.column_stack([v[:, 1], v[:, 2], v[:, 0]])
+    return pr
+
+
+def arch_slot(s):
+    """Blade slot with a 45-degree arch roof instead of a flat 12 mm bridge, so the sled prints
+    standing on its motor end with no support in the slot. The riser grows toward the pad to hold
+    the arch (outer roof 2.5 mm thick). The blade gets a matching ridge (see blade()), slides in,
+    and is held by the fit: no clamp screw."""
+    outer = [(-8.0, 26.5), (8.0, 26.5), (0.0, 34.5)]                       # riser extension, apex x 34.5
+    hood = prism_zx([(-8.0, 26.0)] + [(8.0, 26.0)] + [(8.0, 26.5)] + [(0.0, 34.5)] + [(-8.0, 26.5)], 19.0, 26.0)
+    cut = prism_zx([(-SLOT_W, 21.95), (SLOT_W, 21.95), (SLOT_W, ROOF_X), (0.0, ROOF_X + SLOT_W), (-SLOT_W, ROOF_X)], 19.05, 26.6)
+    s = s + M(to_print_sled(hood))
+    s = s - M(to_print_sled(cut))
     return s
+
+
+def blade():
+    """hardware/stl/blade.stl (printed lying on its back, stem up) with the pad stem STEM_EXTRA longer
+    and a 45-degree ridge on the tongue that matches the arch slot. Blade print coords:
+    x = -model z, y = model y - 43.5, z = model x - 22.1."""
+    m = trimesh.load(STL / "blade.stl", force="mesh")
+    v = m.vertices.copy()
+    v[np.abs(v[:, 2] - 14.5) < 0.01, 2] += STEM_EXTRA        # move the stem's end face out
+    m.vertices = v
+    import shapely.geometry as sg
+    rid = trimesh.creation.extrude_polygon(sg.Polygon([(-6.0, 2.49), (6.0, 2.49), (0.0, 2.5 + 6.0)]), (-17.7) - (-24.3))
+    v = rid.vertices.copy()                                   # local (x, z, y') -> print (x, y, z)
+    rid.vertices = np.column_stack([v[:, 0], v[:, 2] - 24.3, v[:, 1]])   # ridge stops 0.2 above the tongue's end
+    rid.invert()                                              # (x, z, y) is a mirror swap, fix the winding
+    return T(M(m) + M(rid))
 
 
 def sled(clear=CLEAR):
@@ -143,7 +163,7 @@ def sled(clear=CLEAR):
     move = lambda man: man.translate([cx, cy, 0])
     s = (s - move(cav)) + move(ridge ^ keep)
     s = s - move(cs)
-    s = zigzag_slot(s)
+    s = arch_slot(s)
     return T(s), (cx, cy)
 
 
@@ -157,6 +177,7 @@ def main():
         n = nut_block(c, k + 1); n.apply_translation([k * 22, 0, 0]); nuts.append(n)
     trimesh.util.concatenate(nuts).export(out / "v45-test-nuts.stl")
     sl, axis = sled(); sl.export(out / "v45-sled.stl")
+    blade().export(out / "v45-blade.stl")
     for f in sorted(out.glob("v45-*.stl")):
         m = trimesh.load(f, force="mesh")
         if not m.is_watertight:  # float32 STL rounding can leave slivers; weld and close them
