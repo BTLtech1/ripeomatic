@@ -38,7 +38,7 @@ If your printer is tighter or looser, print the test, pick the tightest nut that
 | File | What | Print |
 |---|---|---|
 | `stl/v45/v45-lead-screw.stl` | 90 mm screw, double-D socket for the 28BYJ-48 shaft (Ø5.2, flats 3.2 apart, 10 deep) | standing, socket down, brim |
-| `stl/v45/v45-sled.stl` | the sled with its nut replaced (0.4 clearance) | standing on its motor end, no supports |
+| `stl/v45/v45-sled.stl` | the sled with its nut replaced (0.4 clearance), and a zig-zag blade-slot roof: five small 45° peaks instead of one flat 12 mm bridge, so the slot needs no support and the blade slides in and is held by the fit, no clamp screw | standing on its motor end, no supports |
 | `stl/v45/v45-test-screw-30mm.stl` | short screw for the clearance test | standing |
 | `stl/v45/v45-test-nuts.stl` | 0.3 / 0.4 / 0.5 test nuts | as supplied |
 

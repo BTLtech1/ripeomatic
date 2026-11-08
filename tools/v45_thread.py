@@ -12,6 +12,7 @@ clearance into the nut.
 writes
     v45-lead-screw.stl        90 mm screw, double-D socket for the 28BYJ-48, standing
     v45-sled.stl              hardware/stl/sled.stl with its nut replaced (motor-end 10 mm)
+                              and a zig-zag (no-bridge) blade slot roof, no clamp screw needed
     v45-test-screw-30mm.stl   short screw for a quick fit test
     v45-test-nuts.stl         three 10 mm nuts, radial clearance 0.3 / 0.4 / 0.5 mm
                               (1, 2, 3 notches on the rim)
@@ -91,6 +92,39 @@ def nut_block(clear, notches):
     return T(blk)
 
 
+def zigzag_slot(s, y_off=36.5):
+    """Blade slot roof made of five small 45-degree peaks instead of one flat 12 mm bridge,
+    so the sled prints standing on its motor end with no support in the slot. The flat blade
+    slides in under the peaks' lower edges (0.1 mm clearance) and is held by the fit, no screw.
+    The front wall gets 1 mm thicker to keep 2 mm of wall over the peaks.
+    Built in model coordinates (x = press axis, y = up, z = across) and mapped to the
+    sled's print orientation: print = (-z, y - y_off, x + 2)."""
+    def to_print(m):
+        v = m.vertices.copy()
+        m.vertices = np.column_stack([-v[:, 2], v[:, 1] - y_off, v[:, 0] + 2.0])
+        # (-z, y, x) is a proper rotation (det +1), so the winding stays valid
+        return m
+    wall = trimesh.creation.box(extents=[1.1, 7.0, 16.0]); wall.apply_translation([27.45, 22.5, 0])
+    W, X0, n = 6.25, 24.7, 5   # 6.25: just off the old slot's side faces (coplanar booleans leave slivers)
+    h = 2 * W / (2 * n)
+    roof = [(W, X0)]
+    for k in range(n):
+        zc = W - h * (2 * k + 1)
+        roof += [(zc, X0 + h), (zc - h, X0)]
+    prof = [(-W, 21.95), (W, 21.95)] + roof
+    prof = [(z, x) for z, x in prof]
+    # extrude the (z, x) profile along y 19.05 .. 26.6
+    import shapely.geometry as sg
+    poly = sg.Polygon(prof)
+    cut = trimesh.creation.extrude_polygon(poly, 26.6 - 19.05)   # profile in its local xy = (z, x), extruded along local z
+    cut.apply_translation([0, 0, 19.05])
+    v = cut.vertices.copy()                                       # local (z, x, y) -> model (x, y, z)
+    cut.vertices = np.column_stack([v[:, 1], v[:, 2], v[:, 0]])   # cyclic swap: proper rotation
+    s = s + M(to_print(wall))
+    s = s - M(to_print(cut))
+    return s
+
+
 def sled(clear=CLEAR):
     m = trimesh.load(STL / "sled.stl", force="mesh")
     s = M(m)
@@ -109,6 +143,7 @@ def sled(clear=CLEAR):
     move = lambda man: man.translate([cx, cy, 0])
     s = (s - move(cav)) + move(ridge ^ keep)
     s = s - move(cs)
+    s = zigzag_slot(s)
     return T(s), (cx, cy)
 
 
