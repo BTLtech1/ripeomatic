@@ -24,6 +24,8 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 
 Print the base and the sled first and test the slide before printing the rest. If the sled binds, scale it 99.5 % in X/Y or sand the lips. The sled's nut is threaded only for its first 10 mm at the motor end (the rest is a Ø10.8 clearance bore), since a 50 mm long printed nut got tighter and tighter as the screw went in. If the screw still binds, reprint the screw with an X–Y contour compensation of −0.15 mm (Bambu Studio: the object's *Quality → Precision* settings) rather than scaling it, so the motor socket stays 5.0 mm; 0.12 mm layers and a random seam help too.
 
+**Experimental printable thread:** the TR10×2 thread prints poorly standing up. A 45° V thread with the same 2 mm lead is being tested in [`v45/`](v45/); see [`../printable-thread.md`](../printable-thread.md) for the exact profile, tolerances and test results.
+
 **The boards live in two boxes** that slide onto keyhole studs on the base: the ESP32 in BTL's *ESP32 case v6* (`esp32-case/`, with the keycap on the lid for the BOOT button), the ULN2003 in the driver box. Stud and keyhole dimensions, positions and how the boxes go on: [`../keyhole-mount.md`](../keyhole-mount.md). Any box with those two keyholes fits either spot. The four corner ears have keyholes for screwing the base to a shelf (details in the same file).
 
 If you re-export from Fusion, run `python3 tools/orient_stl.py` afterwards to put the new files back into print orientation.
