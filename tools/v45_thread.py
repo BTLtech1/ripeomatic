@@ -93,6 +93,7 @@ def nut_block(clear, notches):
     return T(blk)
 
 
+RIB_H = 0.4        # crush rib height on the slot's back wall (0.1 mm squeeze after the ridge seats)
 STEM_EXTRA = 5.0   # pad stem lengthened by this much (firmware max_travel_mm drops 42 -> 37 to match)
 SLOT_W = 6.25      # half width of the blade slot (blade is +-6)
 ROOF_X = 24.7      # slot roof springline, model x (blade front face is 24.6)
@@ -119,13 +120,24 @@ def prism_zx(profile, y0, y1):
 def arch_slot(s):
     """Blade slot with a 45-degree arch roof instead of a flat 12 mm bridge, so the sled prints
     standing on its motor end with no support in the slot. The riser grows toward the pad to hold
-    the arch (outer roof 2.5 mm thick). The blade gets a matching ridge (see blade()), slides in,
-    and is held by the fit: no clamp screw."""
-    outer = [(-8.0, 26.5), (8.0, 26.5), (0.0, 34.5)]                       # riser extension, apex x 34.5
-    hood = prism_zx([(-8.0, 26.0)] + [(8.0, 26.0)] + [(8.0, 26.5)] + [(0.0, 34.5)] + [(-8.0, 26.5)], 19.0, 26.0)
+    the arch (outer roof 2.5 mm thick). The blade gets a matching ridge (see blade()).
+    Holding without a screw: two crush ribs on the slot's back wall push the blade forward so its
+    ridge seats in the arch (the 45-degree faces centre it both ways); the ribs squash the rest.
+    Optional M3 x 20 screw: a hole down the arch's apex with a flat seat for the head, through the
+    blade, threading into the old 2.5 mm hole in the block."""
+    hood = prism_zx([(-8.0, 26.0), (8.0, 26.0), (8.0, 26.5), (0.0, 34.5), (-8.0, 26.5)], 19.0, 26.0)
     cut = prism_zx([(-SLOT_W, 21.95), (SLOT_W, 21.95), (SLOT_W, ROOF_X), (0.0, ROOF_X + SLOT_W), (-SLOT_W, ROOF_X)], 19.05, 26.6)
     s = s + M(to_print_sled(hood))
     s = s - M(to_print_sled(cut))
+    for zc in (-3.5, 3.5):   # crush ribs, 45-degree flanks, 0.4 tall, along the insertion direction
+        rib = prism_zx([(zc - 0.45, 21.9), (zc + 0.45, 21.9), (zc, 21.95 + RIB_H)], 19.05, 26.0)
+        s = s + M(to_print_sled(rib))
+    # optional screw: clearance hole along the press axis at the blade's hole (model y 23, z 0), head seat at x 33
+    hole = trimesh.creation.cylinder(radius=1.7, height=6.0, sections=48)
+    hole.apply_transform(trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0])); hole.apply_translation([32.0, 23.0, 0])
+    seat = trimesh.creation.cylinder(radius=3.1, height=3.0, sections=48)
+    seat.apply_transform(trimesh.transformations.rotation_matrix(np.pi / 2, [0, 1, 0])); seat.apply_translation([34.5, 23.0, 0])
+    s = s - M(to_print_sled(hole)) - M(to_print_sled(seat))
     return s
 
 
@@ -138,11 +150,13 @@ def blade():
     v[np.abs(v[:, 2] - 14.5) < 0.01, 2] += STEM_EXTRA        # move the stem's end face out
     m.vertices = v
     import shapely.geometry as sg
-    rid = trimesh.creation.extrude_polygon(sg.Polygon([(-6.0, 2.49), (6.0, 2.49), (0.0, 2.5 + 6.0)]), (-17.7) - (-24.3))
+    rid = trimesh.creation.extrude_polygon(sg.Polygon([(-6.0, 2.49), (6.0, 2.49), (6.0, 2.7), (0.0, 8.7), (-6.0, 2.7)]), (-17.7) - (-24.3))
     v = rid.vertices.copy()                                   # local (x, z, y') -> print (x, y, z)
     rid.vertices = np.column_stack([v[:, 0], v[:, 2] - 24.3, v[:, 1]])   # ridge stops 0.2 above the tongue's end
     rid.invert()                                              # (x, z, y) is a mirror swap, fix the winding
-    return T(M(m) + M(rid))
+    b = M(m) + M(rid)
+    h = trimesh.creation.cylinder(radius=1.7, height=12.0, sections=48); h.apply_translation([0, 23.0 - 43.5, 5.0])
+    return T(b - M(h))   # optional screw hole through the ridge (the blade's own hole was already there)
 
 
 def sled(clear=CLEAR):
