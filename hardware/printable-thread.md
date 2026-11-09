@@ -39,7 +39,7 @@ If your printer is tighter or looser, print the test, pick the tightest nut that
 |---|---|---|
 | `stl/v45/v45-lead-screw.stl` | 90 mm screw, double-D socket for the 28BYJ-48 shaft (Ø5.2, flats 3.2 apart, 10 deep) | standing, socket down, brim |
 | `stl/v45/v45-sled.stl` | the sled with its nut replaced (0.4 clearance), and the blade slot roofed with a 45° arch instead of a flat 12 mm bridge (no support needed; the riser grows 7.5 mm toward the pad to hold it). Two 0.4 mm crush ribs on the slot's back wall push the blade forward so its ridge seats in the arch, which centres it both ways; the ribs squash the last 0.1 mm. First arch print without ribs (0.1–0.35 mm gaps) let the blade wobble. Optional M3 × 20 down the arch's apex (flat head seat) into the block | standing on its motor end, no supports |
-| `stl/v45/v45-blade.stl` | the blade with a matching 45° ridge on its tongue (0.15 mm gap to the arch along the press axis) and the pad stem 5 mm longer. Slides into the arch slot and is held by the fit, no clamp screw | lying on its back as supplied |
+| `stl/v45/v45-blade.stl` | the blade with a matching 45° ridge on its tongue (0.15 mm gap to the arch along the press axis) and the pad stem 5 mm longer. Magnet pocket Ø3.4 × 2.1 deep so a 3 × 2 mm magnet sits flush (the original 3.2 × 0.5 printed too tight and left the magnet 1.5 mm proud). Slides into the arch slot and is held by the fit, no clamp screw | lying on its back as supplied |
 | `stl/v45/v45-test-screw-30mm.stl` | short screw for the clearance test | standing |
 | `stl/v45/v45-test-nuts.stl` | 0.3 / 0.4 / 0.5 test nuts | as supplied |
 

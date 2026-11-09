@@ -94,6 +94,7 @@ def nut_block(clear, notches):
 
 
 RIB_H = 0.4        # crush rib height on the slot's back wall (0.1 mm squeeze after the ridge seats)
+MAG_D, MAG_DEPTH = 3.4, 2.1   # pocket for a 3 x 2 mm magnet, flush with the blade's back face
 STEM_EXTRA = 5.0   # pad stem lengthened by this much (firmware max_travel_mm drops 42 -> 37 to match)
 SLOT_W = 6.25      # half width of the blade slot (blade is +-6)
 ROOF_X = 24.7      # slot roof springline, model x (blade front face is 24.6)
@@ -156,7 +157,11 @@ def blade():
     rid.invert()                                              # (x, z, y) is a mirror swap, fix the winding
     b = M(m) + M(rid)
     h = trimesh.creation.cylinder(radius=1.7, height=12.0, sections=48); h.apply_translation([0, 23.0 - 43.5, 5.0])
-    return T(b - M(h))   # optional screw hole through the ridge (the blade's own hole was already there)
+    # magnet pocket on the back face (the face on the bed), behind the stem: was 3.2 x 0.5 deep, which left a
+    # 3 x 2 mm magnet 1.5 mm proud and printed too tight. Now 3.4 x 2.1 deep: the magnet sits flush.
+    mag = trimesh.creation.cylinder(radius=MAG_D / 2, height=MAG_DEPTH + 0.1, sections=48)
+    mag.apply_translation([0, 62.0 - 43.5, (MAG_DEPTH + 0.1) / 2 - 0.1])
+    return T(b - M(h) - M(mag))   # optional screw hole through the ridge (the blade's own hole was already there)
 
 
 def sled(clear=CLEAR):
