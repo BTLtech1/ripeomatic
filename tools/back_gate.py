@@ -422,6 +422,9 @@ def build_base():
         h.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [1, 0, 0]))
         h.apply_translation([81.02, 1.0, zh])
         b = b + M(h)
+    # close the two weight-saving windows where the holder now stands, so the deck is solid under it
+    # (board side: x 50-70, z -68..-30; knob side: the last 15 mm of the long window, x 50-65, z 32..68)
+    b = b + box3(49.5, 70.5, 0.0, 4.995, -68.5, -29.5) + box3(49.5, 65.5, 0.0, 4.995, 31.5, 68.5)
     for sx, sz in STUDS:
         b = b + stud(sx, sz)
     return b
