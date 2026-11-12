@@ -40,6 +40,8 @@ jobs:
           arduino-cli core list
       - name: Compile (${{ matrix.variant }})
         run: |
+          # the commit this image is built from: "Update firmware" on the device compares it with the published manifest
+          echo "#define FW_BUILD \"${GITHUB_SHA::7}\"" > firmware/ripeomatic/build_id.h
           arduino-cli compile \
             --fqbn esp32:esp32:esp32:PartitionScheme=min_spiffs,FlashSize=4M \
             --build-property "compiler.cpp.extra_flags=${{ matrix.flags }}" \

@@ -72,6 +72,9 @@ class String {
   float toFloat() const { return (float)atof(s_.c_str()); }
   int toInt() const { return atoi(s_.c_str()); }
   int indexOf(char c) const { auto p = s_.find(c); return p == std::string::npos ? -1 : (int)p; }
+  int indexOf(char c, unsigned from) const { auto p = s_.find(c, from); return p == std::string::npos ? -1 : (int)p; }
+  int indexOf(const String& t, unsigned from = 0) const { auto p = s_.find(t.s_, from); return p == std::string::npos ? -1 : (int)p; }
+  String substring(unsigned a, unsigned b) const { String r; if (a < s_.size()) r.s_ = s_.substr(a, b > a ? b - a : 0); return r; }
   void trim() { auto a = s_.find_first_not_of(" \t\r\n"); auto b = s_.find_last_not_of(" \t\r\n"); s_ = a == std::string::npos ? "" : s_.substr(a, b - a + 1); }
   std::string s_;
 };

@@ -12,8 +12,9 @@
 #include "storage.h"
 #include "net.h"
 #include "servo.h"
+#include "updater.h"
 
-enum class Job : uint8_t { Idle, Measure, Jog, Home, BladeCal, Tip, Notify };
+enum class Job : uint8_t { Idle, Measure, Jog, Home, BladeCal, Tip, Notify, UpdateCheck, Update };
 
 inline const char* jobName(Job j) {
   switch (j) {
@@ -24,6 +25,8 @@ inline const char* jobName(Job j) {
     case Job::BladeCal: return "bladecal";
     case Job::Tip: return "tip";
     case Job::Notify: return "notify";
+    case Job::UpdateCheck: return "updcheck";
+    case Job::Update: return "update";
   }
   return "?";
 }
@@ -42,6 +45,7 @@ class Machine {
   Storage store;
   Net net;
   NestServo servo;
+  Updater upd;
   ripe::MeasureCore core;
 
   // live state for the UI (written by the job task, read by the web task)
@@ -300,6 +304,11 @@ class Machine {
       case Job::Home:     home(); stepper.release(); break;
       case Job::Tip:      servo.tip(S.servo_rest_deg, S.servo_tip_deg, S.servo_hold_ms); break;
       case Job::Notify:   net.notify(pendingTitle, pendingMsg, 2, "white_check_mark"); pendingTitle[0] = 0; pendingMsg[0] = 0; break;
+      case Job::UpdateCheck: upd.check(); break;
+      case Job::Update:
+        stepper.release();
+        if (upd.run()) { delay(2500); ESP.restart(); }   // let the page see "done" first
+        break;
       default: break;
     }
   }

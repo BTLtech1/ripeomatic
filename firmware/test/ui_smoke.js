@@ -55,6 +55,13 @@ const shots = process.argv[2] || require('os').tmpdir();
   await page.waitForFunction(() => document.getElementById('setup').hidden, null, { timeout: 30000 });
   out.setupDone = true;
 
+  // firmware update check
+  await page.click('#d-wifi summary');
+  await page.click('#btnUpdCheck');
+  await page.waitForFunction(() => /newer build is available/.test(document.getElementById('updmsg').textContent) && !document.getElementById('btnUpd').hidden, null, { timeout: 8000 });
+  out.updCheck = await page.textContent('#updmsg');
+  out.fwinfo = await page.textContent('#fwinfo');
+
   // sensor test
   await page.click('#d-sensor summary');
   await page.click('#btnSensor');
@@ -117,6 +124,7 @@ const shots = process.argv[2] || require('os').tmpdir();
   if (errors.length) problems.push('console/network errors');
   if (!/N\/mm/.test(out.kval) || out.kval.startsWith('—')) problems.push('no stiffness shown after measuring');
   if (out.trendPoints2 < 2) problems.push('trend chart has fewer than 2 points');
+  if (!/newer build/.test(out.updCheck || '')) problems.push('update check');
   if (!out.sensorStopped || !/Working/.test(out.sensorTest || '')) problems.push('sensor test');
   if (!out.setupDone || !out.flipped || !out.homeSet || !out.topicLink || !out.discordSaved) problems.push('setup checklist did not complete');
   if (out.savedInterval !== 8) problems.push('settings round trip failed');

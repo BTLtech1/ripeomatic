@@ -7,5 +7,7 @@ class HTTPClient {
   void setTimeout(uint16_t) {}
   int POST(uint8_t*, size_t) { return 200; }
   int POST(const String&) { return 200; }
+  int GET() { return 200; }
+  String getString() { return String(""); }
   void end() {}
 };

@@ -5,6 +5,14 @@
 
 #define FW_VERSION "0.1.0"
 #define HW_VERSION "v1"
+// The commit this image was built from. CI writes build_id.h before compiling;
+// a local build is "dev" and always sees the published build as newer.
+#if __has_include("build_id.h")
+#include "build_id.h"
+#endif
+#ifndef FW_BUILD
+#define FW_BUILD "dev"
+#endif
 #define SCHEMA_VERSION 1
 
 // ---- Pins -----------------------------------------------------------------
@@ -80,3 +88,13 @@
 
 // Shown when something needs the sled position but home hasn't been set.
 #define HOME_UNSET_MSG "home isn't set: jog the sled until it touches the end stop, then tap Set home here"
+
+// Where "Update firmware" looks (published by .github/workflows/pages.yml).
+#define UPDATE_BASE_URL "https://btltech1.github.io/ripeomatic/install/firmware/"
+#if SIMULATE
+#define UPDATE_MANIFEST_URL UPDATE_BASE_URL "manifest-simulate.json"
+#define UPDATE_BIN_URL UPDATE_BASE_URL "ripeomatic-simulate.app.bin"
+#else
+#define UPDATE_MANIFEST_URL UPDATE_BASE_URL "manifest.json"
+#define UPDATE_BIN_URL UPDATE_BASE_URL "ripeomatic.app.bin"
+#endif

@@ -14,7 +14,7 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 - **Web app** at `http://ripeomatic.local`: verdict, trend chart, last press curve, one-tap rating buttons (the labels that make pooled data useful), calibration wizard, motor jog, all settings, Wi-Fi. Add it to your home screen and it behaves like an app.
 - **BOOT button**: short press = measure now, hold 2 s = "it was perfect".
 - **Wi-Fi setup** without editing code: the web installer asks for it over USB (Improv); otherwise first boot opens an access point `RipeOMatic-xxxxxx`; join it and pick your network.
-- **OTA** updates from the IDE after the first USB flash.
+- **Updates over Wi-Fi** from the device's own page (*Wi-Fi & device → Check for updates*) after the first USB flash; Arduino IDE OTA works too.
 - **Simulation mode** (`SIMULATE 1` in `config.h`) runs the whole thing on a bare ESP32 with a virtual avocado so you can try the UI before the printer is done.
 - **v2 servo** (`ENABLE_SERVO 1`): "Tip the avocado out" button and an `/api/tip` endpoint.
 
@@ -31,6 +31,12 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 **PlatformIO**: `cd firmware && pio run -t upload && pio device monitor`.
 
 No libraries to install. If you edit `ui/index.html`, run `python3 tools/build_ui.py` to regenerate `ripeomatic/ui.h` (committed, so Arduino IDE users never need Python). CI (`.github/workflows/build.yml`) compiles both variants with the real toolchain and keeps the merged `.bin` files as artifacts; the `pages` workflow puts them behind the installer.
+
+## Updating over Wi-Fi
+
+After the first USB install, open *Wi-Fi & device* on the device's page and tap **Check for updates**. It reads `install/firmware/manifest.json` on GitHub Pages and compares its `build_id` (the commit CI built it from) with the device's own (`FW_BUILD`, written into `build_id.h` by CI; a local IDE build is `dev`). If they differ, **Update now** downloads `ripeomatic.app.bin` into the spare OTA slot (about a minute), then restarts into it. Wi-Fi, settings, calibration, home and the reading log are kept. If anything fails, the old firmware keeps running.
+
+The download isn't certificate-checked (there's no CA bundle on the board), the same as the ntfy push: someone already on your Wi-Fi could in principle serve a fake image.
 
 ## First run
 
@@ -87,6 +93,8 @@ Everything the page does. Handy for Home Assistant or a script.
 | POST | `/api/home` | Drive back to home (position 0) by step count |
 | POST | `/api/sethome` | The sled is touching the end stop now: call this position 0 |
 | GET | `/api/raw` | Just the hall reading (`raw`, `force_n`), for the live *Sensor test* panel |
+| POST | `/api/update/check` | Compare this build with the one published on GitHub Pages (`upd_state` in status: `uptodate` / `available` / `failed`) |
+| POST | `/api/update/run` | Download and install the published build, then restart (`upd_state` `downloading`, `upd_pct`) |
 | POST | `/api/cal/zero`, `/api/cal/mass` (`g=`), `/api/cal/clear`, `/api/cal/blade` | Calibration |
 | POST | `/api/tip` | v2: tip the avocado out |
 | GET | `/api/scan` · POST `/api/wifi` (`ssid`, `pass`) | Wi-Fi |

@@ -182,6 +182,13 @@ details[open] summary::after{content:"–"}
 <div class="full"><label>Its password</label><input id="pass" type="password" placeholder="leave blank to keep the saved one"></div>
 <div class="full row"><button id="btnWifi" class="primary">Switch network &amp; reboot</button><button id="btnScan" class="quiet">Rescan</button></div>
 <div class="hint" id="devinfo"></div>
+<div class="full" id="fwbox">
+<label>Firmware</label>
+<p class="kv" id="fwinfo" style="margin:2px 0 8px"></p>
+<div class="row"><button id="btnUpdCheck" class="quiet">Check for updates</button><button id="btnUpd" class="primary" hidden>Update now</button></div>
+<div class="bar" id="updbarw" hidden><i id="updbar"></i></div>
+<p id="updmsg" class="kv" style="margin-top:6px"></p>
+</div>
 <div class="full row">
 <button id="btnSetupShow2" class="quiet">Show setup checklist</button>
 <button id="btnReboot" class="quiet">Reboot</button>
@@ -248,7 +255,7 @@ pollTimer = setTimeout(poll, st && st.job !== 'idle' ? 1000 : 3000);
 function render() {
 const s = st, f = s.fruit || {}, busy = s.job !== 'idle';
 $('sub').textContent = (s.ap_mode ? 'setup mode: ' + s.ap_ssid : 'http://' + s.host + '.local') + (s.time ? '' : ' · clock not set');
-$('pill').textContent = busy ? (s.job === 'measure' ? 'measuring: ' + s.stage : s.job) : (s.next_auto_s > 0 ? 'next in ' + hms(s.next_auto_s) : (s.simulate ? 'simulation · idle' : 'idle'));
+$('pill').textContent = busy ? (s.job === 'measure' ? 'measuring: ' + s.stage : ({updcheck: 'checking for updates', update: 'updating firmware'}[s.job] || s.job)) : (s.next_auto_s > 0 ? 'next in ' + hms(s.next_auto_s) : (s.simulate ? 'simulation · idle' : 'idle'));
 $('pill').className = 'pill' + (busy ? ' busy' : '');
 $('ver').textContent = 'fw ' + s.fw + ' · ' + s.hw + ' · id ' + s.device_id;
 renderSetup(s);
@@ -297,7 +304,32 @@ $('calstate').innerHTML = 'blade_k: <b>' + (s.blade_calibrated ? fmt(s.blade_k) 
 $('wifinow').textContent = s.ap_mode ? 'Not on a Wi-Fi network yet: pick yours below.' : 'Connected to ' + (settings && settings.wifi_ssid ? settings.wifi_ssid : 'your Wi-Fi') + '. Only change this if the router or password changes, or the machine moves house.';
 $('devinfo').textContent = 'id ' + s.device_id + ' · ' + (s.ip || '') + (s.rssi ? ' · ' + s.rssi + ' dBm' : '') + ' · log ' + Math.round((s.log_bytes || 0) / 1024) + ' kB · free ' + Math.round((s.fs_free || 0) / 1024) + ' kB · up ' + hms(s.uptime_s);
 document.querySelectorAll('#rate button').forEach(b => b.classList.toggle('on', b.dataset.r === f.rating));
+renderUpdate(s, busy);
 }
+// ---- firmware update over Wi-Fi ------------------------------------------------
+let updating = false;
+function renderUpdate(s, busy) {
+if (updating && s.uptime_s < 90 && s.job === 'idle') { updating = false; toast('Updated. Reloading…'); setTimeout(() => location.reload(), 1200); return; }
+$('fwinfo').textContent = 'version ' + s.fw + ' · build ' + (s.fw_build || '?');
+const st = s.upd_state || '', m = $('updmsg');
+$('btnUpd').hidden = st !== 'available';
+$('btnUpdCheck').disabled = busy || !s.online; $('btnUpd').disabled = busy || !s.online;
+$('updbarw').hidden = !(st === 'downloading' || st === 'done');
+$('updbar').style.width = Math.max(0, s.upd_pct || 0) + '%';
+m.className = st === 'failed' ? 'bad' : st === 'available' || st === 'done' ? 'ok' : 'kv';
+m.textContent = {
+'': s.online ? '' : 'Not online, so it can\'t check.',
+checking: 'Checking GitHub…',
+uptodate: 'Up to date (latest is ' + s.upd_latest + ').',
+available: 'A newer build is available: ' + s.upd_latest + '. About a minute; Wi-Fi, settings, calibration, home and readings are kept.',
+downloading: 'Downloading and installing… ' + Math.max(0, s.upd_pct) + '%. Leave it plugged in.',
+done: 'Installed. Restarting…',
+failed: 'That didn\'t work: ' + (s.upd_error || 'unknown error') + '. Nothing was changed; try again, or use the USB installer.',
+}[st] || '';
+if (st === 'downloading' || st === 'done') updating = true;
+}
+$('btnUpdCheck').onclick = () => act('/api/update/check', null, 'Checking…')();
+$('btnUpd').onclick = async () => { if (!confirm('Install the newer firmware now? The machine restarts when it\'s done.')) return; updating = true; act('/api/update/run', null, 'Updating…')(); };
 const hms = s => s == null ? '' : s >= 86400 ? Math.floor(s / 86400) + 'd ' + Math.floor(s % 86400 / 3600) + 'h' : s >= 3600 ? Math.floor(s / 3600) + 'h ' + Math.floor(s % 3600 / 60) + 'm' : Math.floor(s / 60) + 'm';
 // ---- charts ---------------------------------------------------------------
 function draw() { tab === 'trend' ? drawTrend() : drawCurve(false); }

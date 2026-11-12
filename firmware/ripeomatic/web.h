@@ -86,6 +86,8 @@ class Web {
       else S.motor_checked = true;
       settingsSave(); M.applySettings(); ok();
     });
+    server.on("/api/update/check", HTTP_POST, [this] { if (!M.net.online()) return fail(400, "not online"); startJob(Job::UpdateCheck); });
+    server.on("/api/update/run", HTTP_POST, [this] { if (!M.net.online()) return fail(400, "not online"); startJob(Job::Update); });
     server.on("/api/cal/blade", HTTP_POST, [this] { if (!M.homeKnown) return fail(400, HOME_UNSET_MSG); startJob(Job::BladeCal); });
     server.on("/api/scan", HTTP_GET, [this] { scan(); });
     server.on("/api/wifi", HTTP_POST, [this] { wifi(); });
@@ -138,7 +140,8 @@ class Web {
     String o; o.reserve(1200);
     char ts[24]; Net::isoNow(ts, sizeof ts);
     o += "{";
-    addStr(o, "fw", FW_VERSION); addStr(o, "hw", HW_VERSION); addStr(o, "device_id", S.device_id); addStr(o, "host", S.host);
+    addStr(o, "fw", FW_VERSION); addStr(o, "fw_build", FW_BUILD);
+    addStr(o, "upd_state", M.upd.state); addStr(o, "upd_latest", M.upd.latest); addInt(o, "upd_pct", M.upd.pct); addStr(o, "upd_error", M.upd.err); addStr(o, "hw", HW_VERSION); addStr(o, "device_id", S.device_id); addStr(o, "host", S.host);
     addStr(o, "ip", M.net.apMode ? WiFi.softAPIP().toString().c_str() : WiFi.localIP().toString().c_str());
     addBool(o, "ap_mode", M.net.apMode); addStr(o, "ap_ssid", M.net.apSsid);
     addInt(o, "rssi", M.net.online() ? WiFi.RSSI() : 0);
