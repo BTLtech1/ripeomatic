@@ -22,10 +22,12 @@ class Stepper28BYJ {
 
   float posMm() const { return steps_ / spmm_; }
   void setPosMm(float mm) { steps_ = (long)lroundf(mm * spmm_); }
+  long steps() const { return steps_; }
+  void setSteps(long s) { steps_ = s; }
 
-  // Blocking relative move. +mm = toward the nest. Checks abort_ every step.
-  // Position is tracked even past 0: homing deliberately drives into the end
-  // stop and the caller then calls setPosMm(0).
+  // Blocking relative move. +mm = away from the motor. Checks abort_ every step.
+  // Position is tracked even past 0 (a ◀ 1 mm jog may creep past home to find
+  // the end stop before "Set home here").
   void moveMm(float mm) {
     long n = (long)lroundf(mm * spmm_);
     int dir = n >= 0 ? 1 : -1;

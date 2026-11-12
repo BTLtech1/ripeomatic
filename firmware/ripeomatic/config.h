@@ -77,3 +77,6 @@
 #define WIFI_CONNECT_TIMEOUT_MS 20000
 
 #define NTP_SERVER "pool.ntp.org"
+
+// Shown when something needs the sled position but home hasn't been set.
+#define HOME_UNSET_MSG "home isn't set: jog the sled until it touches the end stop, then tap Set home here"

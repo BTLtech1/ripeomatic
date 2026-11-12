@@ -35,7 +35,7 @@ settings = {
 }
 notify = {"pending": False, "last_ok": False}
 state = {
-    "job": "idle", "stage": "idle", "pos": 0.0, "force": 0.0, "raw": 2001.0, "error": "",
+    "job": "idle", "stage": "idle", "home_known": False, "pos": 0.0, "force": 0.0, "raw": 2001.0, "error": "",
     "fruit": {"counter": 7, "loaded": False, "n": 0, "first_k": 0.0, "last_k": 0.0, "first_contact": 0.0, "last_contact": 0.0, "start": 0.0, "rating": "", "nr": False},
     "last": {"outcome": "none", "time": "", "k": 0, "r2": 0, "squish": 0, "contact": 0, "force_max": 0, "n_points": 0},
     "pts": [], "rows": [], "boot": time.time(), "last_measure": 0.0,
@@ -213,7 +213,7 @@ class H(BaseHTTPRequestHandler):
                     "calibrated": bool(settings["cal_points"]), "n_per_count": settings["hall_n_per_count"], "cal_points_n": settings["cal_points"].count(":"),
                     "blade_calibrated": settings["blade_k_n_per_mm"] > 0.01, "blade_k": settings["blade_k_n_per_mm"], "setup_done": bool(settings["cal_points"]) and settings["blade_k_n_per_mm"] > 0.01, "servo": False,
                     "simulate": False, "ntfy_topic": settings["ntfy_topic"], "ntfy_ok": settings["ntfy_ok"], "discord_set": settings["discord_set"], "notify_pending": notify["pending"], "notify_last_ok": notify["last_ok"],
-                    "motor_checked": settings["motor_checked"], "motor_invert": settings["motor_invert"], "online": True, "fruit_count": f["counter"],
+                    "motor_checked": settings["motor_checked"], "motor_invert": settings["motor_invert"], "home_known": state["home_known"], "home_lost": False, "online": True, "fruit_count": f["counter"],
                     "log_bytes": sum(len(r) + 1 for r in state["rows"]), "fs_free": 1400000, "next_auto_s": nxt, "error": state["error"],
                     "fruit": {"id": fruit_id(), "loaded": f["loaded"], "n": f["n"], "first_k": f["first_k"], "last_k": f["last_k"],
                               "first_contact": f["first_contact"], "last_contact": f["last_contact"], "start_epoch": int(f["start"]),
@@ -250,6 +250,13 @@ class H(BaseHTTPRequestHandler):
             start_job("measure", run_measure)
             return self._json(200, {"ok": True})
         if u.path == "/api/abort":
+            return self._json(200, {"ok": True})
+        if u.path == "/api/sethome":
+            if state["job"] != "idle":
+                return self._json(409, {"ok": False, "error": "busy"})
+            with LOCK:
+                state["pos"] = 0.0
+                state["home_known"] = True
             return self._json(200, {"ok": True})
         if u.path == "/api/home":
             return self._json(200, {"ok": True}) if start_job("home", lambda: time.sleep(1.5)) else self._json(409, {"ok": False, "error": "busy"})

@@ -62,6 +62,7 @@ class Machine {
     boot_millis = millis();
     stepper.begin();
     applySettings();
+    posLoad();
     hall.begin(&stepper);
     hall.tare();   // pad is normally in the air at boot; every reading tares again anyway
     store.begin();
@@ -70,11 +71,68 @@ class Machine {
   }
 
   void applySettings() {
+    // Flipping the motor direction mirrors what "+" means, so mirror the step
+    // count too: the sled hasn't moved, only the meaning of the sign.
+    if (configured_ && S.motor_invert != lastInvert_) { stepper.setSteps(-stepper.steps()); posSave(false); }
+    configured_ = true; lastInvert_ = S.motor_invert;
     stepper.configure(S.steps_per_mm, S.motor_invert);
     stepper.setSpeedMmS(S.fast_mm_s);
   }
 
   bool busy() const { return job != Job::Idle; }
+
+  // ---- home ------------------------------------------------------------------
+  // homeKnown: the step count matches the sled. homeLost: it was known, but the
+  // power went off while the sled was moving, so the count can't be trusted.
+  bool homeKnown = false;
+  bool homeLost = false;
+
+  // "Set home here": the sled is against the end stop at the motor end.
+  bool setHomeHere() {
+    if (busy()) return false;
+    stepper.setSteps(0);
+    homeKnown = true;
+    homeLost = false;
+    posSave(false);
+    return true;
+  }
+
+  // Saved after every job that moves the sled; "moving" is set before it starts.
+  void posSave(bool moving) {
+    Preferences p; p.begin("pos", false);
+    p.putInt("steps", (int)stepper.steps());
+    p.putBool("known", homeKnown);
+    p.putBool("moving", moving);
+    p.end();
+  }
+
+  void posLoad() {
+#if SIMULATE
+    homeKnown = true;   // no motor: the count is always right
+    return;
+#endif
+    Preferences p; p.begin("pos", false);
+    bool known = p.getBool("known", false), moving = p.getBool("moving", false);
+    long steps = p.getInt("steps", 0);
+    p.end();
+    if (known && !moving) { stepper.setSteps(steps); homeKnown = true; }
+    else { homeKnown = false; homeLost = known && moving; }
+  }
+
+  // How far a jog may actually go (see jog()). 0 = nowhere.
+  float jogClamp(float mm) const {
+    if (!homeKnown) return mm;
+    float p = stepper.posMm();
+    if (mm < -1.01f && p + mm < 0) mm = p > 0 ? -p : 0;
+    if (mm > 0 && p + mm > S.t.max_travel_mm) mm = p < S.t.max_travel_mm ? S.t.max_travel_mm - p : 0;
+    return mm;
+  }
+  const char* jogBlocked(float mm) const {
+    if (fabsf(jogClamp(mm)) >= 0.01f) return nullptr;
+    return mm < 0 ? "at home. To creep closer to the end stop, use ◀ 1" : "at the travel limit";
+  }
+
+  static bool moves(Job j) { return j == Job::Measure || j == Job::BladeCal || j == Job::Jog || j == Job::Home; }
 
   // Both calibrations done: the force scale is known and the blade is subtracted.
   bool calibrated() const { return S.cal_points[0] != 0 && S.t.blade_k_n_per_mm > 0.01f; }
@@ -86,6 +144,7 @@ class Machine {
     jobParam_ = param;
     stepper.clearAbort();
     error[0] = 0;
+    if (moves(j)) posSave(true);   // if the power goes now, the count can't be trusted on the next boot
     // 16 kB: the ntfy push at the end runs TLS on this stack.
     BaseType_t ok = xTaskCreatePinnedToCore(taskEntry, "job", 16384, this, 1, &task_, 1);
     if (ok != pdPASS) { job = Job::Idle; strlcpy(error, "could not start task", sizeof error); return false; }
@@ -118,7 +177,7 @@ class Machine {
     if (!S.auto_enabled) return;
     // Never press unattended until the machine has been set up: direction
     // checked, blade and force calibrated. Until then readings are manual.
-    if (!calibrated()) return;
+    if (!calibrated() || !homeKnown) return;
     // ...and not while someone is in the middle of calibrating (machine on its back, coins on the pad).
     if (last_cal_millis_ && millis() - last_cal_millis_ < 10UL * 60 * 1000) return;
     uint32_t now = millis();
@@ -138,7 +197,7 @@ class Machine {
   }
 
   int32_t secondsToNextAuto() const {
-    if (!S.auto_enabled || !calibrated()) return -1;
+    if (!S.auto_enabled || !calibrated() || !homeKnown) return -1;
     uint32_t due = measured_since_boot ? last_measure_millis + (uint32_t)(intervalHours() * 3600000.0f) : boot_millis + 60000;
     int32_t d = (int32_t)(due - millis()) / 1000;
     return d < 0 ? 0 : d;
@@ -226,6 +285,7 @@ class Machine {
   static void taskEntry(void* arg) {
     Machine* m = (Machine*)arg;
     m->runJob();
+    if (moves(m->job)) m->posSave(false);
     m->job = Job::Idle;
     m->stage = ripe::Stage::Idle;
     m->task_ = nullptr;
@@ -236,8 +296,8 @@ class Machine {
     switch (job) {
       case Job::Measure:  runMeasurement(false); break;
       case Job::BladeCal: runMeasurement(true); break;
-      case Job::Jog:      guardedMove(jobParam_, S.t.force_cap_n); homed_ = false; stepper.release(); break;
-      case Job::Home:     home(true); stepper.release(); break;   // the Home button: always the full run
+      case Job::Jog:      jog(jobParam_); stepper.release(); break;
+      case Job::Home:     home(); stepper.release(); break;
       case Job::Tip:      servo.tip(S.servo_rest_deg, S.servo_tip_deg, S.servo_hold_ms); break;
       case Job::Notify:   net.notify(pendingTitle, pendingMsg, 2, "white_check_mark"); pendingTitle[0] = 0; pendingMsg[0] = 0; break;
       default: break;
@@ -268,21 +328,25 @@ class Machine {
     return !stepper.aborted();
   }
 
-  // full = true (the Home button) always runs the whole travel back: there is no
-  // end-stop switch, so if steps were lost (a loose power wire, a stall) the
-  // position count is wrong and a short run would stop in the middle.
-  void home(bool full = false) {
+  // Home is a step count, not a switch. The user sets it once with the sled
+  // against the end stop ("Set home here"), the count is saved after every move,
+  // and nothing ever drives into the stop on purpose: running into it made the
+  // 28BYJ-48 pull the lead screw off its shaft instead of slipping.
+  void home() {
     stage = ripe::Stage::Homing;
+    if (!homeKnown) { strlcpy(error, HOME_UNSET_MSG, sizeof error); stepper.requestAbort(); return; }
     stepper.setSpeedMmS(S.fast_mm_s);
-    // After a clean retract the sled is already at the stop: 3 mm of slip is
-    // enough. Otherwise (boot, jog, abort) run back as far as the sled went, plus 3.
-    float back = full ? S.t.max_travel_mm + 3.0f
-               : homed_ ? 3.0f : (stepper.posMm() > 0 ? stepper.posMm() + 3.0f : S.t.max_travel_mm + 3.0f);
-    if (!guardedMove(-back, 1.5f)) { homed_ = false; return; }   // into the end stop; the 28BYJ-48 slips the last few steps
-    stepper.setPosMm(0);
-    stepper.moveMm(0.3f);           // come off the stop so it isn't loading the screw
-    stepper.setPosMm(0);
-    homed_ = true;
+    float p = stepper.posMm();
+    if (fabsf(p) > 0.001f) guardedMove(-p, 1.5f);
+  }
+
+  // Jog from the Motor panel. With home set, big steps stop at home and at the
+  // travel limit; a 1 mm step toward the motor may go past home, so a wrong home
+  // can be corrected by creeping up to the real end stop.
+  void jog(float mm) {
+    mm = jogClamp(mm);
+    if (fabsf(mm) < 0.01f) return;
+    guardedMove(mm, S.t.force_cap_n);
   }
 
   void runMeasurement(bool bladeCal) {
@@ -292,6 +356,7 @@ class Machine {
     // position backstop short so a wrong guess can't turn into a deep press.
     if (!S.cal_points[0] && t.max_squish_mm > 3.0f) t.max_squish_mm = 3.0f;
 
+    if (!homeKnown) { finishAborted(HOME_UNSET_MSG); return; }
     home();
     if (stepper.aborted()) { finishAborted(error[0] ? error : "stopped"); return; }
 
@@ -378,10 +443,8 @@ class Machine {
     stage = ripe::Stage::Retract;
     stepper.clearAbort();
     stepper.setSpeedMmS(S.fast_mm_s);
-    bool ok = guardedMove(-(stepper.posMm() + 1.0f), S.t.force_cap_n + 1.0f);
-    stepper.setPosMm(0);
+    guardedMove(-stepper.posMm(), S.t.force_cap_n + 1.0f);   // back to home by count; never into the stop
     stepper.release();
-    homed_ = ok;
     stepper.clearAbort();
   }
 
@@ -390,7 +453,6 @@ class Machine {
     last.outcome = ripe::Outcome::Aborted;
     stepper.clearAbort();
     stepper.release();
-    homed_ = false;
   }
 
   void processReading(const ripe::Reading& r, const char* ts) {
@@ -464,7 +526,7 @@ class Machine {
 
   TaskHandle_t task_ = nullptr;
   float jobParam_ = 0;
-  bool homed_ = false;          // sled known to be at the end stop (clean retract/home since boot)
+  bool configured_ = false, lastInvert_ = false;
   bool zeroCaptured_ = false;   // captureZero() done since boot
   uint32_t last_cal_millis_ = 0;
 };

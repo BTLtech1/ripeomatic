@@ -157,7 +157,8 @@ details[open] summary::after{content:"–"}
     <div class="row" style="padding:4px 0 10px">
       <button data-jog="-5">◀ 5 mm</button><button data-jog="-1">◀ 1</button><button id="btnHome" style="flex:2">Home</button><button data-jog="1">1 ▶</button><button data-jog="5">5 mm ▶</button>
     </div>
-    <p class="kv">▶ should move the sled away from the motor (toward the avocado). If it goes toward the motor, flip <b>motor_invert</b> in Settings. Position: <b id="pos">—</b> mm, force now: <b id="forcenow">—</b> N.</p>
+    <div class="row" style="padding:0 0 10px"><button id="btnSetHome">Set home here</button></div>
+    <p class="kv">▶ moves the sled away from the motor (toward the avocado); if it goes toward the motor, flip <b>motor_invert</b> in Settings. <b>Home</b> drives it back to home. <b>Set home here</b> tells the machine the sled is touching the end stop at the motor end: do it once after building, or again if home ever looks wrong (◀ 5 mm stops at home; ◀ 1 can creep past it to reach the real end stop). Position: <b id="pos">—</b> mm from home, force now: <b id="forcenow">—</b> N.</p>
     <div id="servo" hidden style="margin-top:8px"><button id="btnTip">Tip the avocado out (v2 servo)</button></div>
   </details>
 
@@ -263,6 +264,9 @@ function render() {
   else if (verdict === 'hard' && f.n > 1) msg = 'Not softening yet.';
   if (s.last && s.last.outcome === 'overtravel') msg = 'Last press never reached the force cap: very soft fruit, or check the sensor.';
   if (s.last && s.last.outcome === 'aborted') msg = 'Last press was stopped: ' + (s.error || 'aborted') + '.';
+  if (!s.home_known && !s.simulate && !busy) msg = s.home_lost
+    ? 'The power went off while the sled was moving, so it lost its place. In Motor: jog the sled until it touches the end stop, then tap Set home here.'
+    : 'Home isn\'t set yet: jog the sled until it touches the end stop at the motor end, then tap Set home here (in the setup checklist, or under Motor).';
   v.textContent = names[verdict] || verdict; v.className = 'verdict ' + verdict;
   $('kval').innerHTML = (f.loaded && f.last_k > 0 ? fmt(f.last_k) : '—') + '<small> N/mm</small>';
   const meta = [];
@@ -279,11 +283,11 @@ function render() {
 
   $('live').hidden = !busy;
   $('btnAbort').hidden = !busy;
-  $('btnMeasure').disabled = busy; $('btnNew').disabled = busy; $('btnHome').disabled = busy;
+  $('btnMeasure').disabled = busy; $('btnNew').disabled = busy; $('btnHome').disabled = busy || !s.home_known; $('btnSetHome').disabled = busy;
   document.querySelectorAll('#steps button').forEach(b => { if (!b.classList.contains('nobusy')) b.disabled = busy; });
   document.querySelectorAll('[data-jog]').forEach(b => b.disabled = busy);
   if (busy) {
-    const stageTxt = {homing: 'Homing against the end stop', taring: 'Zeroing the sensor', approach: 'Approaching', creep: 'Feeling for the skin', preload: 'Seating the fruit', measure: 'Pressing', retract: 'Backing off', done: 'Done'}[s.stage] || s.stage;
+    const stageTxt = {homing: 'Going back to home', taring: 'Zeroing the sensor', approach: 'Approaching', creep: 'Feeling for the skin', preload: 'Seating the fruit', measure: 'Pressing', retract: 'Backing off', done: 'Done'}[s.stage] || s.stage;
     $('livetxt').textContent = (s.job === 'measure' ? stageTxt : s.job) + ' · ' + fmt(s.pos_mm, 1) + ' mm · ' + fmt(s.force_n) + ' N';
     const prog = s.job === 'measure' ? (s.stage === 'measure' ? 60 + 40 * Math.min(1, s.force_n / (settings ? settings.force_cap_n : 2.5)) : {homing: 10, taring: 15, approach: 30, creep: 45, preload: 55, retract: 95, done: 100}[s.stage] || 5) : 50;
     $('livebar').style.width = prog + '%';
@@ -346,7 +350,8 @@ const act = (path, data, okMsg) => async () => { try { await post(path, data); i
 $('btnMeasure').onclick = act('/api/measure', null, 'Measuring…');
 $('btnNew').onclick = async () => { if (!confirm('Start tracking a new avocado? The current one is kept in the log.')) return; act('/api/newfruit', null, 'New avocado. Measuring…')(); };
 $('btnAbort').onclick = act('/api/abort', null, 'Stopping');
-$('btnHome').onclick = act('/api/home', null, 'Homing');
+$('btnHome').onclick = act('/api/home', null, 'Going home');
+$('btnSetHome').onclick = async () => { if (!confirm('Is the sled touching the end stop at the motor end?')) return; act('/api/sethome', null, 'Home set')(); };
 $('btnCalClear').onclick = act('/api/cal/clear', null, 'Calibration points cleared');
 $('btnSetupShow').onclick = () => { setupHidden(false); $('setup').hidden = false; window.scrollTo({top: 0, behavior: 'smooth'}); };
 $('setupHide').onclick = () => { setupHidden(true); $('setup').hidden = true; };
@@ -360,6 +365,7 @@ function renderSetup(s) {
   const steps = [
     { id: 'ntfy', title: 'Alerts', done: !!s.ntfy_ok || skippedNtfy },
     { id: 'motor', title: 'Motor direction', done: !!s.motor_checked || !!s.simulate },
+    { id: 'home', title: 'Set home', done: !!s.home_known || !!s.simulate },
     { id: 'force', title: 'Force calibration', done: (s.cal_points_n || 0) >= 2 || (!!s.calibrated && ls.get('forceCalDone') === '1') },
     { id: 'blade', title: 'Blade calibration', done: !!s.blade_calibrated },
     { id: 'fruit', title: 'First avocado', done: (s.fruit_count || 0) > 0 && !!s.fruit && s.fruit.n > 0 },
@@ -371,7 +377,7 @@ function renderSetup(s) {
   $('setupbar').style.width = (100 * nDone / steps.length) + '%';
   if (card.hidden) return;
   // only rebuild the markup when the step states change, so typing in inputs survives polling
-  const key = steps.map(x => x.done ? 1 : 0).join('') + '|' + (s.ntfy_topic || '') + '|' + s.discord_set + '|' + s.motor_invert + '|' + s.online + '|' + testPending + testResult + '|' + s.cal_points_n;
+  const key = steps.map(x => x.done ? 1 : 0).join('') + '|' + (s.ntfy_topic || '') + '|' + s.discord_set + '|' + s.motor_invert + '|' + s.online + '|' + testPending + testResult + '|' + s.cal_points_n + '|' + s.home_lost;
   if (key === stepsKey) return;
   stepsKey = key;
   let firstOpen = steps.findIndex(x => !x.done);
@@ -391,6 +397,9 @@ function renderSetup(s) {
     } else if (st.id === 'motor') {
       if (st.done) body = `<p><b>Motor direction</b> · ${s.simulate ? 'no motor in simulation' : 'checked'}</p>`;
       else body = `<p><b>Motor direction.</b> Tap <b>Nudge</b> and watch the sled.</p><div class="row"><button class="primary" data-act="nudge">Nudge the sled 1 mm</button></div><p style="margin-top:10px">Which way did it move?</p><div class="row"><button data-act="motorok">Away from the motor</button><button data-act="motorbad">Toward the motor</button></div>${s.motor_invert ? '<p class="kv" style="margin-top:6px">Direction is currently flipped.</p>' : ''}`;
+    } else if (st.id === 'home') {
+      if (st.done) body = `<p><b>Set home</b> · ${s.simulate ? 'not needed in simulation' : 'set'}</p>`;
+      else body = `<p><b>Set home.</b> The machine counts every step from here, so it never has to bump into anything to find its place. Jog the sled toward the motor until it just touches the end stop: ◀ 5 mm while it's far, ◀ 1 for the last bit.</p>${s.home_lost ? '<p class="bad">The power went off while the sled was moving, so it lost its place. Set home again.</p>' : ''}<div class="row"><button data-act="jog" data-mm="-5">◀ 5 mm</button><button data-act="jog" data-mm="-1">◀ 1</button><button data-act="jog" data-mm="1">1 ▶</button></div><div class="row" style="margin-top:8px"><button class="primary" data-act="sethome">It's touching: set home here</button></div>`;
     } else if (st.id === 'force') {
       if (st.done) body = `<p><b>Force calibration</b> · ${s.cal_points_n} point${s.cal_points_n === 1 ? '' : 's'}</p>`;
       else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<p>1 · Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad, nothing else, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cap (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Two different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${s.cal_points_n ? '<p class="ok" style="margin-top:8px">' + s.cal_points_n + ' point captured. Add a second amount, or:</p><div class="row"><button data-act="forcedone">Continue with one point</button></div>' : ''}`;
@@ -417,6 +426,8 @@ $('steps').addEventListener('click', async ev => {
     else if (a === 'ntfytest') { testPending = true; testResult = ''; await post('/api/ntfy/test'); waitForTest(); }
     else if (a === 'nudge') { await post('/api/jog', {mm: 1}); toast('Nudging'); }
     else if (a === 'motorok') { await post('/api/motor/checked', {ok: 1}); toast('Direction confirmed'); }
+    else if (a === 'jog') { await post('/api/jog', {mm: b.dataset.mm}); }
+    else if (a === 'sethome') { await post('/api/sethome'); toast('Home set'); }
     else if (a === 'motorbad') { await post('/api/motor/checked', {ok: 0}); toast('Flipped. Nudge again to check.'); }
     else if (a === 'zero') { await post('/api/cal/zero'); ls.set('forceCalDone', '0'); toast('Zero captured'); }
     else if (a === 'forcedone') { ls.set('forceCalDone', '1'); }

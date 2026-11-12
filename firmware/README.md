@@ -6,7 +6,7 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 
 ## What it does
 
-- **Measures** on a schedule (default every 12 h, every 6 h once the fruit is almost ripe; only once both calibrations are done) and on demand: homes against the end stop, zeroes the hall sensor, approaches, creeps to contact, preloads, presses to the force cap, retracts. ~1–2 minutes.
+- **Measures** on a schedule (default every 12 h, every 6 h once the fruit is almost ripe; only once both calibrations are done) and on demand: goes back to home, zeroes the hall sensor, approaches, creeps to contact, preloads, presses to the force cap, retracts. ~1–2 minutes.
 - **Reports stiffness in N/mm** with the blade's own bend subtracted, fits a line, and judges `hard / softening / almost ripe / ripe`. Guesses days-to-ripe from the fruit's own decay once it has two readings a day apart.
 - **Knows when you swap avocados** (contact position jumps, or the fruit got much stiffer) and starts a new fruit id. Notices when the avocado is gone.
 - **Logs** every reading to a CSV on the ESP32's flash in the shared schema (`docs/data-sharing.md`), downloadable from the page as `/data.csv`.
@@ -38,11 +38,12 @@ The device page opens with a **setup checklist** that walks through everything, 
 
 1. **Alerts.** Phone: *Set up phone alerts* creates a private ntfy topic; install the free ntfy app, tap the link to subscribe. Discord: paste a channel webhook URL (channel settings → Integrations → Webhooks). One or both, then *Send a test alert*. (Or skip.)
 2. **Motor direction.** *Nudge the sled 1 mm*, then answer *Away from the motor* or *Toward the motor*; the firmware flips the direction itself if needed.
-3. **Force calibration.** Machine on its motor end, bottle cap on the pad: *Capture zero*; add nickels (5.000 g each), type the grams, *Capture*. Two amounts are better than one.
-4. **Blade calibration.** Machine upright, a glass jar where the avocado goes: *Measure the blade*. Records the machine's own spring (`blade_k`) so it can be subtracted from every reading. (If you redo the force calibration later, `blade_k` is rescaled automatically.)
-5. **First avocado.** Put one in, *Measure now*. From then on readings run every 12 h.
+3. **Set home.** Jog the sled toward the motor until it just touches the end stop (◀ 5 mm while it's far, ◀ 1 for the last bit), then *Set home here*. Done once: see [Home](#home) below.
+4. **Force calibration.** Machine on its motor end, bottle cap on the pad: *Capture zero*; add nickels (5.000 g each), type the grams, *Capture*. Two amounts are better than one.
+5. **Blade calibration.** Machine upright, a glass jar where the avocado goes: *Measure the blade*. Records the machine's own spring (`blade_k`) so it can be subtracted from every reading. (If you redo the force calibration later, `blade_k` is rescaled automatically.)
+6. **First avocado.** Put one in, *Measure now*. From then on readings run every 12 h.
 
-Until steps 3 and 4 are done the force cap is a guess, the squish backstop is shortened to 3 mm, and automatic readings stay off. Wi-Fi was already set by the installer; without it, the device starts an access point `RipeOMatic-xxxxxx` with a setup page (or open `http://192.168.4.1`).
+Until steps 4 and 5 are done the force cap is a guess, the squish backstop is shortened to 3 mm, and automatic readings stay off. Wi-Fi was already set by the installer; without it, the device starts an access point `RipeOMatic-xxxxxx` with a setup page (or open `http://192.168.4.1`).
 
 When you eat the avocado, tap how it was (**Perfect** is the label that matters), and whether it bruised if you looked. That row is what turns everyone's readings into a real ripeness threshold.
 
@@ -83,7 +84,8 @@ Everything the page does. Handy for Home Assistant or a script.
 | GET/POST | `/api/settings` | All settings as JSON; POST form fields to change any of them |
 | POST | `/api/alerts/discord` | `url=` a Discord webhook (blank to remove); `/api/ntfy/new` makes a phone topic; `/api/ntfy/test` sends a test to every channel set |
 | POST | `/api/jog` | `mm=±5` manual move |
-| POST | `/api/home` | Home against the end stop: always runs the full travel back (about 1½ min), since there is no end-stop switch to say it has arrived |
+| POST | `/api/home` | Drive back to home (position 0) by step count |
+| POST | `/api/sethome` | The sled is touching the end stop now: call this position 0 |
 | POST | `/api/cal/zero`, `/api/cal/mass` (`g=`), `/api/cal/clear`, `/api/cal/blade` | Calibration |
 | POST | `/api/tip` | v2: tip the avocado out |
 | GET | `/api/scan` · POST `/api/wifi` (`ssid`, `pass`) | Wi-Fi |
@@ -111,6 +113,21 @@ All in the Settings panel; defaults in `measure.h` and `config.h`.
 | `ripe_pct_of_first` | 45 | Ripe when below this % of the fruit's first reading; whichever threshold is higher wins. 0 = off |
 | `swap_contact_mm`, `swap_stiffer_pct` | 6, 60 | New-fruit detection |
 | `interval_h` | 12 | Halved once the fruit is almost ripe |
+
+## Home
+
+There is no home switch, and the machine never runs into the end stop to find its place. Running into it doesn't make a 28BYJ-48 slip politely: it keeps turning the screw, which pulls the lead screw off the motor shaft instead.
+
+Instead home is a step count:
+
+- **Set it once.** In the setup checklist (or under *Motor*), jog the sled until it just touches the end stop at the motor end and tap *Set home here*. That spot is position 0.
+- **Every move is counted** (2048 half-steps per mm), and the count is saved to flash after each move, so a restart or power cut keeps it; the lead screw can't move without power.
+- **A power cut in the middle of a move** loses the count: a "moving" flag is saved before each move and cleared after it. If the device boots with it set, it asks for *Set home here* again and holds off automatic readings until then.
+- **Home** (the button, and the start of every reading) drives back to 0 by count. Retract does the same.
+- **Jogging** with home set: ◀ 5 mm stops at home and ▶ stops at `max_travel_mm`. ◀ 1 can go past home, so if home ever looks off, creep to the real end stop and set it again.
+- **Flipping `motor_invert`** mirrors the count, because the sled didn't move, only the meaning of the sign.
+
+The reading itself doesn't depend on home: it feels for the skin with the sensor and measures the slope after contact. Home only places the travel limit, the fast-approach point and the "new avocado?" check, which all tolerate a few millimetres.
 
 ## Hall sensor notes
 

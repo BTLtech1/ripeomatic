@@ -23,13 +23,15 @@ class Web {
     server.on("/api/live", HTTP_GET, [this] { live(); });
     server.on("/api/settings", HTTP_GET, [this] { json(200, settingsJson()); });
     server.on("/api/settings", HTTP_POST, [this] { saveSettings(); });
-    server.on("/api/measure", HTTP_POST, [this] { startJob(Job::Measure); });
-    server.on("/api/newfruit", HTTP_POST, [this] { if (M.busy()) return fail(409, "busy"); M.forgetFruit(); startJob(Job::Measure); });
+    server.on("/api/measure", HTTP_POST, [this] { if (!M.homeKnown) return fail(400, HOME_UNSET_MSG); startJob(Job::Measure); });
+    server.on("/api/newfruit", HTTP_POST, [this] { if (M.busy()) return fail(409, "busy"); if (!M.homeKnown) return fail(400, HOME_UNSET_MSG); M.forgetFruit(); startJob(Job::Measure); });
     server.on("/api/abort", HTTP_POST, [this] { M.abort(); ok(); });
-    server.on("/api/home", HTTP_POST, [this] { startJob(Job::Home); });
+    server.on("/api/home", HTTP_POST, [this] { if (!M.homeKnown) return fail(400, HOME_UNSET_MSG); startJob(Job::Home); });
+    server.on("/api/sethome", HTTP_POST, [this] { if (!M.setHomeHere()) return fail(409, "busy"); ok(); });
     server.on("/api/jog", HTTP_POST, [this] {
       float mm = server.arg("mm").toFloat();
       if (mm == 0 || fabsf(mm) > 20) return fail(400, "mm must be within +-20");
+      if (const char* why = M.jogBlocked(mm)) return fail(400, why);
       startJob(Job::Jog, mm);
     });
     server.on("/api/tip", HTTP_POST, [this] {
@@ -78,7 +80,7 @@ class Web {
       else S.motor_checked = true;
       settingsSave(); M.applySettings(); ok();
     });
-    server.on("/api/cal/blade", HTTP_POST, [this] { startJob(Job::BladeCal); });
+    server.on("/api/cal/blade", HTTP_POST, [this] { if (!M.homeKnown) return fail(400, HOME_UNSET_MSG); startJob(Job::BladeCal); });
     server.on("/api/scan", HTTP_GET, [this] { scan(); });
     server.on("/api/wifi", HTTP_POST, [this] { wifi(); });
     server.on("/api/reset", HTTP_POST, [this] { reset(); });
@@ -147,6 +149,7 @@ class Web {
     addBool(o, "simulate", SIMULATE);
     addStr(o, "ntfy_topic", S.ntfy_topic); addBool(o, "ntfy_ok", S.ntfy_ok); addBool(o, "discord_set", S.discord_webhook[0] != 0); addBool(o, "notify_pending", M.pendingTitle[0] != 0); addBool(o, "notify_last_ok", M.net.lastOk);
     addBool(o, "motor_checked", S.motor_checked); addBool(o, "motor_invert", S.motor_invert);
+    addBool(o, "home_known", M.homeKnown); addBool(o, "home_lost", M.homeLost);
     addBool(o, "online", M.net.online());
     addInt(o, "fruit_count", FR.counter);
     addNum(o, "blade_k", S.t.blade_k_n_per_mm, 2);

@@ -24,7 +24,7 @@ The base (with its guide channel and nest pedestal), the nest, the lead screw, t
 
 ### Measurement routine
 
-1. **Home** by running the sled gently back against the printed end stop.
+1. **Home**: drive the sled back to position 0. There's no home switch: you set home once with the sled touching the end stop, and the machine counts every step from there.
 2. **Tare** the hall sensor with the pad in the air.
 3. **Approach** to just short of the last known contact position, then creep slowly.
 4. **Detect contact** when force rises above ~0.1 N for 3 readings in a row.

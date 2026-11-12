@@ -59,7 +59,7 @@ Use `3V3` here, **not** `VIN`: the sensor's signal has to stay at 3.3 V or less 
 3. Open [http://ripeomatic.local](http://ripeomatic.local) on a phone or computer on the same Wi-Fi.
 4. Press **1 ▶**. The sled should move 1 mm **away from the motor** (toward where the avocado sits), and the four LEDs on the driver flicker.
 5. If it moved **toward the motor**, accept the "flip direction" prompt (or turn on `motor_invert` in Settings) and try again.
-6. Press **Home**. The sled runs back to the motor end and clicks for a few seconds against the stop. That clicking is normal; it's how the machine finds zero.
+6. **Set home** (once): jog the sled toward the motor with ◀ until it just touches the end stop, then tap **Set home here**. From then on the machine counts every step from that spot, and **Home** brings the sled back there.
 
 Using the V45 sled and blade (from [`stl/v45/`](stl/v45/))? Set **Max travel** to **37** in Settings first.
 
