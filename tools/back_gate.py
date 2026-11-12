@@ -414,17 +414,21 @@ def build_base():
     if base.volume < 0:
         base.invert()
     b = M(base)
-    fill = trimesh.creation.box(extents=[15.9, 3.1, 148.9])
-    fill.apply_translation([81.0, 3.445, 0.0])                 # old yoke recess, flush with the deck
-    b = b + M(fill)
-    for zh in (-60.0, -30.0, 30.0, 60.0):
+    # Fill the old yoke recess (x 73-89) and the two weight-saving windows where the holder now stands
+    # (board side x 50-70, z -68..-30; knob side the last 15 mm of the long window, x 50-65, z 32..68).
+    # Each fill is built 0.5 proud and then planed off at exactly the deck's own height, so the deck is
+    # one flat face: a fill that stops a hair under it leaves hairline steps that slicers draw as lines.
+    deck = float(np.median(base.vertices[np.abs(base.vertices[:, 1] - DECK) < 0.01, 1]))
+    fills = [(72.5, 89.5, 1.9, -75.5, 75.5), (49.5, 70.5, 0.0, -68.5, -29.5), (49.5, 65.5, 0.0, 31.5, 68.5)]
+    for x0, x1, y0, z0, z1 in fills:
+        b = b + box3(x0, x1, y0, deck + 0.5, z0, z1)
+    for zh in (-60.0, -30.0, 30.0, 60.0):                     # the yoke's four screw holes
         h = trimesh.creation.cylinder(radius=1.85, height=2.3, sections=32)
         h.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [1, 0, 0]))
         h.apply_translation([81.02, 1.0, zh])
         b = b + M(h)
-    # close the two weight-saving windows where the holder now stands, so the deck is solid under it
-    # (board side: x 50-70, z -68..-30; knob side: the last 15 mm of the long window, x 50-65, z 32..68)
-    b = b + box3(49.5, 70.5, 0.0, 4.995, -68.5, -29.5) + box3(49.5, 65.5, 0.0, 4.995, 31.5, 68.5)
+    for x0, x1, y0, z0, z1 in fills:
+        b = b - box3(x0, x1, deck, deck + 1.0, z0, z1)
     for sx, sz in STUDS:
         b = b + stud(sx, sz)
     return b
