@@ -142,6 +142,25 @@ def arch_slot(s):
     return s
 
 
+def hall_clip(s):
+    """Hall-sensor pocket that holds an SS49E without glue. The sensor (4.0 wide, 3.0 tall, 1.5 thick,
+    flat marked face toward the magnet, legs up) slides down from the top of the post until it sits on
+    the pocket floor, which puts its middle level with the magnet (model y 62). Two 0.6 mm lips on the
+    post's front face overlap the sensor's face edges by 0.3 mm, and a 0.3 mm rib on the back wall
+    pushes it against them. The lips stand proud of the post face, so the sensor isn't moved back."""
+    fill = trimesh.creation.box(extents=[2.2, 8.0, 5.2]); fill.apply_translation([16.4, 64.0, 0.0])   # old pocket
+    s = s + M(to_print_sled(fill))
+    pocket = trimesh.creation.box(extents=[1.7 + 0.01, 8.0, 4.2]); pocket.apply_translation([17.5 - 0.85 + 0.005, 60.5 + 4.0, 0.0])
+    s = s - M(to_print_sled(pocket))
+    for zs in (-1, 1):   # lips: x 17.5..18.1, from |z| 1.7 (0.3 over the sensor) to 2.7 (0.6 onto the face)
+        lip = trimesh.creation.box(extents=[0.6 + 0.01, 7.5, 1.0]); lip.apply_translation([17.8 - 0.005, 60.5 + 3.75, zs * 2.2])
+        s = s + M(to_print_sled(lip))
+    rib = prism_zx([(-0.35, 15.79), (0.35, 15.79), (0.0, 16.1)], 61.0, 67.5)   # crush rib on the back wall, along y
+    rib.apply_translation([0, 0, 0])
+    s = s + M(to_print_sled(rib))
+    return s
+
+
 def blade():
     """hardware/stl/blade.stl (printed lying on its back, stem up) with the pad stem STEM_EXTRA longer
     and a 45-degree ridge on the tongue that matches the arch slot. Blade print coords:
@@ -183,6 +202,7 @@ def sled(clear=CLEAR):
     s = (s - move(cav)) + move(ridge ^ keep)
     s = s - move(cs)
     s = arch_slot(s)
+    s = hall_clip(s)
     return T(s), (cx, cy)
 
 
