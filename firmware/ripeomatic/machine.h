@@ -237,7 +237,7 @@ class Machine {
       case Job::Measure:  runMeasurement(false); break;
       case Job::BladeCal: runMeasurement(true); break;
       case Job::Jog:      guardedMove(jobParam_, S.t.force_cap_n); homed_ = false; stepper.release(); break;
-      case Job::Home:     home(); stepper.release(); break;
+      case Job::Home:     home(true); stepper.release(); break;   // the Home button: always the full run
       case Job::Tip:      servo.tip(S.servo_rest_deg, S.servo_tip_deg, S.servo_hold_ms); break;
       case Job::Notify:   net.notify(pendingTitle, pendingMsg, 2, "white_check_mark"); pendingTitle[0] = 0; pendingMsg[0] = 0; break;
       default: break;
@@ -268,12 +268,16 @@ class Machine {
     return !stepper.aborted();
   }
 
-  void home() {
+  // full = true (the Home button) always runs the whole travel back: there is no
+  // end-stop switch, so if steps were lost (a loose power wire, a stall) the
+  // position count is wrong and a short run would stop in the middle.
+  void home(bool full = false) {
     stage = ripe::Stage::Homing;
     stepper.setSpeedMmS(S.fast_mm_s);
     // After a clean retract the sled is already at the stop: 3 mm of slip is
-    // enough. Otherwise (boot, jog, abort) run the whole travel back.
-    float back = homed_ ? 3.0f : (stepper.posMm() > 0 ? stepper.posMm() + 3.0f : S.t.max_travel_mm + 3.0f);
+    // enough. Otherwise (boot, jog, abort) run back as far as the sled went, plus 3.
+    float back = full ? S.t.max_travel_mm + 3.0f
+               : homed_ ? 3.0f : (stepper.posMm() > 0 ? stepper.posMm() + 3.0f : S.t.max_travel_mm + 3.0f);
     if (!guardedMove(-back, 1.5f)) { homed_ = false; return; }   // into the end stop; the 28BYJ-48 slips the last few steps
     stepper.setPosMm(0);
     stepper.moveMm(0.3f);           // come off the stop so it isn't loading the screw

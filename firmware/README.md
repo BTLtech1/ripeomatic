@@ -83,7 +83,7 @@ Everything the page does. Handy for Home Assistant or a script.
 | GET/POST | `/api/settings` | All settings as JSON; POST form fields to change any of them |
 | POST | `/api/alerts/discord` | `url=` a Discord webhook (blank to remove); `/api/ntfy/new` makes a phone topic; `/api/ntfy/test` sends a test to every channel set |
 | POST | `/api/jog` | `mm=±5` manual move |
-| POST | `/api/home` | Home against the end stop |
+| POST | `/api/home` | Home against the end stop: always runs the full travel back (about 1½ min), since there is no end-stop switch to say it has arrived |
 | POST | `/api/cal/zero`, `/api/cal/mass` (`g=`), `/api/cal/clear`, `/api/cal/blade` | Calibration |
 | POST | `/api/tip` | v2: tip the avocado out |
 | GET | `/api/scan` · POST `/api/wifi` (`ssid`, `pass`) | Wi-Fi |
