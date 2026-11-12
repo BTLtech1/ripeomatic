@@ -152,11 +152,14 @@ def hall_clip(s):
     s = s + M(to_print_sled(fill))
     pocket = trimesh.creation.box(extents=[1.7 + 0.01, 8.0, 4.2]); pocket.apply_translation([17.5 - 0.85 + 0.005, 60.5 + 4.0, 0.0])
     s = s - M(to_print_sled(pocket))
-    for zs in (-1, 1):   # lips: x 17.5..18.1, from |z| 1.7 (0.3 over the sensor) to 2.7 (0.6 onto the face)
-        lip = trimesh.creation.box(extents=[0.6 + 0.01, 7.5, 1.0]); lip.apply_translation([17.8 - 0.005, 60.5 + 3.75, zs * 2.2])
-        s = s + M(to_print_sled(lip))
-    rib = prism_zx([(-0.35, 15.79), (0.35, 15.79), (0.0, 16.1)], 61.0, 67.5)   # crush rib on the back wall, along y
-    rib.apply_translation([0, 0, 0])
+    # dovetail lips standing 0.6 mm proud of the post face, their inner faces at 45 degrees: they overlap the
+    # sensor's face edges, centre it, and print without support (the sled prints with the post face up)
+    for zs in (-1, 1):
+        prof = [(2.9, 17.49), (2.9, 18.1), (1.6, 18.1), (1.6, 18.0), (2.1, 17.5), (2.1, 17.49)]
+        if zs < 0:
+            prof = [(-z, x) for z, x in reversed(prof)]
+        s = s + M(to_print_sled(prism_zx(prof, 60.5, 68.0)))
+    rib = prism_zx([(-0.35, 15.79), (0.35, 15.79), (0.0, 16.2)], 61.0, 67.5)   # crush rib on the back wall, along y
     s = s + M(to_print_sled(rib))
     return s
 
