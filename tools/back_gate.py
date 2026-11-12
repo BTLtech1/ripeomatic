@@ -16,8 +16,8 @@ The holder
 The avocado lies in a V: a floor tilted 12 deg down toward the back and a back wall square to
 it, so any size touches both and the pad's push wedges it into the corner instead of rolling it.
 The corner is placed so a 70 mm avocado has its middle exactly at pad height (y 62). An 80 mm
-one is met 6 mm below its middle and a 55 mm one 9 mm above (8 and 19 degrees off square), and
-the pad reaches everything from 50 to 85 mm across inside the 37 mm travel. (The first gate
+one is met 6 mm below its middle and a 55 mm one 9 mm above (9 and 19 degrees off square), and
+the pad reaches everything from 45 to 80 mm across inside the 42 mm travel. (The first gate
 design centred an 80 mm fruit, which left a 55 mm one hit 14 mm high, at 31 degrees.)
 
 The floor is 6 mm or more above the sled everywhere the sled can reach: the sled runs into a
@@ -47,7 +47,7 @@ Everything is built on the +z side and mirrored at the end, so the servo ends up
 side (-z), next to the ESP32.
 
 Model coordinates (as the Fusion assembly): x = press axis toward the holder, y = up,
-z = across. Pad centre y 62; V45 pad tip at x 28 at home, 65 at max travel 37.
+z = across. Pad centre y 62; V45 pad tip at x 28 at home, 70 at max travel 42.
 """
 import sys
 import math
@@ -70,13 +70,15 @@ U_F = np.array([-math.cos(A), math.sin(A)])      # along the floor toward the pa
 U_W = np.array([math.sin(A), math.cos(A)])       # up the wall
 N_F = np.array([-math.sin(A), -math.cos(A)])     # out of the floor (down)
 N_W = np.array([math.cos(A), -math.sin(A)])      # out of the wall (back)
-LF = 50.0                                        # floor length from the corner
+LF = 46.0                                        # floor length from the corner
 F1 = V0 + LF * U_F                               # front edge of the floor (top)
 HALF_IN = 56.0                                   # 112 mm between the side walls
 CHEEK = 5.0
 ZC = HALF_IN + CHEEK                             # 61: outer face of the side walls
 DECK = 5.0
 TUNNEL_Y = 24.0                                  # underside of the floor over the sled (sled top is y 19)
+TUNNEL_BACK = 76.0                               # the sled's front is at x 70 at max travel 42
+MAX_TRAVEL = 42.0
 TUNNEL_HALF = 22.5                               # the sled is 39.4 wide
 
 # ---------------------------------------------------------------- the door and the four-bar
@@ -317,7 +319,7 @@ def cheek_outline():
     door; top corners rounded, bottom corners square (they stand on the print bed)"""
     top_in = V0 + L_DOOR * U_W
     top_out = top_in + T_DOOR * N_W
-    raw = Polygon([(F1[0] - 3.0, DECK), (F1[0] - 3.0, F1[1] + 10.0), tuple(top_in + 1.5 * U_W), tuple(top_out + 1.5 * U_W + 2.5 * N_W),
+    raw = Polygon([(SERVO[0] - 22.9, DECK), (SERVO[0] - 22.9, F1[1] + 9.0), tuple(top_in + 1.5 * U_W), tuple(top_out + 1.5 * U_W + 2.5 * N_W),
                    (HINGE[0] + 8.5, HINGE[1] + 6.0), (HINGE[0] + 8.5, DECK)])
     rounded = raw.buffer(-6.0).buffer(6.0, 24)
     out = rounded.union(raw.intersection(sbox(0, DECK, 200, DECK + 10.0)))
@@ -335,7 +337,7 @@ def under_floor(kind):
     if kind in ("rail", "both"):       # over the rails: clear of them while the frame is dropped on 9 mm forward
         p = p.difference(sbox(0, 0, 80.0, 14.0))
     if kind in ("centre", "both", "core"):   # the sled's tunnel
-        p = p.difference(sbox(0, 0, 70.0, TUNNEL_Y))
+        p = p.difference(sbox(0, 0, TUNNEL_BACK, TUNNEL_Y))
     if kind == "core":                 # the middle stays open further back for the lead screw's tip
         p = p.difference(sbox(0, 0, 79.0, TUNNEL_Y))
     return p
@@ -485,7 +487,7 @@ def checks(frame, door, lever, link, base_new):
     s = sled.vertices.copy()
     blade = trimesh.load(STL / "v45" / "v45-blade.stl", force="mesh")
     bl = blade.vertices.copy()
-    for travel in (0.0, 37.0):
+    for travel in (0.0, MAX_TRAVEL):
         sled.vertices = np.column_stack([s[:, 2] - 22.0 + travel, s[:, 1] + 36.5, s[:, 0]])
         blade.vertices = np.column_stack([bl[:, 2] + 2.1 + travel, bl[:, 1] + 43.5, bl[:, 0]])
         def flipped(mesh):                 # the z mirror turns the mesh inside out: put the faces back
@@ -498,7 +500,7 @@ def checks(frame, door, lever, link, base_new):
         rep(f"frame and door vs blade and pad at travel {travel:.0f}", vol(frame ^ bm) + vol(door ^ bm) + vol(frame ^ M(pad)))
         if travel > 0:
             gap = -trimesh.proximity.signed_distance(T(frame), sled.sample(3000)).max()
-            print(f"  {'ok ' if gap >= 1.9 else 'BAD'} closest the sled gets to the frame at max travel: {gap:.1f} mm")
+            print(f"  {'ok ' if gap >= 1.9 else 'BAD'} closest the sled gets to the frame at max travel {MAX_TRAVEL:.0f}: {gap:.1f} mm")
             ok &= gap >= 1.9
     mot = motion(40) + [over_pose(math.radians((LUG_TOUCH or 5.0) - 0.3))]
     case = prism(servo_case_profile(), Z_TAB[0], 71.8)
@@ -538,15 +540,15 @@ def checks(frame, door, lever, link, base_new):
     parts = len(T(frame).split(only_watertight=False))
     print(f"  {'ok ' if parts == 1 else 'BAD'} frame is one piece ({parts})")
     ok &= parts == 1
-    print("where the pad meets each size (pad tip is at x 28 at home, 65 at max travel 37)")
-    for d in (50, 55, 60, 65, 70, 75, 80):
+    print(f"where the pad meets each size (pad tip is at x 28 at home, {28 + MAX_TRAVEL:.0f} at max travel {MAX_TRAVEL:.0f})")
+    for d in (45, 50, 55, 60, 65, 70, 75, 80):
         r = d / 2
         c = V0 + r * U_F + r * U_W
         dy = PAD_Y - c[1]
         x = c[0] - math.sqrt(r * r - dy * dy)
-        good = 28.0 + 2.0 <= x <= 65.0 - 1.0
+        good = 28.0 + 2.0 <= x <= 28.0 + MAX_TRAVEL - 1.0
         ok &= good
-        print(f"  {'ok ' if good else 'BAD'} {d} mm: travel {x - 28.0:4.1f} of 37, pad {abs(dy):4.1f} mm {'above' if dy > 0 else 'below'} the middle ({math.degrees(math.asin(abs(dy) / r)):.0f} deg off square)")
+        print(f"  {'ok ' if good else 'BAD'} {d} mm: travel {x - 28.0:4.1f} of {MAX_TRAVEL:.0f}, pad {abs(dy):4.1f} mm {'above' if dy > 0 else 'below'} the middle ({math.degrees(math.asin(abs(dy) / r)):.0f} deg off square)")
     return ok
 
 

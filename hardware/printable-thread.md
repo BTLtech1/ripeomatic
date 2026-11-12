@@ -47,6 +47,8 @@ Regenerate everything: `python3 tools/v45_thread.py hardware/stl/v45` (needs `pi
 
 ## Arch slot and the longer stem: set max travel to 37
 
+**Only for the old hanging bowl (`nest.stl`).** With the V-holder and back gate (`gate-frame.stl`) the sled runs into a tunnel under the floor, so leave `max_travel_mm` at its default 42.
+
 The longer stem puts the pad 5 mm further forward, so the sled needs 5 mm less travel to reach the same point; the bigger riser would otherwise touch the nest's front at full travel with the nest empty. With the V45 sled and blade, set **`max_travel_mm` to 37** on the device's Settings page (firmware default is 42 for the original blade). The largest avocado the pad clears at home becomes about 78 mm across (was about 83).
 
 ## Rules of thumb (for any printed thread printed axis-vertical)
