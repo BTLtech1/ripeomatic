@@ -46,6 +46,8 @@ Hold the sensor with the **side with writing on it facing you and the legs point
 | middle | `GND` |
 | right | `D34` |
 
+![Which leg is which: in your hand (writing toward you, legs down) and in the sled (legs up, so left and right swap)](hall-sensor-pins.svg)
+
 Use `3V3` here, **not** `VIN`: the sensor's signal has to stay at 3.3 V or less for the ESP32. Then slide the sensor into its pocket on the sled, writing facing the blade, legs up. It clicks into a dovetail and needs no glue. If the sensor's readings ever jump around, an optional 0.1 µF capacitor (marked "104") between its right and middle legs calms them. Most builds don't need it.
 
 > **Testing the motor before the sensor is wired?** Put one jumper wire from `D34` to a `GND` pin for now. The machine watches the sensor during every move and stops if the reading jumps. A pin with nothing on it gives random readings, which would stop the motor for no reason. Take this wire off when you connect the sensor.

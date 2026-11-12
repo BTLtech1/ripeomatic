@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 470" width="860" height="470" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="14">
+  <title>Hall sensor pins</title>
+  <rect width="860" height="470" fill="#f7f6f1"/>
+  <text x="30" y="40" font-size="22" font-weight="700" fill="#1d1d1b">Which leg is which (SS49E hall sensor)</text>
+  <text x="30" y="64" font-size="14" fill="#555">Always look at the side with the writing on it. Wire it in your hand, before it goes into the sled.</text>
+
+  <!-- ===== Panel A: in your hand ===== -->
+  <rect x="30" y="86" width="380" height="360" rx="12" fill="#fff" stroke="#d8d6cc"/>
+  <text x="220" y="116" text-anchor="middle" font-size="16" font-weight="700" fill="#1d1d1b">In your hand: wire it like this</text>
+  <text x="220" y="136" text-anchor="middle" font-size="13" fill="#555">writing toward you, legs pointing DOWN</text>
+  <!-- body (chamfered top edge = printed face) -->
+  <path d="M160 160 L280 160 L280 230 L160 230 Z" fill="#1a1a1a"/>
+  <path d="M168 168 L272 168 L272 222 L168 222 Z" fill="#262626"/>
+  <text x="220" y="200" text-anchor="middle" font-size="20" font-weight="700" fill="#e6e6e6">49E</text>
+  <text x="220" y="216" text-anchor="middle" font-size="10" fill="#aaa">writing</text>
+  <!-- legs -->
+  <g stroke="#9aa0a6" stroke-width="5"><path d="M185 230 V300"/><path d="M220 230 V300"/><path d="M255 230 V300"/></g>
+  <!-- wires -->
+  <g fill="none" stroke-width="6" stroke-linecap="round">
+    <path d="M185 300 V330 L120 380" stroke="#a03cc8"/>
+    <path d="M220 300 V390" stroke="#222"/>
+    <path d="M255 300 V330 L320 380" stroke="#0aa5a5"/>
+  </g>
+  <g font-size="15" font-weight="700" text-anchor="middle">
+    <text x="110" y="408" fill="#a03cc8">3V3</text><text x="110" y="426" font-size="11" font-weight="400" fill="#555">left leg</text>
+    <text x="220" y="414" fill="#222">GND</text><text x="220" y="432" font-size="11" font-weight="400" fill="#555">middle leg</text>
+    <text x="330" y="408" fill="#0aa5a5">D34</text><text x="330" y="426" font-size="11" font-weight="400" fill="#555">right leg</text>
+  </g>
+
+  <!-- ===== Panel B: in the sled ===== -->
+  <rect x="450" y="86" width="380" height="360" rx="12" fill="#fff" stroke="#d8d6cc"/>
+  <text x="640" y="116" text-anchor="middle" font-size="16" font-weight="700" fill="#1d1d1b">In the sled: same wires, flipped</text>
+  <text x="640" y="136" text-anchor="middle" font-size="13" fill="#555">seen from the blade side, legs pointing UP</text>
+  <!-- post -->
+  <rect x="560" y="250" width="160" height="150" rx="4" fill="#8bbf6a" stroke="#5f8f45"/>
+  <text x="640" y="385" text-anchor="middle" font-size="12" fill="#2f4f22">sled post</text>
+  <!-- sensor in pocket, legs up -->
+  <path d="M580 260 L700 260 L700 330 L580 330 Z" fill="#1a1a1a"/>
+  <path d="M588 268 L692 268 L692 322 L588 322 Z" fill="#262626"/>
+  <text x="640" y="296" text-anchor="middle" font-size="20" font-weight="700" fill="#e6e6e6" transform="rotate(180 640 290)">49E</text>
+  <g stroke="#9aa0a6" stroke-width="5"><path d="M605 260 V200"/><path d="M640 260 V200"/><path d="M675 260 V200"/></g>
+  <g fill="none" stroke-width="6" stroke-linecap="round">
+    <path d="M605 200 V190 L548 178" stroke="#0aa5a5"/>
+    <path d="M640 200 V182" stroke="#222"/>
+    <path d="M675 200 V190 L732 178" stroke="#a03cc8"/>
+  </g>
+  <g font-size="15" font-weight="700" text-anchor="middle">
+    <text x="522" y="185" fill="#0aa5a5">D34</text>
+    <text x="640" y="176" fill="#222">GND</text>
+    <text x="758" y="185" fill="#a03cc8">3V3</text>
+  </g>
+  <text x="640" y="345" text-anchor="middle" font-size="11" fill="#ddd">writing faces the blade</text>
+  <text x="640" y="420" text-anchor="middle" font-size="12" fill="#555">Upside down, so left and right swap.</text>
+  <text x="640" y="437" text-anchor="middle" font-size="12" fill="#555">Don't re-wire it: the wires stay on the same legs.</text>
+</svg>
