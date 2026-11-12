@@ -436,6 +436,41 @@ def build_base():
     return b
 
 
+LINER_T = 8.0                                    # the small-avocado liner makes the floor this much thicker
+
+
+def build_liner():
+    """Drop-in floor liner for small avocados (about 45 to 65 mm across). It lifts the fruit 8 mm, so a
+    57 mm one has its middle at pad height instead of a 70 mm one. It lies on the floor between the side
+    walls, stops 0.8 mm short of the door, and two hooks at its front corners reach down over the floor's
+    front edge and tuck 1.6 mm under it, so it cannot slide back when the pad pushes. The hooks are
+    outside the sled's width. To fit it: tilt it, hook the front, lower the back."""
+    top_b = V0 + LINER_T * U_W + 0.8 * U_F
+    top_f = F1 + LINER_T * U_W
+    plate = Polygon([tuple(F1 + 0.15 * U_W), tuple(V0 + 0.15 * U_W + 0.8 * U_F), tuple(top_b), tuple(top_f)])
+    liner = prism(plate, -HALF_IN + 0.4, HALF_IN - 0.4)
+    xf, nose = F1[0], F1[1] - 3.0                 # the floor's front face, and where its 45 deg underside starts
+    x0 = xf - 2.3
+    y_top = top_f[1] + (top_f[0] - x0) * math.tan(A)
+    hook = Polygon([(x0, y_top), tuple(top_f), tuple(F1 + 0.15 * U_W), (xf - 0.3, F1[1] + 0.2), (xf - 0.3, nose - 0.12),
+                    (xf + 1.3, nose - 1.72), (xf + 1.3, nose - 2.5), (x0, nose - 2.5)])
+    for z0, z1 in ((26.0, HALF_IN - 0.4), (-HALF_IN + 0.4, -26.0)):
+        liner = liner + prism(hook, z0, z1)
+    return liner
+
+
+def liner_to_print(t):
+    """top face down, hooks up"""
+    t = t.copy()
+    ez = np.array([U_W[0], U_W[1], 0.0]) * -1.0
+    ey = np.array([0.0, 0.0, 1.0])
+    ex = np.cross(ey, ez)
+    t.vertices = t.vertices @ np.vstack([ex, ey, ez]).T
+    lo, hi = t.bounds
+    t.apply_translation([-(lo[0] + hi[0]) / 2, -(lo[1] + hi[1]) / 2, -lo[2]])
+    return t
+
+
 def servo_solid():
     """the servo as fitted (+z side), for the fit checks and the renders"""
     s = box3(SERVO[0] - 16.6, SERVO[0] + 5.9, SERVO[1] - 6.1, SERVO[1] + 6.1, ZC - 15.9, Z_CASE)
@@ -478,6 +513,13 @@ def checks(frame, door, lever, link, base_new):
 
     print("fit checks")
     base_m = mirror_z(base_new)
+    liner = build_liner()
+    rep("liner vs frame", vol(liner ^ frame), 0.3)
+    worst_l = 0.0
+    for th in np.linspace(TH_CLOSED, TH_OPEN, 30):
+        dd = math.degrees(th - TH_CLOSED)
+        worst_l = max(worst_l, vol(door.translate([-HINGE[0], -HINGE[1], 0]).rotate([0, 0, dd]).translate([HINGE[0], HINGE[1], 0]) ^ liner))
+    rep("liner vs door, whole swing (worst)", worst_l, 0.3)
     rep("frame vs base", vol(frame ^ base_m), 0.5)
     rep("frame vs base while being dropped on (9 mm toward the pad)", vol(frame.translate([-SLIDE, 0, 0]) ^ base_m), 0.5)
     srv = servo_solid()
@@ -497,6 +539,11 @@ def checks(frame, door, lever, link, base_new):
         pad.apply_transform(trimesh.transformations.rotation_matrix(math.pi / 2, [0, 1, 0]))
         pad.apply_translation([28.0 + travel - 5.7, PAD_Y, 0.0])
         rep(f"frame vs sled at travel {travel:.0f}", vol(frame ^ sm))
+        rep(f"liner vs sled, blade and pad at travel {travel:.0f}", vol(liner ^ sm) + vol(liner ^ bm) + vol(liner ^ M(pad)))
+        if travel > 0:
+            lg = -trimesh.proximity.signed_distance(T(liner), sled.sample(3000)).max()
+            print(f"  {'ok ' if lg >= 1.0 else 'BAD'} closest the sled gets to the liner at max travel: {lg:.1f} mm")
+            ok &= lg >= 1.0
         rep(f"frame and door vs blade and pad at travel {travel:.0f}", vol(frame ^ bm) + vol(door ^ bm) + vol(frame ^ M(pad)))
         if travel > 0:
             gap = -trimesh.proximity.signed_distance(T(frame), sled.sample(3000)).max()
@@ -549,6 +596,15 @@ def checks(frame, door, lever, link, base_new):
         good = 28.0 + 2.0 <= x <= 28.0 + MAX_TRAVEL - 1.0
         ok &= good
         print(f"  {'ok ' if good else 'BAD'} {d} mm: travel {x - 28.0:4.1f} of {MAX_TRAVEL:.0f}, pad {abs(dy):4.1f} mm {'above' if dy > 0 else 'below'} the middle ({math.degrees(math.asin(abs(dy) / r)):.0f} deg off square)")
+    print(f"with the liner in ({LINER_T:.0f} mm)")
+    for d in (45, 50, 55, 57, 60, 65):
+        r = d / 2
+        c = V0 + r * U_F + (r + LINER_T) * U_W
+        dy = PAD_Y - c[1]
+        x = c[0] - math.sqrt(r * r - dy * dy)
+        good = 28.0 + 2.0 <= x <= 28.0 + MAX_TRAVEL - 1.0
+        ok &= good
+        print(f"  {'ok ' if good else 'BAD'} {d} mm: travel {x - 28.0:4.1f} of {MAX_TRAVEL:.0f}, pad {abs(dy):4.1f} mm {'above' if dy > 0 else 'below'} the middle ({math.degrees(math.asin(abs(dy) / r)):.0f} deg off square)")
     return ok
 
 
@@ -569,6 +625,13 @@ def main():
         if "--model" in sys.argv:
             t.export(out / f"{name}-model.stl")
         print(f"{name}: watertight {t.is_watertight}, {t.volume / 1000:.1f} cm3, print size {np.round(p.extents, 1).tolist()}")
+    lt = T(build_liner())
+    ok &= lt.is_watertight
+    lp = liner_to_print(lt)
+    lp.export(out / "gate-liner-small.stl")
+    if "--model" in sys.argv:
+        lt.export(out / "gate-liner-small-model.stl")
+    print(f"gate-liner-small: watertight {lt.is_watertight}, {lt.volume / 1000:.1f} cm3, print size {np.round(lp.extents, 1).tolist()}")
     if not ok:
         sys.exit("a check failed")
 
