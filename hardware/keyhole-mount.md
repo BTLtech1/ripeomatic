@@ -14,7 +14,7 @@ Why boxes and not rails in the base: dev boards have their pin headers right at 
 
 ## The studs (on the base, printed with it)
 
-The avocado holder has its own four studs at x 76 and 92, 30 mm either side of the middle (its keyholes' slot ends). The boxes use two pairs, each pair 26 mm apart, standing on the 5 mm deck: the ESP32 pair along the press axis, the driver pair across it. Each stud:
+The avocado holder has its own four studs (its keyholes' slot ends): two at x 76, 33 mm either side of the middle, and two at x 89, 15 mm either side. They are staggered so the 9 mm keyholes don't run into each other. The boxes use two pairs, each pair 26 mm apart, standing on the 5 mm deck: the ESP32 pair along the press axis, the driver pair across it. Each stud:
 
 | | mm |
 |---|---|

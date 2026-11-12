@@ -39,12 +39,13 @@ struct Settings {
   char  cal_points[64]   = "";         // "grams:counts;grams:counts" captured during calibration
   // the measurement routine
   ripe::Tunables t;
-  // back gate (servo). The four-bar in tools/back_gate.py turns the servo 124 deg from shut to open;
+  // back gate (servo). The four-bar in tools/back_gate.py turns the servo 119 deg from in-line to open,
+  // and the shut position is about 4 deg past in-line, against the link's stop;
   // swap rest and tip if your servo turns the other way.
   bool  gate_fitted    = false;        // nothing moves until this is on
   bool  gate_auto      = false;        // open the gate after a reading that says ripe
   int   servo_rest_deg = 20;
-  int   servo_tip_deg  = 144;
+  int   servo_tip_deg  = 143;
   int   servo_hold_ms  = 2500;
 };
 

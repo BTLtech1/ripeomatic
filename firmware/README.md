@@ -16,7 +16,7 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 - **Wi-Fi setup** without editing code: the web installer asks for it over USB (Improv); otherwise first boot opens an access point `RipeOMatic-xxxxxx`; join it and pick your network.
 - **Updates over Wi-Fi** from the device's own page (*Wi-Fi & device → Check for updates*) after the first USB flash; Arduino IDE OTA works too.
 - **Simulation mode** (`SIMULATE 1` in `config.h`) runs the whole thing on a bare ESP32 with a virtual avocado so you can try the UI before the printer is done.
-- **Back gate:** a servo opens the holder's back wall so a ripe avocado rolls out into a basket. Turn on *Back gate fitted* in Settings; *Open the back gate* (or `/api/tip`) opens it for *Stay open* ms and shuts it, and *Drop ripe avocados into the basket* does that after a reading that says ripe. Shut and open angles default to 20 / 144 (the four-bar in `tools/back_gate.py` turns the servo 124°); a servo that turns the other way uses 160 / 36. Compiled in by default (`ENABLE_SERVO 1`); nothing moves until the setting is on.
+- **Back gate:** a servo opens the holder's back wall so a ripe avocado rolls out into a basket. Turn on *Back gate fitted* in Settings; *Open the back gate* (or `/api/tip`) opens it for *Stay open* ms and shuts it, and *Drop ripe avocados into the basket* does that after a reading that says ripe. Shut and open angles default to 20 / 143 (the four-bar in `tools/back_gate.py` turns the servo 119° plus about 4° past its in-line lock); a servo that turns the other way uses 160 / 37. Compiled in by default (`ENABLE_SERVO 1`); nothing moves until the setting is on.
 
 ## Flashing
 

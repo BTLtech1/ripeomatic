@@ -12,10 +12,10 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 | `esp32-case/esp32-case-base.stl` | PLA/PETG | As supplied (floor down) | 2 walls, 10 %, no supports | 1 h |
 | `esp32-case/esp32-case-lid-firm-key.stl` | PLA/PETG | As supplied (top down) | 2 walls, 10 %, no supports | 25 min |
 | `esp32-case/esp32-case-keycap.stl` + one `mx-adapter` | any | As supplied | default. Print the 1.30 adapter first; 1.25 / 1.35 are looser / tighter on the keycap stem | 10 min |
-| `gate-frame.stl` | PLA/PETG | Upright, as supplied (keyholes on the bed) | 3 walls, 15 %, **no supports** (the floor's front lip is a short flat bridge) | 3 h |
+| `gate-frame.stl` | PLA/PETG | Upright, as supplied (keyholes on the bed) | 3 walls, 15 %, **no supports** (the sled's tunnel and the servo pocket have flat roofs that print as bridges, 45 mm and 16 mm) | 3 h |
 | `gate-door.stl` | PLA/PETG | Inner face down, as supplied | 3 walls, 15 %, no supports | 1.5 h |
 | `gate-lever.stl` | PLA/PETG | Arm down, shaft up, as supplied | 100 % infill | 15 min |
-| `gate-link.stl` | PLA/PETG | Flat | 100 % infill | 5 min |
+| `gate-link.stl` | PLA/PETG | Flat, spacer and bump up, as supplied | 100 % infill | 10 min |
 | `v-holder.stl` *(screwed version, for `base-v1-yoke-slot.stl`)* | PLA/PETG | Lying on the back of its wall (as supplied) | 3 walls, 15 %, **no supports** | 2.5 h |
 | `u-yoke.stl` *(old bowl version)* | PLA/PETG | Standing on its cross-bar | 4 walls, 20 %, **supports: on build plate only** (for the servo boss, which overhangs the arm) | 50 min |
 | `nest.stl` *(old bowl version)* | PLA/PETG | Upside down: the flat top edge on the bed, the shell's back up | 3 walls, 10 %, no supports. The front lip overhangs at ~45°, which is fine | 2 h |
@@ -27,7 +27,7 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 | `nest-liner-TPU.stl` *(old bowl version)* | TPU 95A (or skip: use 3 mm craft foam) | Upside down, same as the nest | 2 walls, vase-ish, **brim** (it stands on a 2 mm edge) | 1.5 h |
 | `servo-horn-v2.stl` *(old bowl version)* | any | Flat | default | 5 min — **v2 only** |
 
-**The avocado holder** is a V-shaped corner with a door for a back wall (`gate-*.stl`, made by [`../../tools/back_gate.py`](../../tools/back_gate.py), which also checks every fit and every motion for collisions). Any avocado from about 55 to 80 mm across wedges into the corner, so the pad's push can't roll it. When a servo opens the door, it folds down level with the floor and the avocado rolls out the back, onto your own ramp into a basket. The frame clicks onto four studs on the base, so `base.stl` has them now (the old yoke slot and its screw holes are filled). Made for the V45 sled and blade with **Max travel 37**; don't go past 40 with it.
+**The avocado holder** is a V-shaped corner with a door for a back wall (`gate-*.stl`, made by [`../../tools/back_gate.py`](../../tools/back_gate.py), which also checks every fit and every motion for collisions). Any avocado from 50 to 80 mm across wedges into the corner, so the pad's push can't roll it; a 70 mm one is pressed exactly at its middle, an 80 mm one 6 mm below it and a 55 mm one 9 mm above. The sled runs into a tunnel under the floor with 5 mm to spare. A servo tucked under the floor opens the door: it folds down level with the floor and the avocado rolls out the back, onto your own ramp into a basket. The frame clicks onto four studs on the base, so `base.stl` has them now (the old yoke slot and its screw holes are filled). Made for the V45 sled and blade with **Max travel 37**; don't go past 39 with it.
 
 Older parts kept for anyone who built them: `base-v1-yoke-slot.stl` (the base with the screw-down slot), `v-holder.stl` (a fixed V that screws into that slot, no gate) and the original hanging bowl (`nest.stl`, `u-yoke.stl`, knob, liner).
 
@@ -45,10 +45,10 @@ If you re-export from Fusion, run `python3 tools/orient_stl.py` afterwards to pu
 |---|---|---|
 | 2 | M4 × 8 (or M3 × 8 with nuts) | 28BYJ-48 ears (35 mm apart) into the motor plate; plate holes are 3.5 mm so M4 self-taps |
 | 1 | MG90S servo (metal gear; an SG90 works but is near its limit) | The back gate. Comes with horns and screws |
-| 1 | M3 × 12 | Door hinge pin, through the plain end wall into the door |
-| 1 | M3 × 25 | Through the lever's shaft into the door |
-| 1 | M3 × 8 | Link pivot on the lever (self-taps into the lever, the link turns on the shank) |
-| 1 | M2 × 8 (or a servo-horn screw) | Link to the horn's hole 15 mm from the centre |
+| 1 | M3 × 12 | Door hinge pin, through the plain side wall into the door |
+| 1 | M3 × 30 (or × 25) | Through the lever's shaft into the door |
+| 1 | M3 × 16 | Link pivot: through the link into the lever (the link turns on the shank) |
+| 1 | M2 × 6 self-tapping (or a spare servo screw) | Through the link into the horn's hole 13 mm from the centre |
 | 4 | M3 × 6 to 8 | Only for the screwed `v-holder.stl` on `base-v1-yoke-slot.stl` |
 | 1 | M3 × 10 | Blade clamp, from the front of the riser, self-taps into the block |
 | 2 | M5 × 20 hex-head (or socket) | Old bowl version only: the nest pins. One gets the printed knob on its head; one plain |
@@ -65,16 +65,16 @@ Each box drops over its pair of studs 9 mm short of its final spot and slides ho
 4. Drop the blade into the riser slot and fit the clamp screw from the front. Glue the magnet in its pocket on the blade's back, pole marked.
 5. Hall sensor in the post pocket, legs up, printed face out (the V45 sled's pocket is a dovetail the sensor slides down into, no glue; the original sled needs a drop of glue); wire it.
 6. Press the pad onto the stem.
-7. **The gate**, on the bench before it goes on the base:
-   1. Hold the door between the end walls, its rounded hinge edge down in the corner. Push the lever's shaft through the end wall on the servo side into the door's D-shaped socket, and fix it with an M3 × 25 through the lever. Put an M3 × 12 through the other end wall into the door as the hinge pin. Snug, not tight: the door must swing freely.
-   2. Screw the link onto the lever's pin with an M3 × 8 (it should turn freely on the screw).
-   3. Push the servo into its housing from outside, shaft toward the end wall, and screw its tabs down with the screws that came with it. **Leave the horn off.**
-8. **The frame onto the base:** lower it over the four studs at the avocado end, 9 mm toward the pad from where it ends up, and slide it back until it clicks. The pad pushes it in the locking direction. To take it off, slide it toward the pad and lift.
+7. **The gate**, on the bench before it goes on the base (the servo side is the side wall with the rectangular hole; it ends up on the board side):
+   1. Hold the door between the side walls, rounded hinge edge down in the corner. Push the lever's shaft through the round hole in the servo-side wall into the door's D-shaped socket and fix it with an M3 × 30 through the lever (× 25 also holds). Put an M3 × 12 through the other wall into the door as the hinge pin. Snug, not tight: the door must swing freely.
+   2. Feed the servo's cable into the rectangular hole and out under the floor's front edge, push the servo in until its tabs sit on the wall (shaft at the end nearer the door), and fix it with its own two screws. **Leave the horn off.**
+   3. Screw the link onto the lever's pin with an M3 × 16 through the link's larger hole, round spacer toward the lever. It must turn freely on the screw.
+8. **The frame onto the base:** lower it over the four studs at the avocado end, 9 mm toward the pad from where it ends up, and slide it back until it clicks. The pad pushes it in the locking direction. To take it off, slide it toward the pad and lift. (If you screw the base to a shelf, do that first: the linkage sits over one corner's keyhole.)
 9. **Servo wiring:** orange (signal) to **D25**, red to **VIN**, brown to **GND**.
 10. **Set the servo up** (Settings → *Back gate*): turn on **Back gate fitted** and save. Then:
-    1. **Direction:** put a horn on loosely, hold the servo so you're looking at the horn, and tap **Open the back gate**. Opening must turn the horn **clockwise** (seen from the horn side). If it turns counter-clockwise, set **Shut angle 160** and **Open angle 36**, then save.
-    2. **Horn:** after the test the servo stops at the shut angle. Take the horn off. With the door shut, put the horn back on with its arm pointing along the link toward the lever, so horn and link make one straight line, then join them with the M2 screw through the horn hole 15 mm from the centre. Fit the horn screw.
-    3. Tap **Open the back gate**: the door folds down, waits, and comes back up until the link is straight again. If it stops a little short of straight or pushes past it, change the shut angle by a few degrees.
+    1. **Direction:** push a horn on loosely and tap **Open the back gate**. Looking at the horn, opening must turn it **counter-clockwise**. If it turns clockwise, set **Shut angle 160** and **Open angle 37** and save. After the test the servo rests at the shut angle.
+    2. **Horn:** take the horn off. Shut the door by hand. Put the horn back on pointing straight away from the lever's pin, so it lies under the link with its hole 13 mm from the centre under the link's small hole, and its arm just touching the little bump under the link. Join link and horn with an M2 × 6 through the link into that hole, then fit the horn's own screw.
+    3. Tap **Open the back gate**: the door folds down, waits, and comes back up. It is locked when the horn's arm rests against the link's bump; if it stops short of the bump or strains against it, change the shut angle a few degrees.
     4. Optional: **Drop ripe avocados into the basket** opens the gate on its own after a reading that says ripe.
 11. Set **Max travel** to **37**. Redo the blade calibration (jar in the V, touching the pad): the holder is part of what it measures.
 12. Older versions instead: the screwed `v-holder.stl` (four M3 × 6–8 from below into `base-v1-yoke-slot.stl`), or the hanging bowl (liner into the nest, U-yoke into the slot, nest on two M5 bolts, knob on one).
