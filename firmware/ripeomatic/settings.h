@@ -39,10 +39,13 @@ struct Settings {
   char  cal_points[64]   = "";         // "grams:counts;grams:counts" captured during calibration
   // the measurement routine
   ripe::Tunables t;
-  // v2 servo
-  int   servo_rest_deg = 0;
-  int   servo_tip_deg  = 110;
-  int   servo_hold_ms  = 1500;
+  // back gate (servo). The four-bar in tools/back_gate.py turns the servo 124 deg from shut to open;
+  // swap rest and tip if your servo turns the other way.
+  bool  gate_fitted    = false;        // nothing moves until this is on
+  bool  gate_auto      = false;        // open the gate after a reading that says ripe
+  int   servo_rest_deg = 20;
+  int   servo_tip_deg  = 144;
+  int   servo_hold_ms  = 2500;
 };
 
 extern Settings S;
@@ -93,6 +96,8 @@ inline const FieldDef* settingsFields(int& count) {
     {"ripe_pct_of_first", "ripe_pct", F_FLOAT, &S.t.ripe_pct_of_first,0, false},
     {"swap_contact_mm",   "swap_mm",  F_FLOAT, &S.t.swap_contact_mm, 0, false},
     {"swap_stiffer_pct",  "swap_pct", F_FLOAT, &S.t.swap_stiffer_pct,0, false},
+    {"gate_fitted",       "gate",     F_BOOL,  &S.gate_fitted,       0, false},
+    {"gate_auto",         "gate_auto",F_BOOL,  &S.gate_auto,         0, false},
     {"servo_rest_deg",    "srv_rest", F_INT,   &S.servo_rest_deg,    0, false},
     {"servo_tip_deg",     "srv_tip",  F_INT,   &S.servo_tip_deg,     0, false},
     {"servo_hold_ms",     "srv_hold", F_INT,   &S.servo_hold_ms,     0, false},

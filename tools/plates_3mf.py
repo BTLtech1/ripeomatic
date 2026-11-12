@@ -24,8 +24,9 @@ STRIDE = 200.0
 # plate -> (file, centre x, centre y, rotation about Z in degrees)
 PLATES = {
     1: [("base.stl", 90, 90, 0)],
-    2: [("v-holder.stl", 55, 90, 0), ("v45/v45-blade.stl", 140, 90, 0)],
-    3: [("v45/v45-sled.stl", 60, 90, 0), ("v45/v45-lead-screw.stl", 120, 90, 0)],
+    2: [("gate-frame.stl", 55, 90, 0), ("gate-door.stl", 144.5, 90, 0)],
+    3: [("v45/v45-sled.stl", 50, 90, 0), ("v45/v45-lead-screw.stl", 95, 90, 0), ("v45/v45-blade.stl", 125, 90, 0),
+        ("gate-lever.stl", 155, 40, 0), ("gate-link.stl", 155, 140, 90)],
     4: [("pad-TPU.stl", 90, 90, 0)],
     # the two electronics boxes (the ESP32 case is BTL's v6 case, printed as supplied)
     5: [("esp32-case/esp32-case-base.stl", 25, 36, 0), ("esp32-case/esp32-case-lid-firm-key.stl", 25, 102, 0),
@@ -72,7 +73,7 @@ def main():
         sys.exit(1)
     if split:
         out.mkdir(parents=True, exist_ok=True)
-        names = {1: "base", 2: "holder-blade", 3: "sled-screw", 4: "TPU-pad", 5: "electronics-boxes"}
+        names = {1: "base", 2: "holder-gate", 3: "sled-screw-blade-lever-link", 4: "TPU-pad", 5: "electronics-boxes"}
         for k, sc in scenes.items():
             f = out / f"plate{k}-{names.get(k, k)}.3mf"
             sc.export(f)

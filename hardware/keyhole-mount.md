@@ -7,13 +7,14 @@ Two boxes, side by side on the board side of the channel, so every wire stays on
 | Box | Holds | Where | Files |
 |---|---|---|---|
 | **ESP32 case** | the ELEGOO ESP32 DevKit, USB-C out the motor end of the base, BOOT keycap on the lid (short press = measure now, hold = "it was perfect") | the board side of the base (the side with the hall-sensor wiring) | [`stl/esp32-case/`](stl/esp32-case/): BTL's *ESP32 case for the ELEGOO DevKit v6*, printed as supplied: base, lid with the firm key, keycap and one of the three MX adapters |
+| **Avocado holder** | the V-shaped corner with the back gate | the avocado end of the base, where the old yoke slot was | [`stl/gate-frame.stl`](stl/gate-frame.stl): four keyholes in its underside, slots 9 mm long toward the pad. Drop it on 9 mm toward the pad from its place and push it back until it clicks; the pad's push is in the locking direction |
 | **Driver box** | the ULN2003 board | right beside the ESP32 case on its nest end, turned crosswise | [`stl/driver-box.stl`](stl/driver-box.stl) and [`stl/driver-box-lid.stl`](stl/driver-box-lid.stl) |
 
 Why boxes and not rails in the base: dev boards have their pin headers right at the board edge, so there is no edge for a groove to grip. A box can hold the board any way it likes and can be swapped without reprinting the 3–4 hour base.
 
 ## The studs (on the base, printed with it)
 
-Two pairs, each pair 26 mm apart, standing on the 5 mm deck: the ESP32 pair along the press axis, the driver pair across it. Each stud:
+The avocado holder has its own four studs at x 76 and 92, 30 mm either side of the middle (its keyholes' slot ends). The boxes use two pairs, each pair 26 mm apart, standing on the 5 mm deck: the ESP32 pair along the press axis, the driver pair across it. Each stud:
 
 | | mm |
 |---|---|

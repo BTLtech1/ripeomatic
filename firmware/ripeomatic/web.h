@@ -42,9 +42,10 @@ class Web {
     });
     server.on("/api/tip", HTTP_POST, [this] {
 #if ENABLE_SERVO
+      if (!S.gate_fitted) return fail(400, "turn on 'Back gate fitted' in Settings first");
       startJob(Job::Tip);
 #else
-      fail(400, "servo not enabled in this build (config.h ENABLE_SERVO)");
+      fail(400, "this build has no servo code (config.h ENABLE_SERVO)");
 #endif
     });
     server.on("/api/rate", HTTP_POST, [this] {
@@ -162,7 +163,7 @@ class Web {
     addBool(o, "online", M.net.online());
     addInt(o, "fruit_count", FR.counter);
     addNum(o, "blade_k", S.t.blade_k_n_per_mm, 2);
-    addBool(o, "servo", ENABLE_SERVO);
+    addBool(o, "servo", ENABLE_SERVO && S.gate_fitted);
     addInt(o, "log_bytes", M.store.logSize()); addInt(o, "fs_free", M.store.freeBytes());
     addInt(o, "next_auto_s", M.secondsToNextAuto());
     addStr(o, "error", M.error);

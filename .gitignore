@@ -22,3 +22,4 @@ firmware/**/secrets.h
 
 # written by CI before compiling (the commit the firmware is built from)
 firmware/ripeomatic/build_id.h
+__pycache__/

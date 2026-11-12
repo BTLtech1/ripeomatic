@@ -16,7 +16,7 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 - **Wi-Fi setup** without editing code: the web installer asks for it over USB (Improv); otherwise first boot opens an access point `RipeOMatic-xxxxxx`; join it and pick your network.
 - **Updates over Wi-Fi** from the device's own page (*Wi-Fi & device → Check for updates*) after the first USB flash; Arduino IDE OTA works too.
 - **Simulation mode** (`SIMULATE 1` in `config.h`) runs the whole thing on a bare ESP32 with a virtual avocado so you can try the UI before the printer is done.
-- **v2 servo** (`ENABLE_SERVO 1`): "Tip the avocado out" button and an `/api/tip` endpoint.
+- **Back gate:** a servo opens the holder's back wall so a ripe avocado rolls out into a basket. Turn on *Back gate fitted* in Settings; *Open the back gate* (or `/api/tip`) opens it for *Stay open* ms and shuts it, and *Drop ripe avocados into the basket* does that after a reading that says ripe. Shut and open angles default to 20 / 144 (the four-bar in `tools/back_gate.py` turns the servo 124°); a servo that turns the other way uses 160 / 36. Compiled in by default (`ENABLE_SERVO 1`); nothing moves until the setting is on.
 
 ## Flashing
 
@@ -58,7 +58,7 @@ When you eat the avocado, tap how it was (**Perfect** is the label that matters)
 | File | What |
 |---|---|
 | `ripeomatic/ripeomatic.ino` | setup/loop, button, LED, OTA |
-| `ripeomatic/config.h` | pins, `SIMULATE`, `ENABLE_SERVO`, defaults |
+| `ripeomatic/config.h` | pins (servo on GPIO 25), `SIMULATE`, `ENABLE_SERVO`, defaults |
 | `ripeomatic/measure.h` | the measurement state machine, verdict, days-to-ripe, CSV rows. Pure C++, no Arduino; unit-tested |
 | `ripeomatic/machine.h` | the job task: home, tare, press, log, notify; calibration capture |
 | `ripeomatic/settings.h` | settings and fruit state in NVS, table-driven |
@@ -67,7 +67,7 @@ When you eat the avocado, tap how it was (**Perfect** is the label that matters)
 | `ripeomatic/storage.h` | CSV log on LittleFS with one rotation |
 | `ripeomatic/net.h` | Wi-Fi, setup AP + captive portal, mDNS, NTP, ntfy |
 | `ripeomatic/web.h` | HTTP API (below) and the captive-portal redirects |
-| `ripeomatic/servo.h` | v2 SG90 on LEDC |
+| `ripeomatic/servo.h` | the back-gate servo on LEDC (eases open, holds, shuts, then stops driving it: the linkage locks the door) |
 | `ripeomatic/improv.h` | Improv Wi-Fi over serial: what the web installer talks to. Framing is host-tested in `test/test_improv.cpp` |
 | `ripeomatic/ui.h` | generated from `ui/index.html` |
 | `test/test_measure.cpp`, `test/test_improv.cpp` | `cd test && g++ -std=c++17 -I../ripeomatic test_measure.cpp && ./a.out` (same for improv) |

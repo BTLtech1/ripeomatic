@@ -135,7 +135,7 @@ def to_print(m):
 def check(h):
     """fit checks in model coordinates: the base, the sled at max travel, the reach for 55-80 mm fruit"""
     ok = True
-    base = trimesh.load(STL / "base.stl", force="mesh")
+    base = trimesh.load(STL / "base-v1-yoke-slot.stl", force="mesh")
     v = base.vertices.copy(); base.vertices = np.column_stack([v[:, 1] + 20.5, v[:, 2], v[:, 0]])
     inter = T(M(h) ^ M(base)).volume
     print(f"overlap with the base: {inter:.2f} mm3"); ok &= inter < 1.0

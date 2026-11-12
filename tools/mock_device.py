@@ -30,7 +30,7 @@ settings = {
     "fast_mm_s": 0.45, "creep_mm_s": 0.25, "hall_n_per_count": 0.0035, "cal_zero_counts": 2001.0, "cal_points": "",
     "contact_threshold_n": 0.1, "preload_force_n": 0.2, "force_cap_n": 2.5, "blade_k_n_per_mm": 0.0, "sample_step_mm": 0.05,
     "approach_step_mm": 0.5, "safety_margin_mm": 2.0, "max_travel_mm": 42.0, "max_squish_mm": 12.0, "ripe_abs_n_per_mm": 1.5,
-    "ripe_pct_of_first": 45.0, "swap_contact_mm": 6.0, "swap_stiffer_pct": 60.0, "servo_rest_deg": 0, "servo_tip_deg": 110,
+    "ripe_pct_of_first": 45.0, "swap_contact_mm": 6.0, "swap_stiffer_pct": 60.0, "gate_fitted": False, "gate_auto": False, "servo_rest_deg": 0, "servo_tip_deg": 110,
     "servo_hold_ms": 1500, "wifi_pass_set": True, "ntfy_ok": False, "motor_checked": False, "discord_set": False,
 }
 notify = {"pending": False, "last_ok": False}

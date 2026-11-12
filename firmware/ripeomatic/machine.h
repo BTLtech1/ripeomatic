@@ -298,7 +298,11 @@ class Machine {
 
   void runJob() {
     switch (job) {
-      case Job::Measure:  runMeasurement(false); break;
+      case Job::Measure:
+        runMeasurement(false);
+        // ripe and "drop ripe avocados" on: the sled has backed off, open the gate
+        if (tipAfter_) { tipAfter_ = false; servo.tip(S.servo_rest_deg, S.servo_tip_deg, S.servo_hold_ms); }
+        break;
       case Job::BladeCal: runMeasurement(true); break;
       case Job::Jog:      jog(jobParam_); stepper.release(); break;
       case Job::Home:     home(); stepper.release(); break;
@@ -495,6 +499,8 @@ class Machine {
     char msg[160];
     if (v == ripe::Verdict::Ripe && !FR.notified_ripe) {
       snprintf(msg, sizeof msg, "Stiffness %.2f N/mm (%.0f%% of day 1). Eat it today or fridge it.", FR.last_k, FR.first_k > 0 ? 100 * FR.last_k / FR.first_k : 0);
+      bool drop = S.gate_auto && S.gate_fitted && ENABLE_SERVO;
+      if (drop) { strlcat(msg, " It's in the basket.", sizeof msg); tipAfter_ = true; }
       if (net.notify("Avocado is ripe", msg, 4, "avocado,tada")) FR.notified_ripe = true;
     } else if (v == ripe::Verdict::Nearly && S.notify_nearly && !FR.notified_nearly) {
       float d = ripe::daysToRipe(FR.first_k, FR.last_k, elapsedDays(), thresholdNow());
@@ -536,6 +542,7 @@ class Machine {
   TaskHandle_t task_ = nullptr;
   float jobParam_ = 0;
   bool configured_ = false, lastInvert_ = false;
+  bool tipAfter_ = false;       // set by processReading when a ripe fruit should go in the basket
   bool zeroCaptured_ = false;   // captureZero() done since boot
   uint32_t last_cal_millis_ = 0;
 };

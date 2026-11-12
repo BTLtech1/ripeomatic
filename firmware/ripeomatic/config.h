@@ -32,9 +32,10 @@
 // On-board LED (blue on most ESP32 DevKits). Set to -1 if yours has none.
 #define PIN_LED 2
 
-// v2: SG90 servo that tips the nest. Set ENABLE_SERVO 1 once it is fitted.
+// Servo on the back gate (SG90 / MG90S). Compiled in by default; it only ever moves once
+// "Back gate fitted" is on in Settings. Set 0 for a build without any servo code.
 #ifndef ENABLE_SERVO
-#define ENABLE_SERVO 0
+#define ENABLE_SERVO 1
 #endif
 #define PIN_SERVO 25
 

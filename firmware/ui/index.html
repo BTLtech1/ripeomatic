@@ -170,7 +170,7 @@ details[open] summary::after{content:"–"}
     </div>
     <div class="row" style="padding:0 0 10px"><button id="btnSetHome">Set home here</button></div>
     <p class="kv">▶ moves the sled away from the motor (toward the avocado); if it goes toward the motor, flip <b>motor_invert</b> in Settings. <b>Home</b> drives it back to home. <b>Set home here</b> tells the machine the sled is touching the end stop at the motor end: do it once after building, or again if home ever looks wrong (◀ 5 mm stops at home; ◀ 1 can creep past it to reach the real end stop). Position: <b id="pos">—</b> mm from home, force now: <b id="forcenow">—</b> N.</p>
-    <div id="servo" hidden style="margin-top:8px"><button id="btnTip">Tip the avocado out (v2 servo)</button></div>
+    <div id="servo" hidden style="margin-top:8px"><button id="btnTip">Open the back gate</button></div>
   </details>
 
   <details id="d-set">
@@ -516,7 +516,7 @@ async function waitForTest() {
   }
   testPending = false; testResult = 'fail'; stepsKey = ''; poll();
 }
-$('btnTip').onclick = act('/api/tip', null, 'Tipping');
+$('btnTip').onclick = act('/api/tip', null, 'Opening the gate');
 $('btnSetupShow2').onclick = () => $('btnSetupShow').onclick();
 $('btnReboot').onclick = () => { if (confirm('Reboot the device?')) act('/api/reboot')(); };
 $('btnResetFruit').onclick = () => { if (confirm('Forget the current avocado? Its readings stay in the log.')) act('/api/reset', {what: 'fruit'}, 'Forgotten')(); };
@@ -543,8 +543,9 @@ const FIELDS = [
   ['Motor & sensor', null],
   ['steps_per_mm', 'Steps per mm'], ['motor_invert', 'Invert motor direction', 'bool'], ['fast_mm_s', 'Approach speed (mm/s)'], ['creep_mm_s', 'Creep speed (mm/s)'],
   ['hall_n_per_count', 'Hall N per count'], ['blade_k_n_per_mm', 'Blade k (N/mm)'],
-  ['Servo (v2)', null],
-  ['servo_rest_deg', 'Rest angle'], ['servo_tip_deg', 'Tip angle'], ['servo_hold_ms', 'Hold (ms)'],
+  ['Back gate (servo)', null],
+  ['gate_fitted', 'Back gate fitted', 'bool'], ['gate_auto', 'Drop ripe avocados into the basket', 'bool'],
+  ['servo_rest_deg', 'Shut angle'], ['servo_tip_deg', 'Open angle'], ['servo_hold_ms', 'Stay open (ms)'],
   ['Device', null],
   ['host', 'Hostname (needs reboot)'],
 ];
