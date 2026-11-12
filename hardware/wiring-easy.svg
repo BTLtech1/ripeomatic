@@ -1,10 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 610" width="980" height="610" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 636" width="980" height="636" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13">
   <title>Ripe-O-Matic wiring, the easy version</title>
-  <rect width="980" height="610" fill="#f7f6f1"/>
+  <rect width="980" height="636" fill="#f7f6f1"/>
 
   <text x="28" y="40" font-size="22" font-weight="700" fill="#1d1d1b">Ripe-O-Matic wiring</text>
   <text x="28" y="62" font-size="13" fill="#555">Match the words printed next to each pin. Unplug the USB while you wire.</text>
 
+  <g transform="translate(0 26)">
   <!-- ============ wires (drawn first, boards on top) ============ -->
   <g fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
     <!-- 1: motor signals. ESP right side -> ULN IN pins -->
@@ -14,21 +15,31 @@
     <path d="M450 320 H580 V282 H660" stroke="#2f6fd6"/>   <!-- RX2 -> IN1 -->
     <!-- 2: power -->
     <path d="M450 416 H630 V360 H660" stroke="#222"/>        <!-- GND -> minus -->
-    <path d="M330 440 H310 V505 H462 A8 8 0 0 1 478 505 H645 V384 H660" stroke="#d62828"/>  <!-- VIN -> plus, hops over 3V3 -->
+    <path d="M330 440 H310 V522 H462 A8 8 0 0 1 478 522 H645 V384 H660" stroke="#d62828"/>  <!-- VIN -> plus, hops over 3V3 -->
     <!-- 4: sensor -->
-    <path d="M135 300 V530 H470 V440 H450" stroke="#a03cc8"/>  <!-- leg 1 -> 3V3 -->
+    <path d="M135 300 V548 H470 V440 H450" stroke="#a03cc8"/>  <!-- leg 1 -> 3V3 -->
     <path d="M155 300 V416 H330" stroke="#222"/>                <!-- leg 2 -> GND -->
     <path d="M175 300 V322 H250 V176 H330" stroke="#0aa5a5"/>  <!-- leg 3 -> D34 -->
   </g>
 
   <!-- ============ ESP32 ============ -->
-  <rect x="330" y="80" width="120" height="400" rx="8" fill="#1f2a36" stroke="#0e141a"/>
-  <rect x="368" y="92" width="44" height="58" rx="3" fill="#aab3bc"/>
-  <text x="390" y="118" text-anchor="middle" font-size="9" fill="#333">chip</text>
-  <text x="390" y="131" text-anchor="middle" font-size="9" fill="#333">side up</text>
-  <text x="0" y="0" transform="translate(397 300) rotate(-90)" text-anchor="middle" font-size="22" font-weight="700" fill="#fff">ESP32</text>
-  <rect x="372" y="472" width="36" height="20" rx="4" fill="#b8bec4" stroke="#7d848a"/>
-  <text x="390" y="464" text-anchor="middle" font-size="10" fill="#cfd6dd">USB: plug in last</text>
+  <rect x="330" y="58" width="120" height="448" rx="8" fill="#121417" stroke="#000"/>
+  <!-- antenna -->
+  <path d="M362 64 V78 H372 V68 H382 V78 H392 V68 H402 V78 H412 V68 H418" fill="none" stroke="#3a3f45" stroke-width="2"/>
+  <!-- metal module (on the real board it covers the top half, between the two pin rows) -->
+  <rect x="372" y="84" width="36" height="200" rx="3" fill="#b9bec3" stroke="#80868c"/>
+  <text x="0" y="0" transform="translate(397 184) rotate(-90)" text-anchor="middle" font-size="17" font-weight="700" fill="#2b2f33">ESP-32</text>
+  <text x="0" y="0" transform="translate(381 184) rotate(-90)" text-anchor="middle" font-size="7" fill="#4a4f54">metal chip side up</text>
+  <!-- small parts -->
+  <rect x="372" y="340" width="34" height="34" rx="2" fill="#1d1f22" stroke="#33373b"/>
+  <rect x="376" y="390" width="22" height="30" rx="2" fill="#2a2d30"/>
+  <!-- buttons and USB-C -->
+  <rect x="344" y="466" width="18" height="18" rx="3" fill="#cfd3d6"/><circle cx="353" cy="475" r="5" fill="#8d9296"/>
+  <text x="353" y="497" text-anchor="middle" font-size="9" fill="#cfd6dd">EN</text>
+  <rect x="418" y="466" width="18" height="18" rx="3" fill="#cfd3d6"/><circle cx="427" cy="475" r="5" fill="#8d9296"/>
+  <text x="427" y="497" text-anchor="middle" font-size="9" fill="#cfd6dd">BOOT</text>
+  <rect x="374" y="478" width="32" height="36" rx="6" fill="#c3c8cc" stroke="#7d848a"/>
+  <text x="485" y="498" font-size="11" fill="#444">← USB: plug in last</text>
   <!-- left pins: EN VP VN D34 D35 D32 D33 D25 D26 D27 D14 D12 D13 GND VIN -->
   <g font-size="10" fill="#7f8a96">
     <text x="342" y="107">EN</text><text x="342" y="131">VP</text><text x="342" y="155">VN</text>
@@ -103,8 +114,8 @@
   <g font-size="11" font-weight="700">
     <text x="258" y="170" fill="#0aa5a5">D34</text>
     <text x="212" y="410" fill="#222">GND</text>
-    <text x="200" y="548" fill="#a03cc8">3V3</text>
-    <text x="520" y="498" fill="#d62828">VIN → +</text>
+    <text x="200" y="566" fill="#a03cc8">3V3</text>
+    <text x="520" y="514" fill="#d62828">VIN → +</text>
     <text x="520" y="410" fill="#222">GND → −</text>
   </g>
 
@@ -125,5 +136,6 @@
     <text x="704" y="536"><tspan font-weight="700">3</tspan>  motor plug into the white socket</text>
     <text x="704" y="558"><tspan font-weight="700">4</tspan>  sensor: 3V3, GND, D34</text>
     <text x="722" y="574" fill="#555">(can wait until the motor works)</text>
+  </g>
   </g>
 </svg>
