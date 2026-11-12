@@ -345,7 +345,7 @@ class Machine {
         settingsSave();
         Serial.printf("blade_k = %.2f N/mm (r2 %.3f)\n", r.stiffness_n_per_mm, r.r2);
       } else if (!error[0]) {
-        strlcpy(error, "blade calibration failed: nothing hard in the nest?", sizeof error);
+        strlcpy(error, "blade calibration failed: nothing hard where the avocado goes?", sizeof error);
       }
       return;
     }
@@ -359,7 +359,7 @@ class Machine {
         if (FR.loaded) {
           FR.loaded = false;
           fruitSave();
-          net.notify("Nest is empty", "The avocado is gone. Put the next one in.", 2, "avocado");
+          net.notify("No avocado", "The avocado is gone. Put the next one in.", 2, "avocado");
         }
         break;
       case ripe::Outcome::Aborted:

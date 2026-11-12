@@ -8,15 +8,15 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 
 - **Measures** on a schedule (default every 12 h, every 6 h once the fruit is almost ripe; only once both calibrations are done) and on demand: homes against the end stop, zeroes the hall sensor, approaches, creeps to contact, preloads, presses to the force cap, retracts. ~1–2 minutes.
 - **Reports stiffness in N/mm** with the blade's own bend subtracted, fits a line, and judges `hard / softening / almost ripe / ripe`. Guesses days-to-ripe from the fruit's own decay once it has two readings a day apart.
-- **Knows when you swap avocados** (contact position jumps, or the fruit got much stiffer) and starts a new fruit id. Notices an empty nest.
+- **Knows when you swap avocados** (contact position jumps, or the fruit got much stiffer) and starts a new fruit id. Notices when the avocado is gone.
 - **Logs** every reading to a CSV on the ESP32's flash in the shared schema (`docs/data-sharing.md`), downloadable from the page as `/data.csv`.
-- **Alerts** to your phone through [ntfy](https://ntfy.sh) (free, no account) and/or to a **Discord channel** through a webhook: "almost ripe", "ripe", "nest is empty". Both are set up from the page's checklist.
+- **Alerts** to your phone through [ntfy](https://ntfy.sh) (free, no account) and/or to a **Discord channel** through a webhook: "almost ripe", "ripe", "no avocado". Both are set up from the page's checklist.
 - **Web app** at `http://ripeomatic.local`: verdict, trend chart, last press curve, one-tap rating buttons (the labels that make pooled data useful), calibration wizard, motor jog, all settings, Wi-Fi. Add it to your home screen and it behaves like an app.
 - **BOOT button**: short press = measure now, hold 2 s = "it was perfect".
 - **Wi-Fi setup** without editing code: the web installer asks for it over USB (Improv); otherwise first boot opens an access point `RipeOMatic-xxxxxx`; join it and pick your network.
 - **OTA** updates from the IDE after the first USB flash.
 - **Simulation mode** (`SIMULATE 1` in `config.h`) runs the whole thing on a bare ESP32 with a virtual avocado so you can try the UI before the printer is done.
-- **v2 servo** (`ENABLE_SERVO 1`): "Tip the nest" button and an `/api/tip` endpoint.
+- **v2 servo** (`ENABLE_SERVO 1`): "Tip the avocado out" button and an `/api/tip` endpoint.
 
 ## Flashing
 
@@ -37,9 +37,9 @@ No libraries to install. If you edit `ui/index.html`, run `python3 tools/build_u
 The device page opens with a **setup checklist** that walks through everything, one step at a time:
 
 1. **Alerts.** Phone: *Set up phone alerts* creates a private ntfy topic; install the free ntfy app, tap the link to subscribe. Discord: paste a channel webhook URL (channel settings → Integrations → Webhooks). One or both, then *Send a test alert*. (Or skip.)
-2. **Motor direction.** *Nudge the sled 1 mm*, then answer *Toward the nest* or *Away from the nest*; the firmware flips the direction itself if needed.
+2. **Motor direction.** *Nudge the sled 1 mm*, then answer *Away from the motor* or *Toward the motor*; the firmware flips the direction itself if needed.
 3. **Force calibration.** Machine on its motor end, bottle cap on the pad: *Capture zero*; add nickels (5.000 g each), type the grams, *Capture*. Two amounts are better than one.
-4. **Blade calibration.** Machine upright, a glass jar in the nest: *Measure the blade*. Records the machine's own spring (`blade_k`) so it can be subtracted from every reading. (If you redo the force calibration later, `blade_k` is rescaled automatically.)
+4. **Blade calibration.** Machine upright, a glass jar where the avocado goes: *Measure the blade*. Records the machine's own spring (`blade_k`) so it can be subtracted from every reading. (If you redo the force calibration later, `blade_k` is rescaled automatically.)
 5. **First avocado.** Put one in, *Measure now*. From then on readings run every 12 h.
 
 Until steps 3 and 4 are done the force cap is a guess, the squish backstop is shortened to 3 mm, and automatic readings stay off. Wi-Fi was already set by the installer; without it, the device starts an access point `RipeOMatic-xxxxxx` with a setup page (or open `http://192.168.4.1`).
@@ -85,7 +85,7 @@ Everything the page does. Handy for Home Assistant or a script.
 | POST | `/api/jog` | `mm=±5` manual move |
 | POST | `/api/home` | Home against the end stop |
 | POST | `/api/cal/zero`, `/api/cal/mass` (`g=`), `/api/cal/clear`, `/api/cal/blade` | Calibration |
-| POST | `/api/tip` | v2: tip the nest |
+| POST | `/api/tip` | v2: tip the avocado out |
 | GET | `/api/scan` · POST `/api/wifi` (`ssid`, `pass`) | Wi-Fi |
 | POST | `/api/reset` (`what=fruit|data|settings|all`), `/api/reboot` | Housekeeping |
 
@@ -105,7 +105,7 @@ All in the Settings panel; defaults in `measure.h` and `config.h`.
 | `sample_step_mm` | 0.05 | One force sample per step while creeping and pressing |
 | `approach_step_mm` | 0.5 | Force is checked between approach steps; a touch backs off and creeps, so this is the worst-case overshoot |
 | `safety_margin_mm` | 2 | Creep starts this far before last time's contact |
-| `max_travel_mm` | 42 | Past this with no contact = empty nest |
+| `max_travel_mm` | 42 | Past this with no contact = no avocado |
 | `max_squish_mm` | 12 | Past this without reaching the cap = give up (mush, or a sensor problem) |
 | `ripe_abs_n_per_mm` | 1.5 | **Placeholder** until there is pooled data. 0 = off |
 | `ripe_pct_of_first` | 45 | Ripe when below this % of the fruit's first reading; whichever threshold is higher wins. 0 = off |

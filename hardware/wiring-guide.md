@@ -55,8 +55,8 @@ Use `3V3` here, **not** `VIN`: the sensor's signal has to stay at 3.3 V or less 
 1. Plug the USB cable into a computer or phone charger. The LEDs on the motor driver may blink once.
 2. If the ESP32 is brand new, flash it first: [web installer](https://btltech1.github.io/ripeomatic/install/) (Chrome or Edge).
 3. Open [http://ripeomatic.local](http://ripeomatic.local) on a phone or computer on the same Wi-Fi.
-4. Press **1 ▶**. The sled should move 1 mm **toward the nest**, and the four LEDs on the driver flicker.
-5. If it moved **away** from the nest, accept the "flip direction" prompt (or turn on `motor_invert` in Settings) and try again.
+4. Press **1 ▶**. The sled should move 1 mm **away from the motor** (toward where the avocado sits), and the four LEDs on the driver flicker.
+5. If it moved **toward the motor**, accept the "flip direction" prompt (or turn on `motor_invert` in Settings) and try again.
 6. Press **Home**. The sled runs back to the motor end and clicks for a few seconds against the stop. That clicking is normal; it's how the machine finds zero.
 
 Using the V45 sled and blade (from [`stl/v45/`](stl/v45/))? Set **Max travel** to **37** in Settings first.

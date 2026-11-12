@@ -148,15 +148,15 @@ details[open] summary::after{content:"–"}
 <div class="kv" id="calstate" style="margin-bottom:8px"></div>
 <p class="kv">Both calibrations are in the setup checklist at the top of the page. Redo them after reprinting the blade or sled, or if readings look off.</p>
 <div class="row" style="padding:4px 0 10px"><button id="btnSetupShow">Show the setup checklist</button><button id="btnCalClear" class="quiet">Clear force points</button></div>
-<p class="kv">Alternative to coins: put a kitchen scale in the nest and press it. Read the peak grams and compare with the force the device reports; adjust <code>hall_n_per_count</code> by the ratio.</p>
+<p class="kv">Alternative to coins: put a kitchen scale where the avocado goes and press it. Read the peak grams and compare with the force the device reports; adjust <code>hall_n_per_count</code> by the ratio.</p>
 </details>
 <details id="d-motor">
 <summary>Motor</summary>
 <div class="row" style="padding:4px 0 10px">
 <button data-jog="-5">◀ 5 mm</button><button data-jog="-1">◀ 1</button><button id="btnHome" style="flex:2">Home</button><button data-jog="1">1 ▶</button><button data-jog="5">5 mm ▶</button>
 </div>
-<p class="kv">▶ should move the sled toward the nest. If it goes the other way, flip <b>motor_invert</b> in Settings. Position: <b id="pos">—</b> mm, force now: <b id="forcenow">—</b> N.</p>
-<div id="servo" hidden style="margin-top:8px"><button id="btnTip">Tip the nest (v2 servo)</button></div>
+<p class="kv">▶ should move the sled away from the motor (toward the avocado). If it goes toward the motor, flip <b>motor_invert</b> in Settings. Position: <b id="pos">—</b> mm, force now: <b id="forcenow">—</b> N.</p>
+<div id="servo" hidden style="margin-top:8px"><button id="btnTip">Tip the avocado out (v2 servo)</button></div>
 </details>
 <details id="d-set">
 <summary>Settings</summary>
@@ -245,7 +245,7 @@ $('servo').hidden = !s.servo;
 const v = $('verdict');
 const names = {unknown: '—', hard: 'Hard', firming: 'Softening', nearly: 'Almost ripe', ripe: 'Ripe!'};
 let verdict = f.verdict || 'unknown', msg = '';
-if (!f.loaded && !busy) { verdict = 'unknown'; msg = s.last && s.last.outcome === 'empty' ? 'The nest is empty. Put an avocado in and tap Measure now.' : (s.simulate ? 'Simulation: a virtual avocado is in the nest. Tap Measure now to press it.' : 'No reading yet. Put an avocado in the nest and tap Measure now.'); }
+if (!f.loaded && !busy) { verdict = 'unknown'; msg = s.last && s.last.outcome === 'empty' ? 'No avocado in the machine. Put one in and tap Measure now.' : (s.simulate ? 'Simulation: a virtual avocado is in the machine. Tap Measure now to press it.' : 'No reading yet. Put an avocado in and tap Measure now.'); }
 else if (f.n === 1) msg = 'First reading taken. The trend starts with the next one.';
 else if (verdict === 'ripe') msg = 'Eat it today or move it to the fridge.';
 else if (verdict === 'nearly') msg = 'Probably ready tomorrow. Checking more often now.';
@@ -375,16 +375,16 @@ if (st.done) body = `<p><b>Alerts</b> · ${s.ntfy_ok ? 'working' : 'skipped'}${s
 else body = `<p><b>Alerts.</b> Hear about it when the avocado is almost ripe and when it's ready. Pick one or both:</p>${phone}${discord}${(s.ntfy_topic || s.discord_set) ? '<p style="margin-top:8px">Then:</p>' + test : '<div class="row" style="margin-top:8px"><button class="quiet" data-act="ntfyskip">Skip for now</button></div>'}`;
 } else if (st.id === 'motor') {
 if (st.done) body = `<p><b>Motor direction</b> · ${s.simulate ? 'no motor in simulation' : 'checked'}</p>`;
-else body = `<p><b>Motor direction.</b> Tap <b>Nudge</b> and watch the sled.</p><div class="row"><button class="primary" data-act="nudge">Nudge the sled 1 mm</button></div><p style="margin-top:10px">Which way did it move?</p><div class="row"><button data-act="motorok">Toward the nest</button><button data-act="motorbad">Away from the nest</button></div>${s.motor_invert ? '<p class="kv" style="margin-top:6px">Direction is currently flipped.</p>' : ''}`;
+else body = `<p><b>Motor direction.</b> Tap <b>Nudge</b> and watch the sled.</p><div class="row"><button class="primary" data-act="nudge">Nudge the sled 1 mm</button></div><p style="margin-top:10px">Which way did it move?</p><div class="row"><button data-act="motorok">Away from the motor</button><button data-act="motorbad">Toward the motor</button></div>${s.motor_invert ? '<p class="kv" style="margin-top:6px">Direction is currently flipped.</p>' : ''}`;
 } else if (st.id === 'force') {
 if (st.done) body = `<p><b>Force calibration</b> · ${s.cal_points_n} point${s.cal_points_n === 1 ? '' : 's'}</p>`;
 else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<p>1 · Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad, nothing else, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cap (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Two different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${s.cal_points_n ? '<p class="ok" style="margin-top:8px">' + s.cal_points_n + ' point captured. Add a second amount, or:</p><div class="row"><button data-act="forcedone">Continue with one point</button></div>' : ''}`;
 } else if (st.id === 'blade') {
 if (st.done) body = `<p><b>Blade calibration</b> · ${fmt(s.blade_k)} N/mm</p>`;
-else body = `<p><b>Blade calibration</b> measures the machine's own flex so it can be subtracted from every reading.</p>${s.simulate ? '<p class="kv">Simulation: tap it and watch the status pill; a pretend press runs in about ten seconds.</p>' : ''}<p>Stand the machine back up. Put something hard in the nest where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade</button></div>`;
+else body = `<p><b>Blade calibration</b> measures the machine's own flex so it can be subtracted from every reading.</p>${s.simulate ? '<p class="kv">Simulation: tap it and watch the status pill; a pretend press runs in about ten seconds.</p>' : ''}<p>Stand the machine back up. Put something hard where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade</button></div>`;
 } else if (st.id === 'fruit') {
 if (st.done) body = `<p><b>First avocado</b> · measured</p>`;
-else body = `<p><b>First avocado.</b> ${s.simulate ? 'A virtual avocado is already in the nest; it softens over about 20 minutes, so take a few readings and watch the chart.' : 'Take the jar out, put an avocado in the nest with its side toward the pad, then:'}</p><div class="row"><button class="primary" data-act="measure">Measure now</button></div><p class="kv" style="margin-top:6px">After this, readings run on their own every 12 hours.</p>`;
+else body = `<p><b>First avocado.</b> ${s.simulate ? 'A virtual avocado is already in the machine; it softens over about 20 minutes, so take a few readings and watch the chart.' : 'Take the jar out, put an avocado in with its side toward the pad, then:'}</p><div class="row"><button class="primary" data-act="measure">Measure now</button></div><p class="kv" style="margin-top:6px">After this, readings run on their own every 12 hours.</p>`;
 }
 if (locked) body = `<p><b>${st.title}</b></p>`;
 return `<div class="sstep${st.done ? ' done' : ''}${locked ? ' locked' : ''}"><span class="n">${st.done ? '✓' : i + 1}</span><div class="body">${body}</div></div>`;
@@ -406,7 +406,7 @@ else if (a === 'motorbad') { await post('/api/motor/checked', {ok: 0}); toast('F
 else if (a === 'zero') { await post('/api/cal/zero'); ls.set('forceCalDone', '0'); toast('Zero captured'); }
 else if (a === 'forcedone') { ls.set('forceCalDone', '1'); }
 else if (a === 'mass') { const g = parseFloat($('grams').value); if (!(g > 0)) return toast('Type the grams on the pad'); await post('/api/cal/mass', {g}); toast('Captured'); }
-else if (a === 'blade') { if (!confirm('Is something hard (a jar, a can) in the nest?')) return; await post('/api/cal/blade'); toast('Measuring the blade…'); }
+else if (a === 'blade') { if (!confirm('Is something hard (a jar, a can) where the avocado goes?')) return; await post('/api/cal/blade'); toast('Measuring the blade…'); }
 else if (a === 'measure') { await post('/api/measure'); toast('Measuring…'); }
 stepsKey = ''; poll();
 } catch (e) { toast(e.message); }
