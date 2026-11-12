@@ -49,7 +49,7 @@ Each box drops over its pair of studs 9 mm short of its final spot and slides ho
 2. Slide the sled into the channel from the nest end, runner pads down.
 3. Thread the lead screw through the sled's nut from the nest end, pass its socket through the end-stop hole and push it onto the motor shaft (D-socket; a drop of glue optional).
 4. Drop the blade into the riser slot and fit the clamp screw from the front. Glue the magnet in its pocket on the blade's back, pole marked.
-5. Glue the hall sensor in the post pocket, legs up; wire it.
+5. Hall sensor in the post pocket, legs up, printed face out (the V45 sled's pocket is a dovetail the sensor slides down into, no glue; the original sled needs a drop of glue); wire it.
 6. Press the pad onto the stem.
 7. Fit the liner (or foam) into the nest.
 8. Set the U-yoke into its recess and screw it from below.

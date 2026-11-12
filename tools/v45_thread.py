@@ -143,24 +143,21 @@ def arch_slot(s):
 
 
 def hall_clip(s):
-    """Hall-sensor pocket that holds an SS49E without glue. The sensor (4.0 wide, 3.0 tall, 1.5 thick,
-    flat marked face toward the magnet, legs up) slides down from the top of the post until it sits on
-    the pocket floor, which puts its middle level with the magnet (model y 62). Two 0.6 mm lips on the
-    post's front face overlap the sensor's face edges by 0.3 mm, and a 0.3 mm rib on the back wall
-    pushes it against them. The lips stand proud of the post face, so the sensor isn't moved back."""
+    """Hall-sensor pocket that holds an SS49E without glue. The sensor (flat marked face toward the
+    magnet, legs up) slides down from the top of the post until it sits on the pocket floor, which puts
+    its middle level with the magnet (model y 62). The SS49E's printed face has chamfered long edges, so
+    the pocket is the same dovetail: measured sensor 4.0 wide, 1.58 thick, face 2.65 wide, 0.77 straight
+    sides (chamfers 0.675 across x 0.81 deep, about 50 degrees). The pocket is that shape seated flush
+    with the post face (model x 17.5), 0.075 oversize all round, open at the front. The sensor can't
+    come out the front, only the top. No glue, no crush rib."""
     fill = trimesh.creation.box(extents=[2.2, 8.0, 5.2]); fill.apply_translation([16.4, 64.0, 0.0])   # old pocket
     s = s + M(to_print_sled(fill))
-    pocket = trimesh.creation.box(extents=[1.7 + 0.01, 8.0, 4.2]); pocket.apply_translation([17.5 - 0.85 + 0.005, 60.5 + 4.0, 0.0])
+    C = 0.075
+    hb, hf = 2.0 + C, 1.325 + C * 0.6          # half widths: back, at the post face
+    back, knee = 17.5 - 1.58 - C, 17.5 - 1.58 + 0.77 + C * 0.4
+    pocket = prism_zx([(-hb, back), (hb, back), (hb, knee), (hf, 17.5), (hf, 17.7),
+                       (-hf, 17.7), (-hf, 17.5), (-hb, knee)], 60.5, 68.6)
     s = s - M(to_print_sled(pocket))
-    # dovetail lips standing 0.6 mm proud of the post face, their inner faces at 45 degrees: they overlap the
-    # sensor's face edges, centre it, and print without support (the sled prints with the post face up)
-    for zs in (-1, 1):
-        prof = [(2.9, 17.49), (2.9, 18.1), (1.6, 18.1), (1.6, 18.0), (2.1, 17.5), (2.1, 17.49)]
-        if zs < 0:
-            prof = [(-z, x) for z, x in reversed(prof)]
-        s = s + M(to_print_sled(prism_zx(prof, 60.5, 68.0)))
-    rib = prism_zx([(-0.35, 15.79), (0.35, 15.79), (0.0, 16.2)], 61.0, 67.5)   # crush rib on the back wall, along y
-    s = s + M(to_print_sled(rib))
     return s
 
 
