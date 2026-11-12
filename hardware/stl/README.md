@@ -35,7 +35,7 @@ If you re-export from Fusion, run `python3 tools/orient_stl.py` afterwards to pu
 | Qty | Item | Where |
 |---|---|---|
 | 2 | M4 × 8 (or M3 × 8 with nuts) | 28BYJ-48 ears (35 mm apart) into the motor plate; plate holes are 3.5 mm so M4 self-taps |
-| 4 | M3 × 6 | U-yoke into the base, from underneath (holes 2.5 mm, self-tap) |
+| 4 | M3 × 5 (or × 6) | U-yoke into the base, from underneath: 3.4 mm clearance holes in the base (z ±30, ±60, clear of the arms), 2.8 mm pilot holes in the yoke's crossbar, self-tap. An M3 × 6 pokes 1 mm out of the crossbar's top, which is harmless |
 | 1 | M3 × 10 | Blade clamp, from the front of the riser, self-taps into the block |
 | 2 | M5 × 20 hex-head (or socket) | Nest pins. One gets the printed knob on its head; one plain |
 | 1 | 3 × 2 mm magnet | Blade back face, in the shallow pocket at pad height |
