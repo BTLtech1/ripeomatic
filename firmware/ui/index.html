@@ -561,8 +561,19 @@ async function loadSettings() {
   }
   f.innerHTML = h;
 }
+// Send only what the user changed: the form is loaded once, and calibration
+// (hall_n_per_count, blade_k) can change underneath it. Sending the whole form
+// would write the stale values back over a fresh calibration.
 $('btnSave').onclick = async () => {
-  const data = {}; new FormData($('settings')).forEach((v, k) => data[k] = v);
+  const data = {};
+  new FormData($('settings')).forEach((v, k) => {
+    const old = settings ? settings[k] : undefined;
+    const same = typeof old === 'boolean' ? (v === '1') === old
+      : typeof old === 'number' ? v.trim() !== '' && Math.abs(Number(v) - old) <= 1e-9 * Math.max(1, Math.abs(old))
+      : String(old == null ? '' : old) === v;
+    if (!same) data[k] = v;
+  });
+  if (!Object.keys(data).length) return toast('Nothing changed');
   try { await post('/api/settings', data); toast('Saved'); await loadSettings(); poll(); } catch (e) { toast(e.message); }
 };
 async function scan() {
