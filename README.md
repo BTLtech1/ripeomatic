@@ -14,7 +14,7 @@ Store ripeness scanners (NIR, acoustic, laser vibrometry) judge a stranger's avo
 
 A soft pad presses very gently on the avocado once or twice a day and measures **how much it squishes for a given force**, the same way you'd test it with your thumb. As the avocado ripens, it gets softer, and when it crosses your threshold you get a notification.
 
-The machine is a low, horizontal press about 7 cm tall. The avocado lies in a printed half-shell nest with a soft liner, and a sled drives the pad into its exposed side, pushing it gently into the curved back of the nest.
+The machine is a low, horizontal press about 7 cm tall. The avocado lies on its side in a printed V-shaped corner, and a sled drives the pad into its exposed side, pushing it gently into the corner, which seats any size from about 55 to 80 mm across.
 
 - **Push:** a $2 geared stepper turns a printed lead screw that moves the sled along a channel in the base in tiny, known steps, so step count = travel.
 - **Feel:** a thin printed blade standing up from the sled carries the pad. It bends back as the avocado pushes. A magnet on its back and a $0.50 hall sensor on the sled measure the bend, which gives the force.

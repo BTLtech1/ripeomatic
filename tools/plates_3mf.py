@@ -24,10 +24,9 @@ STRIDE = 200.0
 # plate -> (file, centre x, centre y, rotation about Z in degrees)
 PLATES = {
     1: [("base.stl", 90, 90, 0)],
-    2: [("nest.stl", 68, 43, 0), ("blade.stl", 150, 110, 0),
-        ("thumbscrew-knob.stl", 150, 30, 0), ("servo-horn-v2.stl", 150, 60, 0)],
-    3: [("u-yoke.stl", 90, 30, 0), ("sled.stl", 60, 95, 0), ("lead-screw-TR10x2.stl", 120, 95, 0)],
-    4: [("nest-liner-TPU.stl", 65, 45, 0), ("pad-TPU.stl", 150, 45, 0)],
+    2: [("v-holder.stl", 55, 90, 0), ("v45/v45-blade.stl", 140, 90, 0)],
+    3: [("v45/v45-sled.stl", 60, 90, 0), ("v45/v45-lead-screw.stl", 120, 90, 0)],
+    4: [("pad-TPU.stl", 90, 90, 0)],
     # the two electronics boxes (the ESP32 case is BTL's v6 case, printed as supplied)
     5: [("esp32-case/esp32-case-base.stl", 25, 36, 0), ("esp32-case/esp32-case-lid-firm-key.stl", 25, 102, 0),
         ("driver-box.stl", 75, 32, 0), ("driver-box-lid.stl", 75, 88, 0),
@@ -73,7 +72,7 @@ def main():
         sys.exit(1)
     if split:
         out.mkdir(parents=True, exist_ok=True)
-        names = {1: "base", 2: "nest-blade-knob-horn", 3: "yoke-sled-screw", 4: "TPU-liner-pad", 5: "electronics-boxes"}
+        names = {1: "base", 2: "holder-blade", 3: "sled-screw", 4: "TPU-pad", 5: "electronics-boxes"}
         for k, sc in scenes.items():
             f = out / f"plate{k}-{names.get(k, k)}.3mf"
             sc.export(f)

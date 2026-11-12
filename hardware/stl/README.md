@@ -12,15 +12,18 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 | `esp32-case/esp32-case-base.stl` | PLA/PETG | As supplied (floor down) | 2 walls, 10 %, no supports | 1 h |
 | `esp32-case/esp32-case-lid-firm-key.stl` | PLA/PETG | As supplied (top down) | 2 walls, 10 %, no supports | 25 min |
 | `esp32-case/esp32-case-keycap.stl` + one `mx-adapter` | any | As supplied | default. Print the 1.30 adapter first; 1.25 / 1.35 are looser / tighter on the keycap stem | 10 min |
-| `u-yoke.stl` | PLA/PETG | Standing on its cross-bar | 4 walls, 20 %, **supports: on build plate only** (for the servo boss, which overhangs the arm) | 50 min |
-| `nest.stl` | PLA/PETG | Upside down: the flat top edge on the bed, the shell's back up | 3 walls, 10 %, no supports. The front lip overhangs at ~45°, which is fine | 2 h |
+| `v-holder.stl` | PLA/PETG | Lying on the back of its wall (as supplied) | 3 walls, 15 %, **no supports** | 2.5 h |
+| `u-yoke.stl` *(old bowl version)* | PLA/PETG | Standing on its cross-bar | 4 walls, 20 %, **supports: on build plate only** (for the servo boss, which overhangs the arm) | 50 min |
+| `nest.stl` *(old bowl version)* | PLA/PETG | Upside down: the flat top edge on the bed, the shell's back up | 3 walls, 10 %, no supports. The front lip overhangs at ~45°, which is fine | 2 h |
 | `sled.stl` | PETG preferred | Standing on its motor end (already oriented): the nut thread prints vertical like the screw's | 4 walls, 30 %, **no supports** | 1 h |
 | `lead-screw-TR10x2.stl` | PETG preferred | Standing, socket end down | 100 % infill or 6 walls, 0.12 mm layers for a smoother thread, **brim** | 40 min |
 | `blade.stl` | PLA | Flat on its 12 mm face, stem up | 100 % infill. The magnet pocket faces the bed | 10 min |
-| `thumbscrew-knob.stl` | any | Flat | default | 5 min |
+| `thumbscrew-knob.stl` *(old bowl version)* | any | Flat | default | 5 min |
 | `pad-TPU.stl` | TPU 95A | Socket down, dome up | 2 walls, 15 % | 10 min |
-| `nest-liner-TPU.stl` | TPU 95A (or skip: use 3 mm craft foam) | Upside down, same as the nest | 2 walls, vase-ish, **brim** (it stands on a 2 mm edge) | 1.5 h |
-| `servo-horn-v2.stl` | any | Flat | default | 5 min — **v2 only** |
+| `nest-liner-TPU.stl` *(old bowl version)* | TPU 95A (or skip: use 3 mm craft foam) | Upside down, same as the nest | 2 walls, vase-ish, **brim** (it stands on a 2 mm edge) | 1.5 h |
+| `servo-horn-v2.stl` *(old bowl version)* | any | Flat | default | 5 min — **v2 only** |
+
+**The avocado holder:** print `v-holder.stl`. It replaces the hanging bowl (`nest.stl`), the U-yoke, the knob, the liner and the two M5 bolts. The bowl only fit one size: a smaller avocado rolled up its curve when pushed, and it flexed on its bolts. The V-holder is a fixed corner (floor tilted 12° back, wall square to it) that any avocado from about 55 to 80 mm across wedges into, screwed straight to the base. It's made for the V45 sled and blade with **Max travel 37**; don't raise Max travel past 40 with it, or the sled's front reaches the floor's underside. Made by [`../../tools/v_holder.py`](../../tools/v_holder.py), which also checks the fit against the base and the sled at full travel. The old bowl parts stay here for anyone who built that version.
 
 Print the base and the sled first and test the slide before printing the rest. If the sled binds, scale it 99.5 % in X/Y or sand the lips. The sled's nut is threaded only for its first 10 mm at the motor end (the rest is a Ø10.8 clearance bore), since a 50 mm long printed nut got tighter and tighter as the screw went in. If the screw still binds, reprint the screw with an X–Y contour compensation of −0.15 mm (Bambu Studio: the object's *Quality → Precision* settings) rather than scaling it, so the motor socket stays 5.0 mm; 0.12 mm layers and a random seam help too.
 
@@ -35,9 +38,9 @@ If you re-export from Fusion, run `python3 tools/orient_stl.py` afterwards to pu
 | Qty | Item | Where |
 |---|---|---|
 | 2 | M4 × 8 (or M3 × 8 with nuts) | 28BYJ-48 ears (35 mm apart) into the motor plate; plate holes are 3.5 mm so M4 self-taps |
-| 4 | M3 × 5 (or × 6) | U-yoke into the base, from underneath: 3.4 mm clearance holes in the base (z ±30, ±60, clear of the arms), 2.8 mm pilot holes in the yoke's crossbar, self-tap. An M3 × 6 pokes 1 mm out of the crossbar's top, which is harmless |
+| 4 | M3 × 6 to 8 | V-holder into the base, from underneath: 3.4 mm clearance holes in the base, 2.8 mm pilot holes in the holder's foot, self-tap. (The old U-yoke used the same holes with M3 × 5.) |
 | 1 | M3 × 10 | Blade clamp, from the front of the riser, self-taps into the block |
-| 2 | M5 × 20 hex-head (or socket) | Nest pins. One gets the printed knob on its head; one plain |
+| 2 | M5 × 20 hex-head (or socket) | Old bowl version only: the nest pins. One gets the printed knob on its head; one plain |
 | 1 | 3 × 2 mm magnet | Blade back face, in the shallow pocket at pad height |
 | 1 | SS49E hall sensor | Post front pocket, legs out the top |
 
@@ -51,9 +54,9 @@ Each box drops over its pair of studs 9 mm short of its final spot and slides ho
 4. Drop the blade into the riser slot and fit the clamp screw from the front. Glue the magnet in its pocket on the blade's back, pole marked.
 5. Hall sensor in the post pocket, legs up, printed face out (the V45 sled's pocket is a dovetail the sensor slides down into, no glue; the original sled needs a drop of glue); wire it.
 6. Press the pad onto the stem.
-7. Fit the liner (or foam) into the nest.
-8. Set the U-yoke into its recess and screw it from below.
-9. Hang the nest between the arms: M5 bolt through each arm into the nest ear. Fit the knob on one bolt head and snug it so the nest rests on the stop tab.
+7. Drop the V-holder's foot into the slot at the avocado end of the base, open side facing the pad, and screw it from below with four M3 × 6–8 (self-tapping into the foot). Optional: 2–3 mm felt or craft foam on the floor and wall where the avocado touches. The blade calibration includes it, so calibrate with it fitted.
+8. (Old bowl version instead: liner into the nest, U-yoke screwed into the slot, nest hung between the arms on two M5 bolts, knob on one.)
+9. Set **Max travel** to **37** on the device's Settings page.
 10. Boxes: click the ESP32 case onto the studs on the board side (USB opening toward the motor end) and the driver box onto the studs on the other side. ESP32 on its pins in the case, ULN2003 on the ledges in the driver box.
 11. Wire per [`../wiring-guide.md`](../wiring-guide.md) (step by step, with a picture) or `../README.md` (the 0.1 µF capacitor on the hall sensor output is optional): the six driver wires leave the driver box through its motor-end notch, go round the end of the base and enter the ESP32 case through the USB opening next to the plug; the hall wires use the same opening. The motor's ribbon plugs into the ULN2003 through the driver box's channel-side notch. Snap both lids on; keycap on the ESP32 lid.
 
