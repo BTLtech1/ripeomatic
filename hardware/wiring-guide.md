@@ -50,6 +50,8 @@ Use `3V3` here, **not** `VIN`: the sensor's signal has to stay at 3.3 V or less 
 
 > **Testing the motor before the sensor is wired?** Put one jumper wire from `D34` to a `GND` pin for now. The machine watches the sensor during every move and stops if the reading jumps. A pin with nothing on it gives random readings, which would stop the motor for no reason. Take this wire off when you connect the sensor.
 
+**Push-on wires slip off easily**, especially the power wires when the boxes go on. Once everything works, hold them with a small dab of hot glue or a strip of tape across each board's connectors (hot glue peels off cleanly later).
+
 ## 5. Power on and check the motor
 
 1. Plug the USB cable into a computer or phone charger. The LEDs on the motor driver may blink once.
@@ -65,6 +67,7 @@ Using the V45 sled and blade (from [`stl/v45/`](stl/v45/))? Set **Max travel** t
 
 | What you see | Most likely |
 |---|---|
+| Status says "home" or shows a position, but the number doesn't change and nothing moves | A power wire (`VIN` / `GND`) has come off |
 | Nothing moves, driver LEDs stay dark | `VIN` / `GND` wires, or the jumper cap is off |
 | LEDs flicker but the motor only hums or shakes | `IN1`–`IN4` are in the wrong order (check step 1) |
 | Motor turns but the sled goes the wrong way | Direction flip (step 5) |
