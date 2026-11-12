@@ -55,7 +55,7 @@ Each box drops over its pair of studs 9 mm short of its final spot and slides ho
 8. Set the U-yoke into its recess and screw it from below.
 9. Hang the nest between the arms: M5 bolt through each arm into the nest ear. Fit the knob on one bolt head and snug it so the nest rests on the stop tab.
 10. Boxes: click the ESP32 case onto the studs on the board side (USB opening toward the motor end) and the driver box onto the studs on the other side. ESP32 on its pins in the case, ULN2003 on the ledges in the driver box.
-11. Wire per `../README.md` (the 0.1 µF capacitor on the hall sensor output is optional): the six driver wires leave the driver box through its motor-end notch, go round the end of the base and enter the ESP32 case through the USB opening next to the plug; the hall wires use the same opening. The motor's ribbon plugs into the ULN2003 through the driver box's channel-side notch. Snap both lids on; keycap on the ESP32 lid.
+11. Wire per [`../wiring-guide.md`](../wiring-guide.md) (step by step, with a picture) or `../README.md` (the 0.1 µF capacitor on the hall sensor output is optional): the six driver wires leave the driver box through its motor-end notch, go round the end of the base and enter the ESP32 case through the USB opening next to the plug; the hall wires use the same opening. The motor's ribbon plugs into the ULN2003 through the driver box's channel-side notch. Snap both lids on; keycap on the ESP32 lid.
 
 ## v2
 
