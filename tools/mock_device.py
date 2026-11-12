@@ -192,6 +192,10 @@ class H(BaseHTTPRequestHandler):
             return self._send(200, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#2e4a21"/></svg>', "image/svg+xml")
         if u.path == "/sw.js":
             return self._send(200, "self.addEventListener('fetch',e=>{});", "application/javascript")
+        if u.path == "/api/raw":
+            import math
+            raw = 2001.0 + 120.0 * math.sin(time.time() * 1.3)   # pretend someone is pushing the blade
+            return self._json(200, {"raw": raw, "force_n": (raw - 2001.0) * settings["hall_n_per_count"]})
         if u.path == "/api/status":
             with LOCK:
                 f = state["fruit"]

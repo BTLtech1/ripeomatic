@@ -150,6 +150,16 @@ details[open] summary::after{content:"–"}
 <div class="row" style="padding:4px 0 10px"><button id="btnSetupShow">Show the setup checklist</button><button id="btnCalClear" class="quiet">Clear force points</button></div>
 <p class="kv">Alternative to coins: put a kitchen scale where the avocado goes and press it. Read the peak grams and compare with the force the device reports; adjust <code>hall_n_per_count</code> by the ratio.</p>
 </details>
+<details id="d-sensor">
+<summary>Sensor test</summary>
+<p class="kv">Shows the hall sensor live. Start it, then push the blade gently toward the sensor with a finger (or bring a magnet near the sensor): the number should move.</p>
+<div class="row" style="padding:4px 0 10px"><button id="btnSensor">Start the sensor test</button></div>
+<div id="sensorbox" hidden>
+<div style="display:flex;align-items:baseline;gap:10px"><span class="verdict" id="sraw" style="font-variant-numeric:tabular-nums">—</span><span class="kv">of 0–4095 · lowest <b id="smin">—</b> · highest <b id="smax">—</b></span></div>
+<div class="bar"><i id="sbar" style="transition:width .15s"></i></div>
+<p id="sstate" style="margin-top:8px"></p>
+</div>
+</details>
 <details id="d-motor">
 <summary>Motor</summary>
 <div class="row" style="padding:4px 0 10px">
@@ -337,6 +347,32 @@ $('btnMeasure').onclick = act('/api/measure', null, 'Measuring…');
 $('btnNew').onclick = async () => { if (!confirm('Start tracking a new avocado? The current one is kept in the log.')) return; act('/api/newfruit', null, 'New avocado. Measuring…')(); };
 $('btnAbort').onclick = act('/api/abort', null, 'Stopping');
 $('btnHome').onclick = act('/api/home', null, 'Going home');
+// ---- sensor test -----------------------------------------------------------
+let sensorRun = 0;
+async function sensorTest(on) {
+const run = ++sensorRun;
+$('btnSensor').textContent = on ? 'Stop the sensor test' : 'Start the sensor test';
+$('sensorbox').hidden = !on;
+if (!on) return;
+let lo = Infinity, hi = -Infinity, n = 0;
+const until = Date.now() + 3 * 60 * 1000;
+while (run === sensorRun && Date.now() < until) {
+try {
+const r = await api('/api/raw');
+const raw = Math.round(r.raw); n++;
+lo = Math.min(lo, raw); hi = Math.max(hi, raw);
+$('sraw').textContent = raw; $('smin').textContent = lo; $('smax').textContent = hi;
+$('sbar').style.width = (100 * raw / 4095) + '%';
+const el = $('sstate');
+if (raw < 20 || raw > 4075) { el.className = 'bad'; el.textContent = 'Stuck at the end of its range. Check the three wires: 3V3, GND (middle leg), D34. If they\'re on, the sensor may be in backwards: unplug the USB and swap the two outer wires on the sensor.'; }
+else if (hi - lo > 40) { el.className = 'ok'; el.textContent = 'Working: it responds to the magnet.'; }
+else if (n > 5) { el.className = 'kv'; el.textContent = 'Steady. Now push the blade toward the sensor, or bring a magnet close: the number should move.'; }
+} catch (e) { $('sstate').className = 'bad'; $('sstate').textContent = 'Can\'t reach the device.'; }
+await new Promise(res => setTimeout(res, 200));
+}
+if (run === sensorRun) { $('btnSensor').textContent = 'Start the sensor test'; }
+}
+$('btnSensor').onclick = () => sensorTest($('btnSensor').textContent.startsWith('Start'));
 $('btnSetHome').onclick = async () => { if (!confirm('Is the sled touching the end stop at the motor end?')) return; act('/api/sethome', null, 'Home set')(); };
 $('btnCalClear').onclick = act('/api/cal/clear', null, 'Calibration points cleared');
 $('btnSetupShow').onclick = () => { setupHidden(false); $('setup').hidden = false; window.scrollTo({top: 0, behavior: 'smooth'}); };
@@ -387,7 +423,7 @@ if (st.done) body = `<p><b>Set home</b> · ${s.simulate ? 'not needed in simulat
 else body = `<p><b>Set home.</b> The machine counts every step from here, so it never has to bump into anything to find its place. Jog the sled toward the motor until it just touches the end stop: ◀ 5 mm while it's far, ◀ 1 for the last bit.</p>${s.home_lost ? '<p class="bad">The power went off while the sled was moving, so it lost its place. Set home again.</p>' : ''}<div class="row"><button data-act="jog" data-mm="-5">◀ 5 mm</button><button data-act="jog" data-mm="-1">◀ 1</button><button data-act="jog" data-mm="1">1 ▶</button></div><div class="row" style="margin-top:8px"><button class="primary" data-act="sethome">It's touching: set home here</button></div>`;
 } else if (st.id === 'force') {
 if (st.done) body = `<p><b>Force calibration</b> · ${s.cal_points_n} point${s.cal_points_n === 1 ? '' : 's'}</p>`;
-else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<p>1 · Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad, nothing else, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cap (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Two different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${s.cal_points_n ? '<p class="ok" style="margin-top:8px">' + s.cal_points_n + ' point captured. Add a second amount, or:</p><div class="row"><button data-act="forcedone">Continue with one point</button></div>' : ''}`;
+else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<div class="row" style="margin-bottom:8px"><button class="quiet" data-act="sensortest">Test the sensor first</button></div><p>1 · Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad, nothing else, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cap (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Two different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${s.cal_points_n ? '<p class="ok" style="margin-top:8px">' + s.cal_points_n + ' point captured. Add a second amount, or:</p><div class="row"><button data-act="forcedone">Continue with one point</button></div>' : ''}`;
 } else if (st.id === 'blade') {
 if (st.done) body = `<p><b>Blade calibration</b> · ${fmt(s.blade_k)} N/mm</p>`;
 else body = `<p><b>Blade calibration</b> measures the machine's own flex so it can be subtracted from every reading.</p>${s.simulate ? '<p class="kv">Simulation: tap it and watch the status pill; a pretend press runs in about ten seconds.</p>' : ''}<p>Stand the machine back up. Put something hard where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade</button></div>`;
@@ -412,6 +448,7 @@ else if (a === 'ntfytest') { testPending = true; testResult = ''; await post('/a
 else if (a === 'nudge') { await post('/api/jog', {mm: 1}); toast('Nudging'); }
 else if (a === 'motorok') { await post('/api/motor/checked', {ok: 1}); toast('Direction confirmed'); }
 else if (a === 'jog') { await post('/api/jog', {mm: b.dataset.mm}); }
+else if (a === 'sensortest') { $('d-sensor').open = true; $('d-sensor').scrollIntoView({behavior: 'smooth', block: 'start'}); sensorTest(true); return; }
 else if (a === 'sethome') { await post('/api/sethome'); toast('Home set'); }
 else if (a === 'motorbad') { await post('/api/motor/checked', {ok: 0}); toast('Flipped. Nudge again to check.'); }
 else if (a === 'zero') { await post('/api/cal/zero'); ls.set('forceCalDone', '0'); toast('Zero captured'); }

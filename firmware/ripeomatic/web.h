@@ -21,6 +21,12 @@ class Web {
 
     server.on("/api/status", HTTP_GET, [this] { status(); });
     server.on("/api/live", HTTP_GET, [this] { live(); });
+    // Sensor test: just the hall reading, cheap enough to poll several times a second.
+    server.on("/api/raw", HTTP_GET, [this] {
+      float raw = M.busy() ? (float)M.live_raw : M.hall.readRaw(16);
+      String o = "{"; addNum(o, "raw", raw, 0); addNum(o, "force_n", M.hall.countsToForce(raw), 3); closeObj(o);
+      json(200, o);
+    });
     server.on("/api/settings", HTTP_GET, [this] { json(200, settingsJson()); });
     server.on("/api/settings", HTTP_POST, [this] { saveSettings(); });
     server.on("/api/measure", HTTP_POST, [this] { if (!M.homeKnown) return fail(400, HOME_UNSET_MSG); startJob(Job::Measure); });

@@ -55,6 +55,14 @@ const shots = process.argv[2] || require('os').tmpdir();
   await page.waitForFunction(() => document.getElementById('setup').hidden, null, { timeout: 30000 });
   out.setupDone = true;
 
+  // sensor test
+  await page.click('#d-sensor summary');
+  await page.click('#btnSensor');
+  await page.waitForFunction(() => /Working/.test(document.getElementById('sstate').textContent), null, { timeout: 10000 });
+  out.sensorTest = await page.textContent('#sstate');
+  await page.click('#btnSensor');
+  out.sensorStopped = await page.isHidden('#sensorbox');
+
   // measure
   await page.click('#btnMeasure');
   await page.waitForFunction(() => !document.getElementById('live').hidden, null, { timeout: 5000 });
@@ -109,6 +117,7 @@ const shots = process.argv[2] || require('os').tmpdir();
   if (errors.length) problems.push('console/network errors');
   if (!/N\/mm/.test(out.kval) || out.kval.startsWith('—')) problems.push('no stiffness shown after measuring');
   if (out.trendPoints2 < 2) problems.push('trend chart has fewer than 2 points');
+  if (!out.sensorStopped || !/Working/.test(out.sensorTest || '')) problems.push('sensor test');
   if (!out.setupDone || !out.flipped || !out.homeSet || !out.topicLink || !out.discordSaved) problems.push('setup checklist did not complete');
   if (out.savedInterval !== 8) problems.push('settings round trip failed');
   if (!/you said: firm/.test(out.rated)) problems.push('rating not reflected');

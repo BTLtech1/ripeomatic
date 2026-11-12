@@ -86,6 +86,7 @@ Everything the page does. Handy for Home Assistant or a script.
 | POST | `/api/jog` | `mm=±5` manual move |
 | POST | `/api/home` | Drive back to home (position 0) by step count |
 | POST | `/api/sethome` | The sled is touching the end stop now: call this position 0 |
+| GET | `/api/raw` | Just the hall reading (`raw`, `force_n`), for the live *Sensor test* panel |
 | POST | `/api/cal/zero`, `/api/cal/mass` (`g=`), `/api/cal/clear`, `/api/cal/blade` | Calibration |
 | POST | `/api/tip` | v2: tip the avocado out |
 | GET | `/api/scan` · POST `/api/wifi` (`ssid`, `pass`) | Wi-Fi |
