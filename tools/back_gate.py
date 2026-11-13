@@ -431,6 +431,10 @@ def build_base():
         b = b + M(h)
     for x0, x1, y0, z0, z1 in fills:
         b = b - box3(x0, x1, deck, deck + 1.0, z0, z1)
+    # ...and nothing may reach below the base's own underside: a fill that pokes out even 0.15 mm
+    # becomes the only thing touching the print bed
+    bottom = float(base.vertices[:, 1].min())
+    b = b - box3(-200.0, 200.0, bottom - 5.0, bottom, -200.0, 200.0)
     for sx, sz in STUDS:
         b = b + stud(sx, sz)
     return b
