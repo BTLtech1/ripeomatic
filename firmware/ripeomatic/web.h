@@ -37,7 +37,10 @@ class Web {
     server.on("/api/jog", HTTP_POST, [this] {
       float mm = server.arg("mm").toFloat();
       if (mm == 0 || fabsf(mm) > 20) return fail(400, "mm must be within +-20");
-      if (const char* why = M.jogBlocked(mm)) return fail(400, why);
+      bool past = server.arg("past") == "1";
+      if (M.busy()) return fail(409, "busy");
+      if (const char* why = M.jogBlocked(mm, past)) return fail(400, why);
+      M.jogPast = past;
       startJob(Job::Jog, mm);
     });
     server.on("/api/tip", HTTP_POST, [this] {

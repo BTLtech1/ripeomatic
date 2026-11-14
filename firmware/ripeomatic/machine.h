@@ -124,15 +124,18 @@ class Machine {
   }
 
   // How far a jog may actually go (see jog()). 0 = nowhere.
-  float jogClamp(float mm) const {
+  // past = the user confirmed the sled isn't really at home (the count is wrong, e.g. the motor lost
+  // power for a while): a big step toward the motor may then go past home too.
+  bool jogPast = false;
+  float jogClamp(float mm, bool past = false) const {
     if (!homeKnown) return mm;
     float p = stepper.posMm();
-    if (mm < -1.01f && p + mm < 0) mm = p > 0 ? -p : 0;
+    if (!past && mm < -1.01f && p + mm < 0) mm = p > 0 ? -p : 0;
     if (mm > 0 && p + mm > S.t.max_travel_mm) mm = p < S.t.max_travel_mm ? S.t.max_travel_mm - p : 0;
     return mm;
   }
-  const char* jogBlocked(float mm) const {
-    if (fabsf(jogClamp(mm)) >= 0.01f) return nullptr;
+  const char* jogBlocked(float mm, bool past = false) const {
+    if (fabsf(jogClamp(mm, past)) >= 0.01f) return nullptr;
     return mm < 0 ? "at home. To creep closer to the end stop, use ◀ 1" : "at the travel limit";
   }
 
@@ -357,7 +360,8 @@ class Machine {
   // travel limit; a 1 mm step toward the motor may go past home, so a wrong home
   // can be corrected by creeping up to the real end stop.
   void jog(float mm) {
-    mm = jogClamp(mm);
+    mm = jogClamp(mm, jogPast);
+    jogPast = false;
     if (fabsf(mm) < 0.01f) return;
     guardedMove(mm, S.t.force_cap_n);
   }

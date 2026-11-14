@@ -274,7 +274,7 @@ class H(BaseHTTPRequestHandler):
 
             def jog():
                 with LOCK:
-                    state["pos"] = max(0, state["pos"] + mm)
+                    state["pos"] = state["pos"] + mm if d.get("past") == "1" else max(0, state["pos"] + mm)
                 time.sleep(abs(mm) / 0.45)
             return self._json(200, {"ok": True}) if start_job("jog", jog) else self._json(409, {"ok": False, "error": "busy"})
         if u.path == "/api/tip":

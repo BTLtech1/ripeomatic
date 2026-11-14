@@ -479,7 +479,7 @@ else if (a === 'discordclear') { await post('/api/alerts/discord', {url: ''}); t
 else if (a === 'ntfytest') { testPending = true; testResult = ''; await post('/api/ntfy/test'); waitForTest(); }
 else if (a === 'nudge') { await post('/api/jog', {mm: 1}); toast('Nudging'); }
 else if (a === 'motorok') { await post('/api/motor/checked', {ok: 1}); toast('Direction confirmed'); }
-else if (a === 'jog') { await post('/api/jog', {mm: b.dataset.mm}); }
+else if (a === 'jog') { await jogBtn(b.dataset.mm); }
 else if (a === 'sensortest') { $('d-sensor').open = true; $('d-sensor').scrollIntoView({behavior: 'smooth', block: 'start'}); sensorTest(true); return; }
 else if (a === 'sethome') { await post('/api/sethome'); toast('Home set'); }
 else if (a === 'motorbad') { await post('/api/motor/checked', {ok: 0}); toast('Flipped. Nudge again to check.'); }
@@ -504,7 +504,17 @@ $('btnSetupShow2').onclick = () => $('btnSetupShow').onclick();
 $('btnReboot').onclick = () => { if (confirm('Reboot the device?')) act('/api/reboot')(); };
 $('btnResetFruit').onclick = () => { if (confirm('Forget the current avocado? Its readings stay in the log.')) act('/api/reset', {what: 'fruit'}, 'Forgotten')(); };
 $('btnWipe').onclick = () => { if (confirm('Erase ALL readings on the device? Download the CSV first if you want them.')) act('/api/reset', {what: 'data'}, 'Erased')(); };
-document.querySelectorAll('[data-jog]').forEach(b => b.onclick = act('/api/jog', {mm: b.dataset.jog}));
+// A big step toward the motor stops at home. If the count is wrong (the motor lost power for a
+// while), the sled isn't really there: ask, then let it go past.
+async function jogBtn(mm) {
+try { await post('/api/jog', {mm}); poll(); }
+catch (e) {
+if (!/^at home/.test(e.message)) return toast(e.message);
+if (!confirm('The machine thinks the sled is already at home.\n\nIf it is NOT touching the end stop at the motor end, tap OK to move it ' + Math.abs(mm) + ' mm closer anyway. Set home again when it touches.')) return;
+try { await post('/api/jog', {mm, past: 1}); poll(); } catch (e2) { toast(e2.message); }
+}
+}
+document.querySelectorAll('[data-jog]').forEach(b => b.onclick = () => jogBtn(b.dataset.jog));
 document.querySelectorAll('#rate button').forEach(b => b.onclick = act('/api/rate', {r: b.dataset.r, cut: $('cut').value}, 'Thanks, logged'));
 // ---- settings form ----------------------------------------------------------
 const FIELDS = [
