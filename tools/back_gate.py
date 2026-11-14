@@ -356,8 +356,11 @@ def build_frame():
     body = body - cyl_z(HINGE, 4.0, HALF_IN - 0.5, ZC + 0.1, 48)
     body = body - cyl_z(HINGE, 1.7, -ZC - 0.1, -HALF_IN + 0.5, 32)
     # servo pocket: in from outside through the side wall, under the floor (case 22.5 x 12.2, 15.9 deep
-    # below its tabs; the cable leaves at the open front)
+    # below its tabs). The MG90S's cable leaves the case at its shaft end, near the bottom, which is the
+    # pocket's closed end: a 4.5 mm relief there lets the cable turn into the 5 mm space behind the
+    # case's bottom and run to the open front. (Without it the cable is pinched and the servo won't seat.)
     body = body - box3(SERVO[0] - 17.1, SERVO[0] + 6.4, SERVO[1] - 6.5, SERVO[1] + 6.5, 40.0, ZC + 0.1)
+    body = body - box3(SERVO[0] + 6.3, SERVO[0] + 10.9, SERVO[1] - 4.5, SERVO[1] + 4.5, 40.0, 54.0)
     for dx in (-13.9, 13.9):           # tab screws, 27.8 apart round the case centre
         body = body - cyl_z((SERVO[0] - 5.35 + dx, SERVO[1]), 0.85, HALF_IN - 0.1, ZC + 0.1, 24)
     for sx, sz in STUDS:
@@ -437,6 +440,13 @@ def build_base():
     b = b - box3(-200.0, 200.0, bottom - 5.0, bottom, -200.0, 200.0)
     for sx, sz in STUDS:
         b = b + stud(sx, sz)
+    # raised arrow beside the holder (knob side): the way to slide the holder to unlock it (toward the pad)
+    arrow = Polygon([(62.0, 71.5), (68.0, 67.5), (68.0, 70.5), (80.0, 70.5), (80.0, 72.5), (68.0, 72.5), (68.0, 75.5)])
+    am = trimesh.creation.extrude_polygon(arrow, 0.65)
+    v = am.vertices.copy()
+    am.vertices = np.column_stack([v[:, 0], v[:, 2] + deck - 0.05, v[:, 1]])
+    am.invert()
+    b = b + M(am)
     return b
 
 
