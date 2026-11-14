@@ -69,6 +69,9 @@ Each box drops over its pair of studs 9 mm short of its final spot and slides ho
 7. **The gate**, on the bench before it goes on the base (the servo side is the side wall with the rectangular hole; it ends up on the board side):
    1. Hold the door between the side walls, rounded hinge edge down in the corner. Push the lever's shaft through the round hole in the servo-side wall into the door's D-shaped socket and fix it with an M3 × 30 through the lever (× 25 also holds). Put an M3 × 12 through the other wall into the door as the hinge pin. Snug, not tight: the door must swing freely.
    2. Feed the servo's cable into the rectangular hole: it turns into the notch at the closed end, runs behind the servo and out under the floor's front edge. Push the servo in until its tabs sit on the wall (shaft at the end nearer the door), and fix it with its own two screws. **Leave the horn off.**
+
+   ![The linkage from the servo side and from above: four screws A to D](../gate-linkage.svg)
+
    3. Screw the link onto the lever's pin with an M3 × 16 through the link's larger hole, round spacer toward the lever. It must turn freely on the screw.
 8. **The frame onto the base:** lower it over the four studs at the avocado end, 9 mm toward the pad from where it ends up, and slide it back until it clicks. The pad pushes it in the locking direction. To take it off, slide it toward the pad and lift. (If you screw the base to a shelf, do that first: the linkage sits over one corner's keyhole.)
 9. **Servo wiring:** orange (signal) to **D25**, red to **VIN**, brown to **GND**.
