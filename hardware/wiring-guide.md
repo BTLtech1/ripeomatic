@@ -52,6 +52,18 @@ Use `3V3` here, **not** `VIN`: the sensor's signal has to stay at 3.3 V or less 
 
 > **Testing the motor before the sensor is wired?** Put one jumper wire from `D34` to a `GND` pin for now. The machine watches the sensor during every move and stops if the reading jumps. A pin with nothing on it gives random readings, which would stop the motor for no reason. Take this wire off when you connect the sensor.
 
+## 4b. The back-gate servo (three wires)
+
+Only if you built the holder with the back gate. The servo's plug has sockets, so use **male-to-female** jumper wires: male end into the servo's plug, female end onto the ESP32.
+
+| Servo wire | ESP32 pin |
+|---|---|
+| orange (signal) | `D25` |
+| red (power) | `VIN` |
+| brown (ground) | `GND` |
+
+`VIN` and both `GND` pins already have a wire on them, so red and brown have to **share**. Use a Y-splitter jumper (one socket to two) on each, a mini breadboard, or twist/solder the servo's red into the driver's `VIN` wire and its brown into a `GND` wire and tape the joints. Red goes to `VIN`, never `3V3`: the servo needs 5 V.
+
 **Push-on wires slip off easily**, especially the power wires when the boxes go on. Once everything works, hold them with a small dab of hot glue or a strip of tape across each board's connectors (hot glue peels off cleanly later).
 
 ## 5. Power on and check the motor

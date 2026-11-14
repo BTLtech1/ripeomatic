@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 636" width="980" height="636" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 760" width="980" height="760" font-family="system-ui, -apple-system, Segoe UI, Roboto, sans-serif" font-size="13">
   <title>Ripe-O-Matic wiring, the easy version</title>
-  <rect width="980" height="636" fill="#f7f6f1"/>
+  <rect width="980" height="760" fill="#f7f6f1"/>
 
   <text x="28" y="40" font-size="22" font-weight="700" fill="#1d1d1b">Ripe-O-Matic wiring</text>
   <text x="28" y="62" font-size="13" fill="#555">Match the words printed next to each pin. Unplug the USB while you wire.</text>
@@ -20,6 +20,10 @@
     <path d="M135 300 V548 H470 V440 H450" stroke="#a03cc8"/>  <!-- leg 1 -> 3V3 -->
     <path d="M155 300 V416 H330" stroke="#222"/>                <!-- leg 2 -> GND -->
     <path d="M175 300 V322 H250 V176 H330" stroke="#0aa5a5"/>  <!-- leg 3 -> D34 -->
+    <!-- 5: servo -->
+    <path d="M150 610 H200 V416" stroke="#7a4a21"/>            <!-- brown -> shares GND -->
+    <path d="M150 628 H290 V272 H330" stroke="#f08c00"/>       <!-- orange -> D25 -->
+    <path d="M150 646 H310 V522" stroke="#d62828"/>            <!-- red -> shares VIN -->
   </g>
 
   <!-- ============ ESP32 ============ -->
@@ -110,11 +114,26 @@
   <text x="155" y="254" text-anchor="middle" font-size="11" fill="#ddd">49E</text>
   <g stroke="#9aa0a6" stroke-width="3"><path d="M135 270 V300"/><path d="M155 270 V300"/><path d="M175 270 V300"/></g>
 
+  <!-- ============ servo ============ -->
+  <rect x="34" y="620" width="116" height="16" rx="2" fill="#2f5fb8"/>
+  <rect x="50" y="596" width="84" height="64" rx="4" fill="#3b76d6" stroke="#274f96" stroke-width="2"/>
+  <circle cx="74" cy="628" r="13" fill="#e9edf2" stroke="#8e9398" stroke-width="2"/><rect x="70" y="600" width="8" height="30" rx="4" fill="#fff" stroke="#8e9398"/>
+  <text x="110" y="633" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">servo</text>
+  <text x="34" y="684" font-size="13" font-weight="700" fill="#1d1d1b">Servo (MG90S) for the back gate</text>
+  <text x="34" y="701" font-size="11" fill="#555">brown and red share pins: use a splitter, breadboard or splice</text>
+  <!-- shared-pin joints -->
+  <circle cx="200" cy="416" r="7" fill="#222" stroke="#fff" stroke-width="2"/>
+  <circle cx="310" cy="522" r="7" fill="#d62828" stroke="#fff" stroke-width="2"/>
+  <g font-size="11" font-weight="700">
+    <text x="158" y="606" fill="#7a4a21">brown</text><text x="212" y="623" fill="#c97400">orange → D25</text><text x="212" y="662" fill="#d62828">red</text>
+    <text x="206" y="440" fill="#7a4a21">joins GND</text><text x="318" y="540" fill="#d62828">joins VIN</text>
+  </g>
+
   <!-- wire labels -->
   <g font-size="11" font-weight="700">
     <text x="258" y="170" fill="#0aa5a5">D34</text>
-    <text x="212" y="410" fill="#222">GND</text>
-    <text x="200" y="566" fill="#a03cc8">3V3</text>
+    <text x="216" y="410" fill="#222">GND</text>
+    <text x="400" y="566" fill="#a03cc8">3V3</text>
     <text x="520" y="514" fill="#d62828">VIN → +</text>
     <text x="520" y="410" fill="#222">GND → −</text>
   </g>
@@ -125,17 +144,21 @@
     <circle cx="608" cy="470" r="13" fill="#1d1d1b"/><text x="608" y="475" fill="#fff">2</text>
     <circle cx="660" cy="128" r="13" fill="#1d1d1b"/><text x="660" y="133" fill="#fff">3</text>
     <circle cx="96" cy="300" r="13" fill="#1d1d1b"/><text x="96" y="305" fill="#fff">4</text>
+    <circle cx="20" cy="600" r="13" fill="#1d1d1b"/><text x="20" y="605" fill="#fff">5</text>
   </g>
 
   <!-- legend -->
   <g font-size="12" fill="#1d1d1b">
-    <rect x="690" y="452" width="270" height="140" rx="8" fill="#fff" stroke="#d8d6cc"/>
+    <rect x="690" y="452" width="270" height="200" rx="8" fill="#fff" stroke="#d8d6cc"/>
     <text x="704" y="476"><tspan font-weight="700">1</tspan>  4 wires: D19, D18, TX2, RX2</text>
     <text x="722" y="492" fill="#555">to IN4, IN3, IN2, IN1</text>
     <text x="704" y="514"><tspan font-weight="700">2</tspan>  power: VIN to +, GND to −</text>
     <text x="704" y="536"><tspan font-weight="700">3</tspan>  motor plug into the white socket</text>
     <text x="704" y="558"><tspan font-weight="700">4</tspan>  sensor: 3V3, GND, D34</text>
     <text x="722" y="574" fill="#555">(can wait until the motor works)</text>
+    <text x="704" y="598"><tspan font-weight="700">5</tspan>  servo: orange to D25,</text>
+    <text x="722" y="614">red to VIN, brown to GND</text>
+    <text x="722" y="632" fill="#555">(red and brown share those pins)</text>
   </g>
   </g>
 </svg>
