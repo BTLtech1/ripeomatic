@@ -25,6 +25,7 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 | `blade.stl` | PLA | Flat on its 12 mm face, stem up | 100 % infill. The magnet pocket faces the bed | 10 min |
 | `thumbscrew-knob.stl` *(old bowl version)* | any | Flat | default | 5 min |
 | `pad-TPU.stl` | TPU 95A | Socket down, dome up | 2 walls, 15 % | 10 min |
+| `cal-cup.stl` *(tool, not part of the machine)* | PLA/PETG | Rim on the bed, as supplied | 15 % | 40 min — sits on the pad and holds the weights for the force calibration ([picture](../cal-cup.svg)); made by [`../../tools/cal_cup.py`](../../tools/cal_cup.py) |
 | `nest-liner-TPU.stl` *(old bowl version)* | TPU 95A (or skip: use 3 mm craft foam) | Upside down, same as the nest | 2 walls, vase-ish, **brim** (it stands on a 2 mm edge) | 1.5 h |
 | `servo-horn-v2.stl` *(old bowl version)* | any | Flat | default | 5 min — **v2 only** |
 
