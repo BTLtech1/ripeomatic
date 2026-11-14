@@ -100,7 +100,9 @@ Z_HORN = (73.2, 74.7)                            # horn arm
 Z_LINK = (75.0, 78.0)
 
 # ---------------------------------------------------------------- keyholes / studs
-STUDS = [(76.0, -33.0), (76.0, 33.0), (89.0, -15.0), (89.0, 15.0)]   # final stud positions (= slot ends)
+# final stud positions (= slot ends). All four are outside the sled's 39.4 mm width, so the sled can
+# still be slid into its channel from this end of the base (the first layout had two at z +-15, in its way).
+STUDS = [(76.0, -31.5), (76.0, 31.5), (89.0, -48.0), (89.0, 48.0)]
 SLIDE = 9.0                                      # the rounds are 9 mm further back (+x) than the slot ends
 
 
@@ -536,6 +538,13 @@ def checks(frame, door, lever, link, base_new):
     rep("liner vs door, whole swing (worst)", worst_l, 0.3)
     rep("frame vs base", vol(frame ^ base_m), 0.5)
     rep("frame vs base while being dropped on (9 mm toward the pad)", vol(frame.translate([-SLIDE, 0, 0]) ^ base_m), 0.5)
+    sled_a = trimesh.load(STL / "v45" / "v45-sled.stl", force="mesh")
+    sa = sled_a.vertices.copy()
+    worst_in = 0.0
+    for t in np.arange(42.0, 125.0, 4.0):          # sliding the sled in or out past the holder's studs (holder off)
+        sled_a.vertices = np.column_stack([sa[:, 2] - 22.0 + t, sa[:, 1] + 36.5, sa[:, 0]])
+        worst_in = max(worst_in, vol(M(trimesh.Trimesh(sled_a.vertices, sled_a.faces[:, ::-1], process=False)) ^ base_m))
+    rep("sled vs base while it is slid in from the holder end (worst)", worst_in, 0.5)
     srv = servo_solid()
     rep("servo vs frame", vol(srv ^ frame), 0.5)
     rep("servo vs base", vol(srv ^ base_m))
