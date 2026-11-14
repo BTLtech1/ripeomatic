@@ -8,6 +8,21 @@
 #include "machine.h"
 #include "ui.h"
 
+// Why the board last started, in plain words (shown under Firmware: tells a weak power supply from a crash).
+inline const char* lastStartReason() {
+  switch (esp_reset_reason()) {
+    case ESP_RST_POWERON:  return "plugged in";
+    case ESP_RST_BROWNOUT: return "POWER DIPPED (weak supply or cable)";
+    case ESP_RST_SW:       return "restart (update or Reboot button)";
+    case ESP_RST_PANIC:    return "crash";
+    case ESP_RST_INT_WDT:
+    case ESP_RST_TASK_WDT:
+    case ESP_RST_WDT:      return "froze and was restarted";
+    case ESP_RST_EXT:      return "EN button or reset pin";
+    default:               return "unknown";
+  }
+}
+
 class Web {
  public:
   WebServer server{80};
@@ -149,7 +164,7 @@ class Web {
     addStr(o, "ip", M.net.apMode ? WiFi.softAPIP().toString().c_str() : WiFi.localIP().toString().c_str());
     addBool(o, "ap_mode", M.net.apMode); addStr(o, "ap_ssid", M.net.apSsid);
     addInt(o, "rssi", M.net.online() ? WiFi.RSSI() : 0);
-    addStr(o, "time", ts); addInt(o, "uptime_s", millis() / 1000);
+    addStr(o, "time", ts); addInt(o, "uptime_s", millis() / 1000); addStr(o, "last_start", lastStartReason());
     addStr(o, "job", jobName(M.job)); addStr(o, "stage", ripe::stageName(M.stage));
     addNum(o, "pos_mm", M.stepper.posMm(), 2);
     addNum(o, "force_n", M.busy() ? M.live_force : M.hall.readForce(16), 3);

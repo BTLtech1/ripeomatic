@@ -28,6 +28,8 @@ inline uint32_t micros() { return 0; }
 inline void delay(uint32_t) {}
 inline void delayMicroseconds(uint32_t) {}
 inline uint32_t esp_random() { return 4; }
+enum esp_reset_reason_t { ESP_RST_UNKNOWN, ESP_RST_POWERON, ESP_RST_EXT, ESP_RST_SW, ESP_RST_PANIC, ESP_RST_INT_WDT, ESP_RST_TASK_WDT, ESP_RST_WDT, ESP_RST_DEEPSLEEP, ESP_RST_BROWNOUT };
+inline esp_reset_reason_t esp_reset_reason() { return ESP_RST_POWERON; }
 inline size_t strlcpy(char* d, const char* s, size_t n) { if (n) { strncpy(d, s, n - 1); d[n - 1] = 0; } return strlen(s); }
 
 // LEDC (both API generations)

@@ -310,7 +310,7 @@ renderUpdate(s, busy);
 let updating = false;
 function renderUpdate(s, busy) {
 if (updating && s.uptime_s < 90 && s.job === 'idle') { updating = false; toast('Updated. Reloading…'); setTimeout(() => location.reload(), 1200); return; }
-$('fwinfo').textContent = 'version ' + s.fw + ' · build ' + (s.fw_build || '?');
+$('fwinfo').textContent = 'version ' + s.fw + ' · build ' + (s.fw_build || '?') + (s.last_start ? ' · running for ' + hms(s.uptime_s) + ' · last start: ' + s.last_start : '');
 const st = s.upd_state || '', m = $('updmsg');
 $('btnUpd').hidden = st !== 'available';
 $('btnUpdCheck').disabled = busy || !s.online; $('btnUpd').disabled = busy || !s.online;

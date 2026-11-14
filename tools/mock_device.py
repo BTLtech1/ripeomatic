@@ -212,7 +212,7 @@ class H(BaseHTTPRequestHandler):
                     nxt = max(0, int(due - time.time()))
                 return self._json(200, {
                     "fw": "0.1.0-mock", "hw": "v1", "device_id": settings["device_id"], "host": settings["host"], "ip": "192.168.1.42",
-                    "ap_mode": False, "ap_ssid": "", "rssi": -58, "time": now_iso(), "uptime_s": int(time.time() - state["boot"]),
+                    "ap_mode": False, "ap_ssid": "", "rssi": -58, "time": now_iso(), "uptime_s": int(time.time() - state["boot"]), "last_start": "plugged in",
                     "job": state["job"], "stage": state["stage"], "pos_mm": state["pos"], "force_n": state["force"], "raw": state["raw"] + state["force"] / settings["hall_n_per_count"],
                     "calibrated": bool(settings["cal_points"]), "n_per_count": settings["hall_n_per_count"], "cal_points_n": settings["cal_points"].count(":"),
                     "blade_calibrated": settings["blade_k_n_per_mm"] > 0.01, "blade_k": settings["blade_k_n_per_mm"], "setup_done": bool(settings["cal_points"]) and settings["blade_k_n_per_mm"] > 0.01, "servo": False,
