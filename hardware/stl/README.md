@@ -78,6 +78,9 @@ Each box drops over its pair of studs 9 mm short of its final spot and slides ho
 10. **Set the servo up** (Settings → *Back gate*): turn on **Back gate fitted** and save. Then:
     1. **Direction:** push a horn on loosely and tap **Open the back gate**. Looking at the horn, opening must turn it **counter-clockwise**. If it turns clockwise, set **Shut angle 160** and **Open angle 37** and save. After the test the servo rests at the shut angle.
     2. **Horn:** take the horn off. Shut the door by hand. Put the horn back on pointing straight away from the lever's pin, so it lies under the link with its hole 13 mm from the centre under the link's small hole, and its arm just touching the little bump under the link. Join link and horn with an M2 × 6 through the link into that hole, then fit the horn's own screw.
+
+    ![Fitting the horn: park the servo with the horn off, push the horn on in line with the pivot, test](../gate-horn-fitting.svg)
+
     3. Tap **Open the back gate**: the door folds down, waits, and comes back up. It is locked when the horn's arm rests against the link's bump; if it stops short of the bump or strains against it, change the shut angle a few degrees.
     4. Optional: **Drop ripe avocados into the basket** opens the gate on its own after a reading that says ripe.
 11. Leave **Max travel** at **42** (the default; if you set 37 for the old bowl, put it back). Redo the blade calibration (jar in the V, touching the pad): the holder is part of what it measures.
