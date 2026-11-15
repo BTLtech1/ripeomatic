@@ -211,6 +211,7 @@ details[open] summary::after{content:"–"}
 <script>
 (() => {
 const $ = id => document.getElementById(id);
+let pollFails = 0;
 let st = null, settings = null, rows = [], tab = 'trend', lastReadingTime = null, pollTimer = null, scanned = false;
 
 const toast = m => { const t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600); };
@@ -256,8 +257,10 @@ async function poll() {
     st = await api('/api/status');
     render();
     if (st.last && st.last.time !== lastReadingTime) { lastReadingTime = st.last.time; loadRows(); }
+    pollFails = 0;
   } catch (e) {
-    $('pill').textContent = 'offline'; $('pill').className = 'pill off';
+    // one missed answer is normal (the board is busy saving, or Wi-Fi blinked): only call it offline after three in a row
+    if (++pollFails >= 3) { $('pill').textContent = 'offline'; $('pill').className = 'pill off'; }
   }
   clearTimeout(pollTimer);
   pollTimer = setTimeout(poll, st && st.job !== 'idle' ? 1000 : 3000);
