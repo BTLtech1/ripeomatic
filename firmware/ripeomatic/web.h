@@ -61,6 +61,8 @@ class Web {
     server.on("/api/tip", HTTP_POST, [this] {
 #if ENABLE_SERVO
       if (!S.gate_fitted) return fail(400, "turn on 'Back gate fitted' in Settings first");
+      if (M.busy()) return fail(409, "busy");
+      if (M.homeKnown && M.stepper.posMm() > 2.0f) return fail(400, "send the sled home first (Home): the holder swings through where the pad is");
       startJob(Job::Tip);
 #else
       fail(400, "this build has no servo code (config.h ENABLE_SERVO)");

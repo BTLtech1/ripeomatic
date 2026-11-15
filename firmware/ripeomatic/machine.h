@@ -386,7 +386,7 @@ class Machine {
 
     // Back gate: the press pushes the avocado against the door, and a relaxed servo lets the door's
     // leverage turn it. Hold the servo at its shut angle for the whole press, let go after backing off.
-    bool holdGate = S.gate_fitted && ENABLE_SERVO;
+    bool holdGate = S.gate_fitted && S.gate_hold && ENABLE_SERVO;
     if (holdGate) { servo.write(S.servo_rest_deg); delay(300); }
 
     core.start(t, bladeCal ? 0 : FR.last_contact_mm);

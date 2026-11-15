@@ -559,7 +559,7 @@ const FIELDS = [
 ['steps_per_mm', 'Steps per mm'], ['motor_invert', 'Invert motor direction', 'bool'], ['fast_mm_s', 'Approach speed (mm/s)'], ['creep_mm_s', 'Creep speed (mm/s)'],
 ['hall_n_per_count', 'Hall N per count'], ['blade_k_n_per_mm', 'Blade k (N/mm)'],
 ['Back gate (servo)', null],
-['gate_fitted', 'Back gate fitted', 'bool'], ['gate_auto', 'Drop ripe avocados into the basket', 'bool'],
+['gate_fitted', 'Back gate fitted', 'bool'], ['gate_auto', 'Drop ripe avocados into the basket', 'bool'], ['gate_hold', 'Hold the servo during a press (door version only)', 'bool'],
 ['servo_rest_deg', 'Shut angle'], ['servo_tip_deg', 'Open angle'], ['servo_hold_ms', 'Stay open (ms)'],
 ['Device', null],
 ['host', 'Hostname (needs reboot)'],

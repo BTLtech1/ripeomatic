@@ -67,9 +67,11 @@ ZI = ZP + GAP                            # 58.6: inner face of the uprights
 T_UP_PIN, T_UP_SERVO = 5.0, 8.3          # the servo's upright is thick enough to bury the servo's gear boss
 ZO_SERVO, ZO_PIN = ZI + T_UP_SERVO, ZI + T_UP_PIN
 SOLE_TOP = DECK + 5.5
-PAD_R, PAD_T = 19.5, 4.2                 # the thick disc inside the end plate that the horn pocket is cut in
+PAD_R, PAD_T = 21.0, 4.2                 # the thick disc inside the end plate that the horn pocket is cut in
 HORN_ZONE = 5.6                          # pocket depth: room for horns up to this tall
-HORN_ARM, HORN_HALF, HUB_R, HUB_SEAT = 17.5, 3.2, 4.6, 3.55   # arm slot reaches 17.5 from the axis, 6.4 wide; hub seat for a 7.1 hub
+# the MG90S's single-arm horn, measured from a photo on a ruled mat: 7 mm hub, 18.3 mm from the shaft's centre to the tip,
+# 5.2 mm wide next to the hub tapering to about 3.8 at the tip. The slot is that plus 0.3 mm a side.
+HORN_TIP, HORN_W0, HORN_W1, HUB_R, HUB_SEAT = 18.9, 2.9, 2.25, 4.6, 3.55
 ARM_DIR = -math.pi / 2                   # the horn's arm points down when the V is at rest
 STOP_S = (0.8, 5.0)                      # the stops carry the floor's underside from 0.8 to 5 mm behind its front tip
 
@@ -111,8 +113,11 @@ def plate_outline():
 def horn_pocket():
     """hub (V-seat: pressed up and forward by the weight and the push) plus the arm slot"""
     hub = v_seat(PIV, HUB_R, HUB_SEAT, 110.0)
-    tip = PIV + HORN_ARM * np.array([math.cos(ARM_DIR), math.sin(ARM_DIR)])
-    return hub.union(LineString([tuple(PIV), tuple(tip)]).buffer(HORN_HALF, 16))
+    u = np.array([math.cos(ARM_DIR), math.sin(ARM_DIR)])
+    n = np.array([-u[1], u[0]])
+    end = PIV + (HORN_TIP - HORN_W1) * u
+    arm = Polygon([tuple(PIV + HORN_W0 * n), tuple(end + HORN_W1 * n), tuple(end - HORN_W1 * n), tuple(PIV - HORN_W0 * n)])
+    return hub.union(arm).union(Point(*end).buffer(HORN_W1, 16))
 
 
 def build_cradle():
@@ -171,8 +176,10 @@ def servo_solid():
 
 
 def horn_solid():
-    tip = PIV + 15.0 * np.array([math.cos(ARM_DIR), math.sin(ARM_DIR)])
-    arm = LineString([tuple(PIV), tuple(tip)]).buffer(2.5, 16)
+    u = np.array([math.cos(ARM_DIR), math.sin(ARM_DIR)])
+    n = np.array([-u[1], u[0]])
+    end = PIV + (18.3 - 1.9) * u
+    arm = Polygon([tuple(PIV + 2.6 * n), tuple(end + 1.9 * n), tuple(end - 1.9 * n), tuple(PIV - 2.6 * n)]).union(Point(*end).buffer(1.9, 16))
     return prism(arm, ZP - 4.4, ZP - 2.8) + cyl_z(PIV, 3.5, ZP - 4.4, ZP - 0.2, 32)
 
 

@@ -44,6 +44,7 @@ struct Settings {
   // swap rest and tip if your servo turns the other way.
   bool  gate_fitted    = false;        // nothing moves until this is on
   bool  gate_auto      = false;        // open the gate after a reading that says ripe
+  bool  gate_hold      = false;        // keep the servo powered at its rest angle during a press (door builds; not the tipping holder)
   int   servo_rest_deg = 20;
   int   servo_tip_deg  = 143;
   int   servo_hold_ms  = 2500;
@@ -99,6 +100,7 @@ inline const FieldDef* settingsFields(int& count) {
     {"swap_stiffer_pct",  "swap_pct", F_FLOAT, &S.t.swap_stiffer_pct,0, false},
     {"gate_fitted",       "gate",     F_BOOL,  &S.gate_fitted,       0, false},
     {"gate_auto",         "gate_auto",F_BOOL,  &S.gate_auto,         0, false},
+    {"gate_hold",         "gate_hold",F_BOOL,  &S.gate_hold,         0, false},
     {"servo_rest_deg",    "srv_rest", F_INT,   &S.servo_rest_deg,    0, false},
     {"servo_tip_deg",     "srv_tip",  F_INT,   &S.servo_tip_deg,     0, false},
     {"servo_hold_ms",     "srv_hold", F_INT,   &S.servo_hold_ms,     0, false},
