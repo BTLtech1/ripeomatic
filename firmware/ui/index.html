@@ -289,7 +289,10 @@ function render() {
     ? 'The power went off while the sled was moving, so it lost its place. In Motor: jog the sled until it touches the end stop, then tap Set home here.'
     : 'Home isn\'t set yet: jog the sled until it touches the end stop at the motor end, then tap Set home here (in the setup checklist, or under Motor).';
   v.textContent = names[verdict] || verdict; v.className = 'verdict ' + verdict;
-  $('kval').innerHTML = (f.loaded && f.last_k > 0 ? fmt(f.last_k) : '—') + '<small> N/mm</small>';
+  const tooHard = f.loaded && (f.last_k >= 29.9 || (f.n > 0 && f.last_k <= 0));
+  $('kval').innerHTML = tooHard ? 'hard<small> too stiff to measure</small>' : (f.loaded && f.last_k > 0 ? fmt(f.last_k) : '—') + '<small> N/mm</small>';
+  if (tooHard && !msg) msg = 'Rock hard: it gave less than the machine can measure.';
+  if (tooHard && f.n === 1) msg = 'First reading taken: rock hard, it gave less than the machine can measure.';
   const meta = [];
   if (f.loaded) {
     if (f.first_k > 0 && f.n > 1) meta.push('<span><b>' + Math.round(100 * f.last_k / f.first_k) + '%</b> of day 1</span>');
@@ -362,7 +365,9 @@ function drawTrend() {
   const xs = pts.map((q, i) => hasT ? (q.t - t0) / 86400000 : i);
   const xmax = Math.max(hasT ? 1 : 1, ...xs) * 1.05;
   const thr = st && st.fruit && st.fruit.threshold > 0 ? st.fruit.threshold : 0;
-  const ymax = Math.max(...pts.map(q => q.k), thr) * 1.15 || 1;
+  const isHard = k => k >= 29.9 || k <= 0;                    // "too stiff to measure" (and old rows with a nonsense slope)
+  const ymax = Math.max(...pts.filter(q => !isHard(q.k)).map(q => q.k), thr * 1.6, 1) * 1.15;
+  pts.forEach(q => { q.hard = isHard(q.k); q.k = q.hard ? ymax : q.k; });
   const a = axes(W, H, p);
   for (let i = 0; i <= 4; i++) { const yv = ymax * i / 4, y = a.y(i / 4); h += `<line class="grid" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${p.l - 6}" y="${y + 4}" text-anchor="end">${yv.toFixed(1)}</text>`; }
   const xt = hasT ? Math.max(1, Math.ceil(xmax / 6)) : 1;
@@ -370,10 +375,10 @@ function drawTrend() {
   if (thr) { const y = a.y(thr / ymax); h += `<line class="thr" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${W - p.r}" y="${y - 4}" text-anchor="end">ripe below ${thr.toFixed(2)}</text>`; }
   const path = pts.map((q, i) => (i ? 'L' : 'M') + a.x(xs[i] / xmax).toFixed(1) + ' ' + a.y(q.k / ymax).toFixed(1)).join(' ');
   h += `<path class="ln" d="${path}"/>`;
-  pts.forEach((q, i) => h += `<circle class="pt" cx="${a.x(xs[i] / xmax).toFixed(1)}" cy="${a.y(q.k / ymax).toFixed(1)}" r="4"><title>${q.k.toFixed(2)} N/mm</title></circle>`);
+  pts.forEach((q, i) => h += `<circle class="pt" cx="${a.x(xs[i] / xmax).toFixed(1)}" cy="${a.y(q.k / ymax).toFixed(1)}" r="4"${q.hard ? ' style="fill:none;stroke-width:2"' : ''}><title>${q.hard ? 'too stiff to measure' : q.k.toFixed(2) + ' N/mm'}</title></circle>`);
   ratings.forEach(q => { if (!hasT || !q.t) return; const x = a.x(((q.t - t0) / 86400000) / xmax); h += `<line class="thr" x1="${x}" x2="${x}" y1="${p.t}" y2="${H - p.b}"/><text x="${x + 3}" y="${p.t + 10}">${esc(q.r)}</text>`; });
   svg.innerHTML = h;
-  $('chartnote').textContent = 'Stiffness (N/mm) of the current avocado over time. ' + (thr ? 'Dashed line: the ripe threshold, a placeholder until there is pooled data.' : 'No ripe threshold set.');
+  $('chartnote').textContent = 'Stiffness (N/mm) of the current avocado over time. ' + (pts.some(q => q.hard) ? 'Hollow dots at the top: too stiff to measure. ' : '') + (thr ? 'Dashed line: the ripe threshold, a placeholder until there is pooled data.' : 'No ripe threshold set.');
 }
 let liveCache = null;
 async function drawCurve(live) {
@@ -388,7 +393,7 @@ async function drawCurve(live) {
   h += `<path class="cv" d="${pts.map((q, i) => (i ? 'L' : 'M') + a.x(q[0] / xmax).toFixed(1) + ' ' + a.y(q[1] / ymax).toFixed(1)).join(' ')}"/>`;
   svg.innerHTML = h;
   const k = liveCache && liveCache.k;
-  $('chartnote').textContent = 'Force vs. squish for the ' + (live ? 'press in progress' : 'last press') + (k ? ' · slope ' + fmt(k) + ' N/mm, r² ' + fmt(liveCache.r2, 3) : '') + '. Blade bend already subtracted.';
+  $('chartnote').textContent = 'Force vs. squish for the ' + (live ? 'press in progress' : 'last press') + (k >= 29.9 || k < 0 ? ' · no measurable squish: stiffer than the machine can tell' : k ? ' · slope ' + fmt(k) + ' N/mm, r² ' + fmt(liveCache.r2, 3) : '') + '. Blade bend already subtracted.';
 }
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { tab = b.dataset.tab; document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b)); draw(); });
 

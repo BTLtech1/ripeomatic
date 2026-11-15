@@ -32,6 +32,8 @@ struct Tunables {
   float swap_stiffer_pct    = 60.0f;  // stiffness jump up by this % means a new avocado
 };
 
+constexpr float K_HARD = 30.0f;      // N/mm reported for "too stiff to measure"
+
 enum class Stage : uint8_t { Idle, Homing, Taring, Approach, Creep, Preload, Measure, Retract, Done, Error };
 
 inline const char* stageName(Stage s) {
@@ -239,6 +241,13 @@ class MeasureCore {
       // Report what we have: treat as very stiff.
       r_.stiffness_n_per_mm = r_.n_points >= 2 ? fitLine(r_.squish, r_.force, r_.n_points).slope : 99.0f;
       r_.squish_at_cap_mm = r_.n_points ? r_.squish[r_.n_points - 1] : 0;
+    }
+    // No measurable squish (under one sample step), or a slope that is negative or absurd: the fruit is
+    // stiffer than the machine can tell from its own flex. Report that as K_HARD, never as a small or
+    // negative number: a negative stiffness would pass every "ripe below" test.
+    if (o == Outcome::Reading && (r_.squish_at_cap_mm < 0.06f || r_.stiffness_n_per_mm <= 0 || r_.stiffness_n_per_mm > K_HARD)) {
+      r_.stiffness_n_per_mm = K_HARD;
+      r_.r2 = 0;
     }
     stage_ = Stage::Done;
     return Cmd{Cmd::Stop, 0, false};
