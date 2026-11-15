@@ -525,8 +525,8 @@ testPending = false; testResult = 'fail'; stepsKey = ''; poll();
 $('btnTip').onclick = act('/api/tip', null, 'Opening the gate');
 $('btnSetupShow2').onclick = () => $('btnSetupShow').onclick();
 $('btnReboot').onclick = () => { if (confirm('Reboot the device?')) act('/api/reboot')(); };
-$('btnResetFruit').onclick = () => { if (confirm('Forget the current avocado? Its readings stay in the log.')) act('/api/reset', {what: 'fruit'}, 'Forgotten')(); };
-$('btnWipe').onclick = () => { if (confirm('Erase ALL readings on the device? Download the CSV first if you want them.')) act('/api/reset', {what: 'data'}, 'Erased')(); };
+$('btnResetFruit').onclick = async () => { if (confirm('Forget the current avocado? Its readings stay in the log.')) { await act('/api/reset', {what: 'fruit'}, 'Forgotten')(); loadRows(); } };
+$('btnWipe').onclick = async () => { if (confirm('Erase ALL readings on the device? Download the CSV first if you want them.')) { await act('/api/reset', {what: 'data'}, 'Erased')(); loadRows(); } };
 // A big step toward the motor stops at home. If the count is wrong (the motor lost power for a
 // while), the sled isn't really there: ask, then let it go past.
 async function jogBtn(mm) {
