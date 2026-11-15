@@ -5,11 +5,11 @@
 
 The pad is a dome, so nothing balances on it. This cup has a socket underneath (a short sleeve round the
 pad's straight part, then a 45 degree cone that seats on the dome in a ring, so it cannot rock) and a
-23 mm tube on top that keeps a stack of US nickels (21.2 mm) upright: 20 nickels = 100 g sit inside it,
-40 = 200 g stand half out of it. The flat rim takes a small jar instead. Put it on the pad BEFORE
+27 mm tube on top for coins (US nickels 5.000 g each, quarters 5.670 g; both fit), opening through a 45 degree
+funnel to 54 mm so loose or odd-shaped weights can go in too. Put it on the pad BEFORE
 "Capture zero": then its own weight is part of the zero and only what you add counts.
 
-Printed upside down (rim on the bed): the socket becomes an open funnel, the only bridge is the 23 mm
+Printed upside down (rim on the bed): the socket becomes an open funnel, the only bridge is the 27 mm
 floor of the tube. No supports.
 """
 import sys, math, pathlib
@@ -20,8 +20,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 STL = ROOT / "hardware" / "stl"
 PAD_R, PAD_STRAIGHT, PAD_H = 8.0, 3.4, 11.4      # pad-TPU.stl: 16 mm round, straight for 3.4, then a dome to 11.4
 CLEAR = 0.2                                      # per side round the pad (it is TPU)
-R_OUT, R_CUP, CUP_DEPTH, FLOOR = 14.0, 11.5, 45.0, 2.0
-R_RIM, RIM_T = 25.0, 2.0
+R_OUT, R_CUP, TUBE_DEPTH, FLOOR = 16.0, 13.5, 35.0, 2.0   # 27 mm tube: a US quarter is 24.3, a nickel 21.2
+R_MOUTH, R_RIM = 27.0, 30.0                               # a 45 degree funnel opens the top to 54 mm for loose or odd-shaped things
+
+
+def upper(z0, z_floor):
+    """(r, z) points from the outside bottom, up round the funnel's rim, and down the inside to the floor's centre"""
+    z_t = z_floor + TUBE_DEPTH
+    z_end = z_t + (R_MOUTH - R_CUP)
+    return [(R_OUT, z0), (R_OUT, z_end - 2.0 - (R_RIM - R_OUT)), (R_RIM, z_end - 2.0), (R_RIM, z_end), (R_MOUTH, z_end), (R_CUP, z_t), (R_CUP, z_floor), (0, z_floor)], z_end
 SKIRT_Z0 = 0.8                                   # the sleeve stops this far above the pad's base
 
 STEM_R, STEM_LEN = 5.0, 10.9                     # the blade's bare stem (no pad on it): 10 mm round, 10.9 long
@@ -30,9 +37,8 @@ STEM_CLEAR, STEM_DEPTH = 0.125, 9.0              # slide fit; the socket is 9 de
 def build_stem():
     """the same cup for the bare stem: a plain 10.25 mm socket whose flat end rests on the stem's tip"""
     rs = STEM_R + STEM_CLEAR
-    z_floor = STEM_DEPTH + FLOOR; z_end = z_floor + CUP_DEPTH
-    prof = [(rs, 0), (R_OUT, 0), (R_OUT, z_end - RIM_T - (R_RIM - R_OUT)), (R_RIM, z_end - RIM_T), (R_RIM, z_end),
-            (R_CUP, z_end), (R_CUP, z_floor), (0, z_floor), (0, STEM_DEPTH), (rs, STEM_DEPTH)]
+    up, z_end = upper(0, STEM_DEPTH + FLOOR)
+    prof = [(rs, 0)] + up + [(0, STEM_DEPTH), (rs, STEM_DEPTH)]
     mm = mf.Manifold.revolve(mf.CrossSection([prof]), 96).to_mesh()
     m = trimesh.Trimesh(np.asarray(mm.vert_properties)[:, :3], np.asarray(mm.tri_verts)); m.merge_vertices()
     return m, dict(z_end=z_end)
@@ -45,10 +51,9 @@ def build():
     z_cone0 = apex - rs                                      # the cone starts at the sleeve's radius
     r_top, z_top = 1.5, apex - 1.5
     z_floor = z_top + FLOOR
-    z_end = z_floor + CUP_DEPTH
-    # half profile (r, z), revolved: outside wall, rim, tube, floor, socket
-    prof = [(rs, SKIRT_Z0), (R_OUT, SKIRT_Z0), (R_OUT, z_end - RIM_T - (R_RIM - R_OUT)), (R_RIM, z_end - RIM_T), (R_RIM, z_end),
-            (R_CUP, z_end), (R_CUP, z_floor), (0, z_floor), (0, z_top), (r_top, z_top), (rs, z_cone0)]
+    # half profile (r, z), revolved: outside wall, funnel rim, tube, floor, socket
+    up, z_end = upper(SKIRT_Z0, z_floor)
+    prof = [(rs, SKIRT_Z0)] + up + [(0, z_top), (r_top, z_top), (rs, z_cone0)]
     man = mf.Manifold.revolve(mf.CrossSection([prof]), 96)      # the profile's (r, z) becomes the solid's radius and z
     mm = man.to_mesh()
     m = trimesh.Trimesh(np.asarray(mm.vert_properties)[:, :3], np.asarray(mm.tri_verts)); m.merge_vertices()
