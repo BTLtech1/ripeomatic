@@ -417,8 +417,10 @@ class Machine {
       if (raw < 20 || raw > 4075) { core.abort(); strlcpy(error, "hall sensor saturated: magnet too close/far, or wiring", sizeof error); break; }
       // Touching something, sled still advancing, force no longer rising: the blade has bottomed out
       // (or the force scale is far too small to ever reach the cap). Stop instead of driving on to max travel.
-      if (force <= t.contact_threshold_n || force > climbForce + 0.05f) { climbForce = force; climbPos = pos; }
-      else if (pos - climbPos > 3.0f) { core.abort(); strlcpy(error, "the pad kept pushing but the force stopped rising: the blade has bottomed out. Redo the force calibration (heavier weights), then the blade calibration", sizeof error); break; }
+      // Only judged once the force is well up (a small steady offset in free air is not a bottomed-out blade).
+      float floorN = fmaxf(0.6f, 3.0f * t.contact_threshold_n);
+      if (force <= floorN || force > climbForce + 0.05f) { climbForce = force; climbPos = pos; }
+      else if (pos - climbPos > 3.0f) { core.abort(); strlcpy(error, "force stopped rising while pushing: blade bottomed out?", sizeof error); break; }
     }
 
     retract();
