@@ -384,11 +384,17 @@ class Machine {
     live_force = 0;
     if (live_raw < 20 || live_raw > 4075) { finishAborted("hall sensor saturated: magnet too close/far, or wiring"); retract(); return; }
 
+    // Back gate: the press pushes the avocado against the door, and a relaxed servo lets the door's
+    // leverage turn it. Hold the servo at its shut angle for the whole press, let go after backing off.
+    bool holdGate = S.gate_fitted && ENABLE_SERVO;
+    if (holdGate) { servo.write(S.servo_rest_deg); delay(300); }
+
     core.start(t, bladeCal ? 0 : FR.last_contact_mm);
     stage = core.stage();
     float pos = stepper.posMm();
     float force = hall.readForce();
     int negativeRun = 0;
+    float climbForce = force, climbPos = pos;   // the last place the force was still rising
     while (true) {
       ripe::MeasureCore::Cmd c = core.feed(pos, force);
       stage = core.stage();
@@ -409,9 +415,14 @@ class Machine {
       if (force < -3 * t.contact_threshold_n) bad = bad || ++negativeRun >= 2; else negativeRun = 0;
       if (bad) { core.abort(); strlcpy(error, "force reads negative: flip the sign of hall_n_per_count (or the magnet)", sizeof error); break; }
       if (raw < 20 || raw > 4075) { core.abort(); strlcpy(error, "hall sensor saturated: magnet too close/far, or wiring", sizeof error); break; }
+      // Touching something, sled still advancing, force no longer rising: the blade has bottomed out
+      // (or the force scale is far too small to ever reach the cap). Stop instead of driving on to max travel.
+      if (force <= t.contact_threshold_n || force > climbForce + 0.05f) { climbForce = force; climbPos = pos; }
+      else if (pos - climbPos > 3.0f) { core.abort(); strlcpy(error, "the pad kept pushing but the force stopped rising: the blade has bottomed out. Redo the force calibration (heavier weights), then the blade calibration", sizeof error); break; }
     }
 
     retract();
+    if (holdGate) servo.relax();
 
     const ripe::Reading& r = core.reading();
     char ts[24];
