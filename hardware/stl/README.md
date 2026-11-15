@@ -27,6 +27,7 @@ STLs exported from the Fusion 360 design `BTL Ripe-O-Matic` (Default Project) an
 | `pad-TPU.stl` | TPU 95A | Socket down, dome up | 2 walls, 15 % | 10 min |
 | `tip-frame.stl` *(tipping holder, new)* | PLA/PETG | As supplied: sole on the bed, uprights standing | 3 walls, 15 %, no supports | 2 h |
 | `tip-cradle.stl` *(tipping holder, new)* | PLA/PETG | As supplied: lying on the back of its wall | 3 walls, 15 %, no supports | 2 h |
+| `sled-wire-clip.stl` | PLA/PETG | As supplied: roof on the bed | default, no supports | 10 min — presses over the top of the sled's sensor post and holds the three jumper sockets on the hall sensor's legs ([`../../tools/wire_clip.py`](../../tools/wire_clip.py)) |
 | `cal-cup.stl` *(tool, not part of the machine)* | PLA/PETG | Rim on the bed, as supplied | 15 % | 40 min — sits on the pad's dome and holds the weights for the force calibration: a 27 mm tube for coins (nickels, quarters) under a 54 mm funnel for anything else; made by [`../../tools/cal_cup.py`](../../tools/cal_cup.py) |
 | `cal-cup-stem.stl` *(tool)* | PLA/PETG | Rim on the bed, as supplied | 15 % | 40 min — the same cup for a blade with **no pad on it**: a plain 10.25 mm socket that slides over the bare 10 mm stem and rests on its tip |
 | `nest-liner-TPU.stl` *(old bowl version)* | TPU 95A (or skip: use 3 mm craft foam) | Upside down, same as the nest | 2 walls, vase-ish, **brim** (it stands on a 2 mm edge) | 1.5 h |
