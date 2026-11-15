@@ -415,12 +415,12 @@ class Machine {
       if (force < -3 * t.contact_threshold_n) bad = bad || ++negativeRun >= 2; else negativeRun = 0;
       if (bad) { core.abort(); strlcpy(error, "force reads negative: flip the sign of hall_n_per_count (or the magnet)", sizeof error); break; }
       if (raw < 20 || raw > 4075) { core.abort(); strlcpy(error, "hall sensor saturated: magnet too close/far, or wiring", sizeof error); break; }
-      // Touching something, sled still advancing, force no longer rising: the blade has bottomed out
+      // Touching something, sled still advancing, force no longer rising for 1 mm (20 samples): the blade has bottomed out
       // (or the force scale is far too small to ever reach the cap). Stop instead of driving on to max travel.
       // Only judged once the force is well up (a small steady offset in free air is not a bottomed-out blade).
       float floorN = fmaxf(0.6f, 3.0f * t.contact_threshold_n);
       if (force <= floorN || force > climbForce + 0.05f) { climbForce = force; climbPos = pos; }
-      else if (pos - climbPos > 3.0f) { core.abort(); strlcpy(error, "force stopped rising while pushing: blade bottomed out?", sizeof error); break; }
+      else if (pos - climbPos > 1.0f) { core.abort(); strlcpy(error, "force stopped rising while pushing: blade bottomed out?", sizeof error); break; }
     }
 
     retract();

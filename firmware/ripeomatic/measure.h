@@ -25,7 +25,7 @@ struct Tunables {
   float approach_step_mm    = 0.50f;  // fast approach increment (force is checked between)
   float safety_margin_mm    = 2.0f;   // switch to creep this far before last contact
   float max_travel_mm       = 42.0f;  // give up (empty nest) past this
-  float max_squish_mm       = 12.0f;  // give up (mush / sensor fault) past this
+  float max_squish_mm       = 6.0f;   // give up (mush / sensor fault) past this: more than this only bruises the fruit
   float ripe_abs_n_per_mm   = 1.5f;   // ripe below this stiffness (0 = off). PLACEHOLDER until data
   float ripe_pct_of_first   = 45.0f;  // ...or below this % of the fruit's first reading (0 = off)
   float swap_contact_mm     = 6.0f;   // contact position jump that means a new avocado
