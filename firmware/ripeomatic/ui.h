@@ -407,8 +407,9 @@ if (run === sensorRun) { $('btnSensor').textContent = 'Start the sensor test'; }
 $('btnSensor').onclick = () => sensorTest($('btnSensor').textContent.startsWith('Start'));
 $('btnSetHome').onclick = async () => { if (!confirm('Is the sled touching the end stop at the motor end?')) return; act('/api/sethome', null, 'Home set')(); };
 $('btnCalClear').onclick = act('/api/cal/clear', null, 'Calibration points cleared');
-$('btnSetupShow').onclick = () => { setupHidden(false); $('setup').hidden = false; window.scrollTo({top: 0, behavior: 'smooth'}); };
-$('setupHide').onclick = () => { setupHidden(true); $('setup').hidden = true; };
+let setupForce = false;      // "Show the setup checklist" keeps it open even when every step is done (to redo one)
+$('btnSetupShow').onclick = () => { setupHidden(false); setupForce = true; stepsKey = ''; $('setup').hidden = false; if (st) renderSetup(st); window.scrollTo({top: 0, behavior: 'smooth'}); };
+$('setupHide').onclick = () => { setupHidden(true); setupForce = false; $('setup').hidden = true; };
 // ---- first-run checklist ----------------------------------------------------
 const ls = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
 const setupHidden = v => { if (v === undefined) return ls.get('setupHidden') === '1'; ls.set('setupHidden', v ? '1' : '0'); };
@@ -423,9 +424,11 @@ const steps = [
 { id: 'blade', title: 'Blade calibration', done: !!s.blade_calibrated },
 { id: 'fruit', title: 'First avocado', done: (s.fruit_count || 0) > 0 && !!s.fruit && s.fruit.n > 0 },
 ];
+// any finished step can be reopened with its Redo button (remembered in this browser until the step is done again)
+steps.forEach(x => { x.redo = ls.get('redo_' + x.id) === '1'; if (x.redo) x.done = false; });
 const nDone = steps.filter(x => x.done).length, allDone = nDone === steps.length;
 const card = $('setup');
-card.hidden = allDone || setupHidden();
+card.hidden = setupHidden() || (allDone && !setupForce);
 $('setupcount').textContent = allDone ? '· done' : '· ' + nDone + ' of ' + steps.length;
 $('setupbar').style.width = (100 * nDone / steps.length) + '%';
 if (card.hidden) return;
@@ -457,12 +460,14 @@ else body = `<p><b>Set home.</b> The machine counts every step from here, so it 
 if (st.done) body = `<p><b>Force calibration</b> · ${s.cal_points_n} point${s.cal_points_n === 1 ? '' : 's'}${calVerdict(s).short}</p><div class="row"><button class="quiet" data-act="forceredo">Show the points / add more</button></div>`;
 else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<div class="row" style="margin-bottom:8px"><button class="quiet" data-act="sensortest">Test the sensor first</button></div><p>1 · Stand the machine on its motor end so the pad points at the ceiling. Put the printed calibration cup (<code>cal-cup.stl</code>) on the pad, empty, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cup (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Any known weight up to 250 g works. Two or three different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${calTable(s)}`;
 } else if (st.id === 'blade') {
-if (st.done) body = `<p><b>Blade calibration</b> · ${fmt(s.blade_k)} N/mm</p><div class="row"><button class="quiet" data-act="blade">Measure the blade again</button></div><p class="kv">Redo it after any new force calibration, and whenever the holder changes. Something hard goes where the avocado goes.</p>`;
+if (st.done) body = `<p><b>Blade calibration</b> · ${fmt(s.blade_k)} N/mm</p><p class="kv">Redo it after any new force calibration, and whenever the holder changes.</p>`;
 else body = `<p><b>Blade calibration</b> measures the machine's own flex so it can be subtracted from every reading.</p>${s.simulate ? '<p class="kv">Simulation: tap it and watch the status pill; a pretend press runs in about ten seconds.</p>' : ''}<p>Stand the machine back up. Put something hard where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade</button></div>`;
 } else if (st.id === 'fruit') {
 if (st.done) body = `<p><b>First avocado</b> · measured</p>`;
 else body = `<p><b>First avocado.</b> ${s.simulate ? 'A virtual avocado is already in the machine; it softens over about 20 minutes, so take a few readings and watch the chart.' : 'Take the jar out, put an avocado in with its side toward the pad, then:'}</p><div class="row"><button class="primary" data-act="measure">Measure now</button></div><p class="kv" style="margin-top:6px">After this, readings run on their own every 12 hours.</p>`;
 }
+if (st.done && st.id !== 'force') body += `<div class="row"><button class="quiet" data-act="redo" data-id="${st.id}" style="padding:4px 10px;min-height:0">Redo this step</button></div>`;
+if (st.redo) body += `<div class="row" style="margin-top:8px"><button class="quiet" data-act="redocancel" data-id="${st.id}" style="padding:4px 10px;min-height:0">Never mind, keep it as it was</button></div>`;
 if (locked) body = `<p><b>${st.title}</b></p>`;
 return `<div class="sstep${st.done ? ' done' : ''}${locked ? ' locked' : ''}"><span class="n">${st.done ? '✓' : i + 1}</span><div class="body">${body}</div></div>`;
 }).join('');
@@ -494,23 +499,26 @@ $('steps').addEventListener('click', async ev => {
 const b = ev.target.closest('button[data-act]'); if (!b) return;
 const a = b.dataset.act;
 try {
-if (a === 'ntfynew') { await post('/api/ntfy/new'); toast('Alert channel created'); }
-else if (a === 'ntfyskip') { ls.set('ntfySkipped', '1'); }
+const clr = id => ls.set('redo_' + id, '0');
+if (a === 'redo') { ls.set('redo_' + b.dataset.id, '1'); }
+else if (a === 'redocancel') { clr(b.dataset.id); }
+else if (a === 'ntfynew') { await post('/api/ntfy/new'); toast('Alert channel created'); }
+else if (a === 'ntfyskip') { ls.set('ntfySkipped', '1'); clr('ntfy'); }
 else if (a === 'discordsave') { const u = ($('discordurl').value || '').trim(); if (!u) return toast('Paste the webhook URL first'); await post('/api/alerts/discord', {url: u}); toast('Discord webhook saved'); }
 else if (a === 'discordclear') { await post('/api/alerts/discord', {url: ''}); toast('Removed'); }
-else if (a === 'ntfytest') { testPending = true; testResult = ''; await post('/api/ntfy/test'); waitForTest(); }
+else if (a === 'ntfytest') { clr('ntfy'); testPending = true; testResult = ''; await post('/api/ntfy/test'); waitForTest(); }
 else if (a === 'nudge') { await post('/api/jog', {mm: 1}); toast('Nudging'); }
-else if (a === 'motorok') { await post('/api/motor/checked', {ok: 1}); toast('Direction confirmed'); }
+else if (a === 'motorok') { clr('motor'); await post('/api/motor/checked', {ok: 1}); toast('Direction confirmed'); }
 else if (a === 'jog') { await jogBtn(b.dataset.mm); }
 else if (a === 'sensortest') { $('d-sensor').open = true; $('d-sensor').scrollIntoView({behavior: 'smooth', block: 'start'}); sensorTest(true); return; }
-else if (a === 'sethome') { await post('/api/sethome'); toast('Home set'); }
+else if (a === 'sethome') { await post('/api/sethome'); clr('home'); toast('Home set'); }
 else if (a === 'motorbad') { await post('/api/motor/checked', {ok: 0}); toast('Flipped. Nudge again to check.'); }
 else if (a === 'zero') { const r = await post('/api/cal/zero'); ls.set('forceCalDone', '0'); ls.set('forceCalOpen', '1'); toast('Zero captured: sensor reads ' + Math.round(r.raw)); }
 else if (a === 'forceredo') { ls.set('forceCalOpen', '1'); }
 else if (a === 'forcedone') { ls.set('forceCalDone', '1'); ls.set('forceCalOpen', '0'); toast('Force calibration saved'); }
 else if (a === 'mass') { const g = parseFloat($('grams').value); if (!(g > 0)) return toast('Type the grams on the pad'); await post('/api/cal/mass', {g}); ls.set('forceCalOpen', '1'); $('grams').value = ''; toast('Captured ' + g + ' g'); }
-else if (a === 'blade') { if (!confirm('Is something hard (a jar, a can) where the avocado goes?')) return; await post('/api/cal/blade'); toast('Measuring the blade…'); }
-else if (a === 'measure') { await post('/api/measure'); toast('Measuring…'); }
+else if (a === 'blade') { if (!confirm('Is something hard (a jar, a can) where the avocado goes?')) return; await post('/api/cal/blade'); clr('blade'); toast('Measuring the blade…'); }
+else if (a === 'measure') { await post('/api/measure'); clr('fruit'); toast('Measuring…'); }
 stepsKey = ''; poll();
 } catch (e) { toast(e.message); }
 });
