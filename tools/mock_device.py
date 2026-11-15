@@ -214,7 +214,7 @@ class H(BaseHTTPRequestHandler):
                     "fw": "0.1.0-mock", "hw": "v1", "device_id": settings["device_id"], "host": settings["host"], "ip": "192.168.1.42",
                     "ap_mode": False, "ap_ssid": "", "rssi": -58, "time": now_iso(), "uptime_s": int(time.time() - state["boot"]), "last_start": "plugged in",
                     "job": state["job"], "stage": state["stage"], "pos_mm": state["pos"], "force_n": state["force"], "raw": state["raw"] + state["force"] / settings["hall_n_per_count"],
-                    "calibrated": bool(settings["cal_points"]), "n_per_count": settings["hall_n_per_count"], "cal_points_n": settings["cal_points"].count(":"),
+                    "calibrated": bool(settings["cal_points"]), "n_per_count": settings["hall_n_per_count"], "cal_points_n": settings["cal_points"].count(":"), "cal_points": settings["cal_points"], "cal_zero": settings["cal_zero_counts"],
                     "blade_calibrated": settings["blade_k_n_per_mm"] > 0.01, "blade_k": settings["blade_k_n_per_mm"], "setup_done": bool(settings["cal_points"]) and settings["blade_k_n_per_mm"] > 0.01, "servo": False,
                     "simulate": False, "ntfy_topic": settings["ntfy_topic"], "ntfy_ok": settings["ntfy_ok"], "discord_set": settings["discord_set"], "notify_pending": notify["pending"], "notify_last_ok": notify["last_ok"],
                     "fw_build": "dev", "upd_state": state.get("upd", ""), "upd_latest": "2026-11-12 · abc1234", "upd_pct": -1, "upd_error": "", "motor_checked": settings["motor_checked"], "motor_invert": settings["motor_invert"], "home_known": state["home_known"], "home_lost": False, "online": True, "fruit_count": f["counter"],

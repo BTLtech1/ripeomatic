@@ -171,7 +171,7 @@ class Web {
     addNum(o, "raw", M.busy() ? M.live_raw : M.hall.readRaw(16), 0);
     addBool(o, "calibrated", S.cal_points[0] != 0);
     addNum(o, "n_per_count", S.hall_n_per_count, 6);
-    addInt(o, "cal_points_n", M.calPointCount());
+    addInt(o, "cal_points_n", M.calPointCount()); addStr(o, "cal_points", S.cal_points); addNum(o, "cal_zero", S.cal_zero_counts, 0);
     addBool(o, "blade_calibrated", S.t.blade_k_n_per_mm > 0.01f);
     addBool(o, "setup_done", M.calibrated());
     addBool(o, "simulate", SIMULATE);

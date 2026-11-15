@@ -419,7 +419,7 @@ const steps = [
 { id: 'ntfy', title: 'Alerts', done: !!s.ntfy_ok || skippedNtfy },
 { id: 'motor', title: 'Motor direction', done: !!s.motor_checked || !!s.simulate },
 { id: 'home', title: 'Set home', done: !!s.home_known || !!s.simulate },
-{ id: 'force', title: 'Force calibration', done: (s.cal_points_n || 0) >= 2 || (!!s.calibrated && ls.get('forceCalDone') === '1') },
+{ id: 'force', title: 'Force calibration', done: ls.get('forceCalOpen') !== '1' && ((s.cal_points_n || 0) >= 2 || (!!s.calibrated && ls.get('forceCalDone') === '1')) },
 { id: 'blade', title: 'Blade calibration', done: !!s.blade_calibrated },
 { id: 'fruit', title: 'First avocado', done: (s.fruit_count || 0) > 0 && !!s.fruit && s.fruit.n > 0 },
 ];
@@ -430,7 +430,7 @@ $('setupcount').textContent = allDone ? '· done' : '· ' + nDone + ' of ' + ste
 $('setupbar').style.width = (100 * nDone / steps.length) + '%';
 if (card.hidden) return;
 // only rebuild the markup when the step states change, so typing in inputs survives polling
-const key = steps.map(x => x.done ? 1 : 0).join('') + '|' + (s.ntfy_topic || '') + '|' + s.discord_set + '|' + s.motor_invert + '|' + s.online + '|' + testPending + testResult + '|' + s.cal_points_n + '|' + s.home_lost;
+const key = steps.map(x => x.done ? 1 : 0).join('') + '|' + (s.ntfy_topic || '') + '|' + s.discord_set + '|' + s.motor_invert + '|' + s.online + '|' + testPending + testResult + '|' + s.cal_points_n + '|' + (s.cal_points || '') + '|' + s.cal_zero + '|' + ls.get('forceCalOpen') + '|' + s.home_lost;
 if (key === stepsKey) return;
 stepsKey = key;
 let firstOpen = steps.findIndex(x => !x.done);
@@ -454,8 +454,8 @@ else body = `<p><b>Motor direction.</b> Tap <b>Nudge</b> and watch the sled.</p>
 if (st.done) body = `<p><b>Set home</b> · ${s.simulate ? 'not needed in simulation' : 'set'}</p>`;
 else body = `<p><b>Set home.</b> The machine counts every step from here, so it never has to bump into anything to find its place. Jog the sled toward the motor until it just touches the end stop: ◀ 5 mm while it's far, ◀ 1 for the last bit.</p>${s.home_lost ? '<p class="bad">The power went off while the sled was moving, so it lost its place. Set home again.</p>' : ''}<div class="row"><button data-act="jog" data-mm="-5">◀ 5 mm</button><button data-act="jog" data-mm="-1">◀ 1</button><button data-act="jog" data-mm="1">1 ▶</button></div><div class="row" style="margin-top:8px"><button class="primary" data-act="sethome">It's touching: set home here</button></div>`;
 } else if (st.id === 'force') {
-if (st.done) body = `<p><b>Force calibration</b> · ${s.cal_points_n} point${s.cal_points_n === 1 ? '' : 's'}</p>`;
-else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<div class="row" style="margin-bottom:8px"><button class="quiet" data-act="sensortest">Test the sensor first</button></div><p>1 · Stand the machine on its motor end so the pad points at the ceiling. Balance a bottle cap on the pad, nothing else, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cap (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Two different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${s.cal_points_n ? '<p class="ok" style="margin-top:8px">' + s.cal_points_n + ' point captured. Add a second amount, or:</p><div class="row"><button data-act="forcedone">Continue with one point</button></div>' : ''}`;
+if (st.done) body = `<p><b>Force calibration</b> · ${s.cal_points_n} point${s.cal_points_n === 1 ? '' : 's'}${calVerdict(s).short}</p><div class="row"><button class="quiet" data-act="forceredo">Show the points / add more</button></div>`;
+else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<div class="row" style="margin-bottom:8px"><button class="quiet" data-act="sensortest">Test the sensor first</button></div><p>1 · Stand the machine on its motor end so the pad points at the ceiling. Put the printed calibration cup (<code>cal-cup.stl</code>) on the pad, empty, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cup (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Any known weight up to 250 g works. Two or three different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${calTable(s)}`;
 } else if (st.id === 'blade') {
 if (st.done) body = `<p><b>Blade calibration</b> · ${fmt(s.blade_k)} N/mm</p>`;
 else body = `<p><b>Blade calibration</b> measures the machine's own flex so it can be subtracted from every reading.</p>${s.simulate ? '<p class="kv">Simulation: tap it and watch the status pill; a pretend press runs in about ten seconds.</p>' : ''}<p>Stand the machine back up. Put something hard where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade</button></div>`;
@@ -467,6 +467,28 @@ if (locked) body = `<p><b>${st.title}</b></p>`;
 return `<div class="sstep${st.done ? ' done' : ''}${locked ? ' locked' : ''}"><span class="n">${st.done ? '✓' : i + 1}</span><div class="body">${body}</div></div>`;
 }).join('');
 if (allDone) $('steps').innerHTML += '<p class="ok" style="margin:8px 0 0">All set. Readings run automatically; you\'ll get an alert when it\'s ready.</p>';
+}
+// ---- force calibration: show what was captured, and whether the points agree ----
+function calPts(s) {
+return (s.cal_points || '').split(';').filter(Boolean).map(p => { const [g, c] = p.split(':').map(Number); return {g, c, d: c - s.cal_zero}; });
+}
+function calVerdict(s) {
+const pts = calPts(s); if (!pts.length) return {short: '', html: ''};
+const per = pts.map(p => p.d / p.g);                         // sensor counts per gram, one per point
+const mN = fmt((s.n_per_count || 0) * 1000, 2) + ' mN per sensor count';
+if (pts.some(p => Math.abs(p.d) < 15)) return {short: ' · weak signal', html: '<p class="bad">The sensor moved by fewer than 15 counts for one of these. That is too little to measure well: check the magnet sits right behind the sensor, or use a heavier weight.</p>'};
+if (per.some(v => v * per[0] < 0)) return {short: ' · points disagree', html: '<p class="bad">One weight pushed the reading up and another pushed it down. Something moved between captures: capture zero and start again.</p>'};
+if (pts.length < 2) return {short: '', html: '<p class="ok">Saved: ' + mN + '. Add a second, different amount to check it.</p>'};
+const lo = Math.min(...per.map(Math.abs)), hi = Math.max(...per.map(Math.abs)), spread = Math.round(100 * (hi - lo) / hi);
+return spread <= 12 ? {short: ' · points agree within ' + spread + ' %', html: '<p class="ok">Calibrated: ' + mN + '. The points agree within ' + spread + ' %, which is good.</p>'}
+: {short: ' · points differ by ' + spread + ' %', html: '<p class="bad">Saved (' + mN + '), but the points differ by ' + spread + ' %. Was the cup rocking, or a weight typed wrong? Capture zero and redo for a better result.</p>'};
+}
+function calTable(s) {
+const pts = calPts(s); if (!pts.length) return '';
+const rows = pts.map(p => '<tr><td><b>' + p.g + ' g</b></td><td>' + Math.round(p.c) + '</td><td>' + (p.d > 0 ? '+' : '') + Math.round(p.d) + '</td><td>' + fmt(100 * p.d / p.g, 0) + '</td></tr>').join('');
+return '<table class="cal" style="margin-top:10px;width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:var(--mute)"><th>on the pad</th><th>sensor read</th><th>change from zero</th><th>change per 100 g</th></tr><tr><td>nothing (zero)</td><td>' + Math.round(s.cal_zero) + '</td><td>—</td><td>—</td></tr>' + rows + '</table>'
++ '<p class="kv" style="margin-top:6px">A good calibration: the last column is about the same on every row.</p>' + calVerdict(s).html
++ '<div class="row"><button class="primary" data-act="forcedone">Done: use this calibration</button></div>';
 }
 $('steps').addEventListener('click', async ev => {
 const b = ev.target.closest('button[data-act]'); if (!b) return;
@@ -483,9 +505,10 @@ else if (a === 'jog') { await jogBtn(b.dataset.mm); }
 else if (a === 'sensortest') { $('d-sensor').open = true; $('d-sensor').scrollIntoView({behavior: 'smooth', block: 'start'}); sensorTest(true); return; }
 else if (a === 'sethome') { await post('/api/sethome'); toast('Home set'); }
 else if (a === 'motorbad') { await post('/api/motor/checked', {ok: 0}); toast('Flipped. Nudge again to check.'); }
-else if (a === 'zero') { await post('/api/cal/zero'); ls.set('forceCalDone', '0'); toast('Zero captured'); }
-else if (a === 'forcedone') { ls.set('forceCalDone', '1'); }
-else if (a === 'mass') { const g = parseFloat($('grams').value); if (!(g > 0)) return toast('Type the grams on the pad'); await post('/api/cal/mass', {g}); toast('Captured'); }
+else if (a === 'zero') { const r = await post('/api/cal/zero'); ls.set('forceCalDone', '0'); ls.set('forceCalOpen', '1'); toast('Zero captured: sensor reads ' + Math.round(r.raw)); }
+else if (a === 'forceredo') { ls.set('forceCalOpen', '1'); }
+else if (a === 'forcedone') { ls.set('forceCalDone', '1'); ls.set('forceCalOpen', '0'); toast('Force calibration saved'); }
+else if (a === 'mass') { const g = parseFloat($('grams').value); if (!(g > 0)) return toast('Type the grams on the pad'); await post('/api/cal/mass', {g}); ls.set('forceCalOpen', '1'); $('grams').value = ''; toast('Captured ' + g + ' g'); }
 else if (a === 'blade') { if (!confirm('Is something hard (a jar, a can) where the avocado goes?')) return; await post('/api/cal/blade'); toast('Measuring the blade…'); }
 else if (a === 'measure') { await post('/api/measure'); toast('Measuring…'); }
 stepsKey = ''; poll();

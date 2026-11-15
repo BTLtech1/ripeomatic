@@ -47,6 +47,9 @@ const shots = process.argv[2] || require('os').tmpdir();
   await step('mass', 500);
   await page.fill('#grams', '200');
   await step('mass', 500);
+  out.calTable = (await page.$$('#steps table.cal tr')).length;                      // header + zero + two weights
+  out.calVerdict = /points agree within/.test(await page.textContent('#steps'));
+  await step('forcedone', 500);
   page.once('dialog', dlg => dlg.accept());
   await step('blade', 500);
   await page.waitForFunction(() => /Blade calibration · /.test(document.getElementById('steps').textContent) && !document.querySelector('#steps .sstep:nth-child(5):not(.done)'), null, { timeout: 30000 });
@@ -127,6 +130,7 @@ const shots = process.argv[2] || require('os').tmpdir();
   if (!/newer build/.test(out.updCheck || '')) problems.push('update check');
   if (!out.sensorStopped || !/Working/.test(out.sensorTest || '')) problems.push('sensor test');
   if (!out.setupDone || !out.flipped || !out.homeSet || !out.topicLink || !out.discordSaved) problems.push('setup checklist did not complete');
+  if (out.calTable !== 4 || !out.calVerdict) problems.push('force calibration did not show its points and verdict');
   if (out.savedInterval !== 8) problems.push('settings round trip failed');
   if (!/you said: firm/.test(out.rated)) problems.push('rating not reflected');
   if (problems.length) { console.error('SMOKE TEST FAILED: ' + problems.join('; ')); process.exit(1); }
