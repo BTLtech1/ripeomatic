@@ -480,7 +480,7 @@ if (pts.some(p => Math.abs(p.d) < 15)) return {short: ' · weak signal', html: '
 if (per.some(v => v * per[0] < 0)) return {short: ' · points disagree', html: '<p class="bad">One weight pushed the reading up and another pushed it down. Something moved between captures: capture zero and start again.</p>'};
 if (pts.length < 2) return {short: '', html: '<p class="ok">Saved: ' + mN + '. Add a second, different amount to check it.</p>'};
 const lo = Math.min(...per.map(Math.abs)), hi = Math.max(...per.map(Math.abs)), spread = Math.round(100 * (hi - lo) / hi);
-return spread <= 12 ? {short: ' · points agree within ' + spread + ' %', html: '<p class="ok">Calibrated: ' + mN + '. The points agree within ' + spread + ' %, which is good.</p>'}
+return spread <= 22 ? {short: ' · points agree within ' + spread + ' %', html: '<p class="ok">Calibrated: ' + mN + '. The points agree within ' + spread + ' %. (Heavier weights read a little stronger per gram: the magnet\'s pull grows as the blade bends toward the sensor. Up to about 20 % is normal.)</p>'}
 : {short: ' · points differ by ' + spread + ' %', html: '<p class="bad">Saved (' + mN + '), but the points differ by ' + spread + ' %. Was the cup rocking, or a weight typed wrong? Capture zero and redo for a better result.</p>'};
 }
 function calTable(s) {
