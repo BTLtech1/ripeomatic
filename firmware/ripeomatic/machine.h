@@ -423,7 +423,7 @@ class Machine {
       // Only judged once the force is well up (a small steady offset in free air is not a bottomed-out blade).
       float floorN = fmaxf(0.6f, 3.0f * t.contact_threshold_n);
       if (force <= floorN || force > climbForce + 0.05f) { climbForce = force; climbPos = pos; }
-      else if (pos - climbPos > 1.0f) { core.abort(); strlcpy(error, "force stopped rising while pushing: blade bottomed out?", sizeof error); break; }
+      else if (pos - climbPos > 1.0f) { core.abort(); snprintf(error, sizeof error, "force stuck at %.2f N (sensor %d) for 1 mm: bottomed out?", force, (int)raw); break; }
     }
 
     retract();
