@@ -2,6 +2,8 @@
 
 **An open-source countertop gadget that watches your avocado and tells you when it's ripe, so you stop forgetting about them until they're brown mush.**
 
+*BTL Ripe-O-Matic (also written ripe-o-matic or ripeomatic) is an open-source avocado ripeness tester: an ESP32, a 3D-printed frame and a hall sensor that presses the fruit gently and tracks how it softens.*
+
 > **Status: first build in progress.** The CAD is done and the STLs are in [`hardware/stl/`](hardware/stl/), the firmware runs on a real ESP32 (flashed from the [web installer](https://btltech1.github.io/ripeomatic/install/), so far in simulation mode), and the data pipeline and dashboard are live. The first printed parts are being test-fitted and have already turned up fixes (thread clearance, the board mounting); nothing has been calibrated on a real avocado yet.
 
 ---
