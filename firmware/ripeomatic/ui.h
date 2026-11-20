@@ -44,6 +44,12 @@ button{font:inherit;font-size:15px;padding:11px 14px;border-radius:12px;border:1
 button.primary{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
 button.quiet{flex:0 0 auto;font-size:14px;color:var(--mute)}
 button:disabled{opacity:.5;cursor:default}
+button:not(:disabled):active{transform:scale(.97)}
+button.tapped{box-shadow:0 0 0 3px var(--green)}
+#busybar{position:sticky;top:0;z-index:5;margin:0 0 10px;padding:9px 14px;border-radius:12px;background:var(--green-ink);color:#fff;font-size:14px;display:flex;gap:10px;align-items:center}
+#busybar[hidden]{display:none}
+#busybar.off{background:var(--danger)}
+#busybar button{flex:0 0 auto;min-height:0;padding:4px 12px;font-size:13px}
 .rate button{flex:1 1 18%;padding:9px 4px;font-size:14px}
 .rate button.on{background:var(--green-ink);color:#fff;border-color:var(--green-ink)}
 h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--mute);margin:0 0 10px;font-weight:600}
@@ -106,6 +112,7 @@ details[open] summary::after{content:"–"}
 <div><h1>Ripe-O-Matic</h1><div class="sub" id="sub">connecting…</div></div>
 <span class="pill" id="pill">…</span>
 </header>
+<div id="busybar" hidden><span id="busytext" style="flex:1"></span><button id="busystop" hidden>Stop</button></div>
 <div class="card setup" id="setup" hidden>
 <div class="setuphead"><h2 style="margin:0">Set up <span id="setupcount"></span></h2><button class="quiet" id="setupHide" style="padding:4px 8px;min-height:0">hide</button></div>
 <div class="bar" style="margin:8px 0 12px"><i id="setupbar"></i></div>
@@ -250,7 +257,7 @@ if (st.last && st.last.time !== lastReadingTime) { lastReadingTime = st.last.tim
 pollFails = 0;
 } catch (e) {
 // one missed answer is normal (the board is busy saving, or Wi-Fi blinked): only call it offline after three in a row
-if (++pollFails >= 3) { $('pill').textContent = 'offline'; $('pill').className = 'pill off'; }
+if (++pollFails >= 3) { $('pill').textContent = 'offline'; $('pill').className = 'pill off'; $('busybar').hidden = false; $('busybar').className = 'off'; $('busystop').hidden = true; $('busytext').textContent = 'No answer from the machine. Buttons will not work until it is back; the numbers below are the last ones it sent.'; }
 }
 clearTimeout(pollTimer);
 pollTimer = setTimeout(poll, st && st.job !== 'idle' ? 1000 : 3000);
@@ -260,6 +267,10 @@ const s = st, f = s.fruit || {}, busy = s.job !== 'idle';
 $('sub').textContent = (s.ap_mode ? 'setup mode: ' + s.ap_ssid : 'http://' + s.host + '.local') + (s.time ? '' : ' · clock not set');
 $('pill').textContent = busy ? (s.job === 'measure' ? 'measuring: ' + s.stage : ({updcheck: 'checking for updates', update: 'updating firmware'}[s.job] || s.job)) : (s.next_auto_s > 0 ? 'next in ' + hms(s.next_auto_s) : (s.simulate ? 'simulation · idle' : 'idle'));
 $('pill').className = 'pill' + (busy ? ' busy' : '');
+// say WHY buttons are greyed out: the machine does one thing at a time
+const jobName = {measure: 'taking a reading', bladecal: 'measuring the blade', jog: 'moving the sled', home: 'sending the sled home', tip: 'opening the gate', notify: 'sending a test alert', updcheck: 'checking for updates', update: 'installing an update', sensor: 'running the sensor test'}[s.job] || s.job;
+$('busybar').hidden = !busy; $('busybar').className = '';
+if (busy) { $('busytext').textContent = 'Busy ' + jobName + '. Most buttons are greyed out until it finishes.'; $('busystop').hidden = !(s.job === 'measure' || s.job === 'bladecal' || s.job === 'jog' || s.job === 'home'); }
 $('ver').textContent = 'fw ' + s.fw + ' · ' + s.hw + ' · id ' + s.device_id;
 renderSetup(s);
 $('servo').hidden = !s.servo;
@@ -317,7 +328,11 @@ let updating = false;
 function renderUpdate(s, busy) {
 if (updating && s.uptime_s < 90 && s.job === 'idle') { updating = false; toast('Updated. Reloading…'); setTimeout(() => location.reload(), 1200); return; }
 $('fwinfo').textContent = 'version ' + s.fw + ' · build ' + (s.fw_build || '?') + (s.last_start ? ' · running for ' + hms(s.uptime_s) + ' · last start: ' + s.last_start : '');
-const st = s.upd_state || '', m = $('updmsg');
+let st = s.upd_state || ''; const m = $('updmsg');
+// the check takes about 10 s: say so from the moment the button is tapped, not when the answer arrives
+const checkingNow = s.job === 'updcheck' || st === 'checking' || (updTapped && Date.now() - updTapped < 4000);
+if (checkingNow) st = 'checking';
+$('btnUpdCheck').textContent = checkingNow ? 'Checking…' : 'Check for updates';
 $('btnUpd').hidden = st !== 'available';
 $('btnUpdCheck').disabled = busy || !s.online; $('btnUpd').disabled = busy || !s.online;
 $('updbarw').hidden = !(st === 'downloading' || st === 'done');
@@ -325,7 +340,7 @@ $('updbar').style.width = Math.max(0, s.upd_pct || 0) + '%';
 m.className = st === 'failed' ? 'bad' : st === 'available' || st === 'done' ? 'ok' : 'kv';
 m.textContent = {
 '': s.online ? '' : 'Not online, so it can\'t check.',
-checking: 'Checking GitHub…',
+checking: 'Checking GitHub for a newer build… about 10 seconds.',
 uptodate: 'Up to date (latest is ' + s.upd_latest + ').',
 available: 'A newer build is available: ' + s.upd_latest + '. About a minute; Wi-Fi, settings, calibration, home and readings are kept.',
 downloading: 'Downloading and installing… ' + Math.max(0, s.upd_pct) + '%. Leave it plugged in.',
@@ -334,7 +349,8 @@ failed: 'That didn\'t work: ' + (s.upd_error || 'unknown error') + '. Nothing wa
 }[st] || '';
 if (st === 'downloading' || st === 'done') updating = true;
 }
-$('btnUpdCheck').onclick = () => act('/api/update/check', null, 'Checking…')();
+let updTapped = 0;
+$('btnUpdCheck').onclick = () => { updTapped = Date.now(); if (st) render(); act('/api/update/check', null, 'Checking for updates…')(); };
 $('btnUpd').onclick = async () => { if (!confirm('Install the newer firmware now? The machine restarts when it\'s done.')) return; updating = true; act('/api/update/run', null, 'Updating…')(); };
 const hms = s => s == null ? '' : s >= 86400 ? Math.floor(s / 86400) + 'd ' + Math.floor(s % 86400 / 3600) + 'h' : s >= 3600 ? Math.floor(s / 3600) + 'h ' + Math.floor(s % 3600 / 60) + 'm' : Math.floor(s / 60) + 'm';
 // ---- charts ---------------------------------------------------------------
@@ -386,6 +402,9 @@ const act = (path, data, okMsg) => async () => { try { await post(path, data); i
 $('btnMeasure').onclick = act('/api/measure', null, 'Measuring…');
 $('btnNew').onclick = async () => { if (!confirm('Start tracking a new avocado? The current one is kept in the log.')) return; act('/api/newfruit', null, 'New avocado. Measuring…')(); };
 $('btnAbort').onclick = act('/api/abort', null, 'Stopping');
+$('busystop').onclick = () => $('btnAbort').onclick();
+// every tap is acknowledged at once with a ring round the button, before the machine has answered
+document.addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return; b.classList.add('tapped'); setTimeout(() => b.classList.remove('tapped'), 700); }, true);
 $('btnHome').onclick = act('/api/home', null, 'Going home');
 // ---- sensor test -----------------------------------------------------------
 let sensorRun = 0;
