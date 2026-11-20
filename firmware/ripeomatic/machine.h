@@ -475,6 +475,17 @@ class Machine {
       else if (pos - climbPos > 1.0f) { core.abort(); snprintf(error, sizeof error, "force stuck at %.2f N (sensor %d) for 1 mm: bottomed out?", force, (int)raw); break; }
     }
 
+    // Blade calibration: save the result now, before the sled travels home, so a hiccup on the way back can't lose it.
+    if (bladeCal) {
+      const ripe::Reading& rb = core.reading();
+      if (rb.outcome == ripe::Outcome::Reading && rb.stiffness_n_per_mm > 0.2f) {
+        S.t.blade_k_n_per_mm = rb.stiffness_n_per_mm;
+        last_cal_millis_ = millis();
+        settingsSave();
+        logEv("  blade measured: %.2f N/mm, peak %.2f N", rb.stiffness_n_per_mm, rb.force_max_n);
+      }
+    }
+
     retract();
     if (holdGate) servo.relax();
 
