@@ -247,8 +247,11 @@ class Machine {
   }
 
   // ---- force calibration ---------------------------------------------------
+  // Returns the reading, or -1 if it is at either end of the range (a sensor wire is off: a zero of 0
+  // or 4095 would make every weight after it meaningless).
   float captureZero() {
     float raw = hall.readRaw(HALL_SAMPLES_TARE);
+    if (raw < 20 || raw > 4075) return -1;
     S.cal_zero_counts = raw;
     S.cal_points[0] = 0;
     zeroCaptured_ = true;
@@ -286,6 +289,23 @@ class Machine {
   }
 
   void clearCalibration() { S.cal_points[0] = 0; settingsSave(); }
+
+  // Drop one captured weight (0 = the first row under the zero) and refit with the rest.
+  bool deleteCalPoint(int idx) {
+    char out[sizeof S.cal_points] = "";
+    int i = 0; bool hit = false;
+    for (const char* p = S.cal_points; *p;) {
+      const char* e = strchr(p, ';'); size_t n = e ? (size_t)(e - p) : strlen(p);
+      if (i++ == idx) hit = true;
+      else { if (out[0]) strncat(out, ";", sizeof out - strlen(out) - 1); strncat(out, p, n); }
+      p += n; if (*p == ';') p++;
+    }
+    if (!hit) return false;
+    strlcpy(S.cal_points, out, sizeof S.cal_points);
+    refitCalibration();
+    settingsSave();
+    return true;
+  }
 
   // ---- the jobs (run inside the task) -------------------------------------
  private:

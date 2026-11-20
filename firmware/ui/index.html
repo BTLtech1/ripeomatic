@@ -544,9 +544,9 @@ function calVerdict(s) {
 }
 function calTable(s) {
   const pts = calPts(s); if (!pts.length) return '';
-  const rows = pts.map(p => '<tr><td><b>' + p.g + ' g</b></td><td>' + Math.round(p.c) + '</td><td>' + (p.d > 0 ? '+' : '') + Math.round(p.d) + '</td><td>' + fmt(100 * p.d / p.g, 0) + '</td></tr>').join('');
-  return '<table class="cal" style="margin-top:10px;width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:var(--mute)"><th>on the pad</th><th>sensor read</th><th>change from zero</th><th>change per 100 g</th></tr><tr><td>nothing (zero)</td><td>' + Math.round(s.cal_zero) + '</td><td>—</td><td>—</td></tr>' + rows + '</table>'
-    + '<p class="kv" style="margin-top:6px">A good calibration: the last column is about the same on every row.</p>' + calVerdict(s).html
+  const rows = pts.map((p, i) => '<tr><td><b>' + p.g + ' g</b></td><td>' + Math.round(p.c) + '</td><td>' + (p.d > 0 ? '+' : '') + Math.round(p.d) + '</td><td>' + fmt(100 * p.d / p.g, 0) + '</td><td style="text-align:right"><button class="quiet" data-act="caldel" data-i="' + i + '" title="Delete this row" style="padding:2px 9px;min-height:0;flex:0">×</button></td></tr>').join('');
+  return '<table class="cal" style="margin-top:10px;width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:var(--mute)"><th>on the pad</th><th>sensor read</th><th>change from zero</th><th>change per 100 g</th><th></th></tr><tr><td>nothing (zero)</td><td>' + Math.round(s.cal_zero) + '</td><td>—</td><td>—</td></tr>' + rows + '</table>'
+    + '<p class="kv" style="margin-top:6px">A good calibration: the last column is about the same on every row. × removes a row (a weight that bottomed the blade out, or one captured while the table shook).</p>' + calVerdict(s).html
     + '<div class="row"><button class="primary" data-act="forcedone">Done: use this calibration</button></div>';
 }
 
@@ -571,6 +571,7 @@ $('steps').addEventListener('click', async ev => {
     else if (a === 'motorbad') { await post('/api/motor/checked', {ok: 0}); toast('Flipped. Nudge again to check.'); }
     else if (a === 'zero') { const r = await post('/api/cal/zero'); ls.set('forceCalDone', '0'); ls.set('forceCalOpen', '1'); toast('Zero captured: sensor reads ' + Math.round(r.raw)); }
     else if (a === 'forceredo') { ls.set('forceCalOpen', '1'); }
+    else if (a === 'caldel') { await post('/api/cal/delete', {i: b.dataset.i}); toast('Row deleted'); }
     else if (a === 'forcedone') { ls.set('forceCalDone', '1'); ls.set('forceCalOpen', '0'); toast('Force calibration saved'); }
     else if (a === 'mass') { const g = parseFloat($('grams').value); if (!(g > 0)) return toast('Type the grams on the pad'); await post('/api/cal/mass', {g}); ls.set('forceCalOpen', '1'); $('grams').value = ''; toast('Captured ' + g + ' g'); }
     else if (a === 'blade') { if (!confirm('Is something hard (a jar, a can) where the avocado goes?')) return; await post('/api/cal/blade'); clr('blade'); toast('Measuring the blade…'); }

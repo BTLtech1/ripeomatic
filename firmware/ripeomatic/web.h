@@ -74,7 +74,8 @@ class Web {
       if (!M.rate(r.c_str(), server.arg("cut").c_str(), server.arg("notes").c_str())) return fail(500, "log write failed");
       ok();
     });
-    server.on("/api/cal/zero", HTTP_POST, [this] { if (M.busy()) return fail(409, "busy"); float raw = M.captureZero(); json(200, String("{\"ok\":true,\"raw\":") + raw + "}"); });
+    server.on("/api/cal/zero", HTTP_POST, [this] { if (M.busy()) return fail(409, "busy"); float raw = M.captureZero(); if (raw < 0) return fail(400, "the sensor reads nothing (0 or full scale): one of its three wires is off. Fix that, then capture zero again"); json(200, String("{\"ok\":true,\"raw\":") + raw + "}"); });
+    server.on("/api/cal/delete", HTTP_POST, [this] { if (M.busy()) return fail(409, "busy"); if (!M.deleteCalPoint(server.arg("i").toInt())) return fail(400, "no such point"); ok(); });
     server.on("/api/cal/mass", HTTP_POST, [this] {
       if (M.busy()) return fail(409, "busy");
       float g = server.arg("g").toFloat();

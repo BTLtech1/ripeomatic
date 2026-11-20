@@ -324,6 +324,13 @@ class H(BaseHTTPRequestHandler):
             else:
                 settings["motor_checked"] = True
             return self._json(200, {"ok": True})
+        if u.path == "/api/cal/delete":
+            pts = [q for q in settings["cal_points"].split(";") if q]
+            i = int(d.get("i", -1))
+            if not 0 <= i < len(pts):
+                return self._json(400, {"ok": False, "error": "no such point"})
+            del pts[i]; settings["cal_points"] = ";".join(pts)
+            return self._json(200, {"ok": True})
         if u.path == "/api/cal/clear":
             settings["cal_points"] = ""
             return self._json(200, {"ok": True})
