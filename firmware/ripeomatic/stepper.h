@@ -43,6 +43,9 @@ class Stepper28BYJ {
       } else {
         next = micros();   // we fell behind (Wi-Fi hiccup); don't try to catch up
       }
+      // At full speed the waits above are all busy-waits, and the web page can go unanswered for the whole
+      // move. Hand the processor over for a millisecond every 64 steps so it can reply.
+      if ((i & 63) == 63) { delay(1); next = micros(); }
     }
   }
 
