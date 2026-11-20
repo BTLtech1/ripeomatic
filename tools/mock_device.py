@@ -352,11 +352,11 @@ class H(BaseHTTPRequestHandler):
         if u.path == "/api/reset":
             w = d.get("what")
             with LOCK:
-                if w in ("fruit", "data"):
+                if w in ("fruit", "data", "fresh"):
                     state["fruit"].update({"loaded": False, "n": 0, "first_k": 0, "last_k": 0, "start": 0, "rating": ""})
-                if w == "data":
+                if w in ("data", "fresh"):
                     state["rows"].clear()
-            return self._json(200, {"ok": True}) if w in ("fruit", "data", "settings", "all") else self._json(400, {"ok": False, "error": "what = fruit | data | settings | all"})
+            return self._json(200, {"ok": True}) if w in ("fruit", "data", "settings", "fresh", "all") else self._json(400, {"ok": False, "error": "what = fruit | data | settings | fresh | all"})
         if u.path == "/api/reboot":
             return self._json(200, {"ok": True})
         self._json(404, {"ok": False, "error": "not found"})

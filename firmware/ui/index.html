@@ -213,6 +213,7 @@ details[open] summary::after{content:"–"}
         <button id="btnReboot" class="quiet">Reboot</button>
         <button id="btnResetFruit" class="quiet">Forget this avocado</button>
         <button id="btnWipe" class="quiet" style="color:var(--danger)">Erase all readings</button>
+        <button id="btnFresh" class="quiet" style="color:var(--danger)">Start over from scratch</button>
       </div>
     </div>
   </details>
@@ -615,6 +616,13 @@ async function waitForTest() {
 }
 $('btnTip').onclick = act('/api/tip', null, 'Opening the gate');
 $('btnSetupShow2').onclick = () => $('btnSetupShow').onclick();
+$('btnFresh').onclick = async () => {
+  if (!confirm('Start over from scratch?\n\nThis erases both calibrations, home, every setting, the current avocado and ALL readings. Wi-Fi is kept, so the machine comes back on this same address in about 20 seconds.\n\nDownload the CSV first if you want the readings.')) return;
+  ['forceCalOpen', 'forceCalDone', 'alertsOpen', 'setupHidden', 'ntfySkipped', 'redo_ntfy', 'redo_motor', 'redo_home', 'redo_blade', 'redo_fruit'].forEach(k => ls.set(k, '0'));
+  try { await post('/api/reset', {what: 'fresh'}); } catch (e) { /* it restarts before it can answer */ }
+  toast('Starting over. The page reloads when the machine is back.');
+  setTimeout(() => location.reload(), 15000);
+};
 $('btnReboot').onclick = () => { if (confirm('Reboot the device?')) act('/api/reboot')(); };
 $('btnResetFruit').onclick = async () => { if (confirm('Forget the current avocado? Its readings stay in the log.')) { await act('/api/reset', {what: 'fruit'}, 'Forgotten')(); loadRows(); } };
 $('btnWipe').onclick = async () => { if (confirm('Erase ALL readings on the device? Download the CSV first if you want them.')) { await act('/api/reset', {what: 'data'}, 'Erased')(); loadRows(); } };

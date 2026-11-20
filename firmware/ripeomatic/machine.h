@@ -225,7 +225,7 @@ class Machine {
 
   float thresholdNow() const {
     float thr = S.t.ripe_abs_n_per_mm > 0 ? S.t.ripe_abs_n_per_mm : 0;
-    if (S.t.ripe_pct_of_first > 0 && FR.first_k > 0) {
+    if (S.t.ripe_pct_of_first > 0 && FR.first_k > 0 && FR.first_k < ripe::K_HARD * 0.99f) {
       float rel = FR.first_k * S.t.ripe_pct_of_first / 100.0f;
       if (rel > thr) thr = rel;
     }
@@ -267,6 +267,7 @@ class Machine {
     if (raw < 20 || raw > 4075) { logEv("capture zero refused: sensor %d", (int)raw); return -1; }
     logEv("zero captured: sensor %d", (int)raw);
     S.cal_zero_counts = raw;
+    S.t.blade_k_n_per_mm = 0;      // a new force calibration: the blade must be measured again against something hard
     S.cal_points[0] = 0;
     zeroCaptured_ = true;
     last_cal_millis_ = millis();
@@ -303,7 +304,7 @@ class Machine {
     return n;
   }
 
-  void clearCalibration() { S.cal_points[0] = 0; settingsSave(); }
+  void clearCalibration() { S.cal_points[0] = 0; S.t.blade_k_n_per_mm = 0; settingsSave(); }
 
   // Drop one captured weight (0 = the first row under the zero) and refit with the rest.
   bool deleteCalPoint(int idx) {

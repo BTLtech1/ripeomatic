@@ -296,8 +296,18 @@ class Web {
     if (what == "fruit") { FR = FruitState(); fruitSave(); ok(); }
     else if (what == "data") { M.store.wipe(); FR = FruitState(); fruitSave(); ok(); }
     else if (what == "settings") { clearSettingsKeepId(); ok(); delay(300); ESP.restart(); }
+    else if (what == "fresh") {
+      // everything back to how it was first installed, except what gets it online: Wi-Fi, its name and its id
+      char ssid[33], pass[65], host[sizeof S.host];
+      strlcpy(ssid, S.wifi_ssid, sizeof ssid); strlcpy(pass, S.wifi_pass, sizeof pass); strlcpy(host, S.host, sizeof host);
+      M.store.wipe();
+      { Preferences p; p.begin("ripe", false); p.clear(); p.putString("dev_id", S.device_id); p.putString("ssid", ssid); p.putString("pass", pass); p.putString("host", host); p.end(); }
+      { Preferences p; p.begin("fruit", false); p.clear(); p.end(); }
+      { Preferences p; p.begin("pos", false); p.clear(); p.end(); }
+      ok(); delay(300); ESP.restart();
+    }
     else if (what == "all") { M.store.wipe(); clearSettingsKeepId(); Preferences p; p.begin("fruit", false); p.clear(); p.end(); ok(); delay(300); ESP.restart(); }
-    else fail(400, "what = fruit | data | settings | all");
+    else fail(400, "what = fruit | data | settings | fresh | all");
   }
 
   // Streams the log. ?fruit=current (default) | all, &old=1 to include the rotated file.

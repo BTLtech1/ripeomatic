@@ -281,7 +281,8 @@ inline Verdict judge(float stiffness, float first_stiffness, const Tunables& t) 
   if (stiffness <= 0) return Verdict::Unknown;
   float thr = 0;
   if (t.ripe_abs_n_per_mm > 0) thr = t.ripe_abs_n_per_mm;
-  if (t.ripe_pct_of_first > 0 && first_stiffness > 0) {
+  // a first reading that was "too stiff to measure" (K_HARD) is not a baseline: only the absolute threshold applies
+  if (t.ripe_pct_of_first > 0 && first_stiffness > 0 && first_stiffness < K_HARD * 0.99f) {
     float rel = first_stiffness * t.ripe_pct_of_first / 100.0f;
     if (rel > thr) thr = rel;   // whichever comes first = the higher threshold
   }
