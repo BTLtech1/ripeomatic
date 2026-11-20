@@ -153,6 +153,7 @@ details[open] summary::after{content:"–"}
 <details id="d-cal">
 <summary>Calibration</summary>
 <div class="kv" id="calstate" style="margin-bottom:8px"></div>
+<div id="calpoints"></div>
 <p class="kv">Both calibrations are in the setup checklist at the top of the page. Redo them after reprinting the blade or sled, or if readings look off.</p>
 <div class="row" style="padding:4px 0 10px"><button id="btnSetupShow">Show the setup checklist</button><button id="btnCalClear" class="quiet">Clear force points and recalibrate</button></div>
 <p class="kv">Alternative to coins: put a kitchen scale where the avocado goes and press it. Read the peak grams and compare with the force the device reports; adjust <code>hall_n_per_count</code> by the ratio.</p>
@@ -317,6 +318,7 @@ if (tab === 'curve') drawCurve(true);
 }
 $('pos').textContent = fmt(s.pos_mm, 2); $('forcenow').textContent = fmt(s.force_n, 3);
 const rawEl = $('raw'); if (rawEl) rawEl.textContent = s.raw != null ? Math.round(s.raw) : '—';
+$('calpoints').innerHTML = calTable(s, true);
 $('calstate').innerHTML = 'blade_k: <b>' + (s.blade_calibrated ? fmt(s.blade_k) + ' N/mm' : 'not measured') + '</b> · force: <b>' + (s.calibrated ? fmt(s.n_per_count * 1000, 3) + ' mN/count, ' + s.cal_points_n + ' point' + (s.cal_points_n === 1 ? '' : 's') : 'not calibrated') + '</b>';
 $('wifinow').textContent = s.ap_mode ? 'Not on a Wi-Fi network yet: pick yours below.' : 'Connected to ' + (settings && settings.wifi_ssid ? settings.wifi_ssid : 'your Wi-Fi') + '. Only change this if the router or password changes, or the machine moves house.';
 $('devinfo').textContent = 'id ' + s.device_id + ' · ' + (s.ip || '') + (s.rssi ? ' · ' + s.rssi + ' dBm' : '') + ' · log ' + Math.round((s.log_bytes || 0) / 1024) + ' kB · free ' + Math.round((s.fs_free || 0) / 1024) + ' kB · up ' + hms(s.uptime_s);
@@ -525,9 +527,10 @@ const lo = Math.min(...per.map(Math.abs)), hi = Math.max(...per.map(Math.abs)), 
 return spread <= 22 ? {short: ' · points agree within ' + spread + ' %', html: '<p class="ok">Calibrated: ' + mN + '. The points agree within ' + spread + ' %. (Heavier weights read a little stronger per gram: the magnet\'s pull grows as the blade bends toward the sensor. Up to about 20 % is normal.)</p>'}
 : {short: ' · points differ by ' + spread + ' %', html: '<p class="bad">Saved (' + mN + '), but the points differ by ' + spread + ' %. Was the cup rocking, or a weight typed wrong? Capture zero and redo for a better result.</p>'};
 }
-function calTable(s) {
+function calTable(s, readOnly) {
 const pts = calPts(s); if (!pts.length) return '';
 const rows = pts.map((p, i) => '<tr><td><b>' + p.g + ' g</b></td><td>' + Math.round(p.c) + '</td><td>' + (p.d > 0 ? '+' : '') + Math.round(p.d) + '</td><td>' + fmt(100 * p.d / p.g, 0) + '</td><td style="text-align:right"><button class="quiet" data-act="caldel" data-i="' + i + '" title="Delete this row" style="padding:2px 9px;min-height:0;flex:0">×</button></td></tr>').join('');
+if (readOnly) return '<table class="cal" style="margin:8px 0 2px;width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:var(--mute)"><th>on the pad</th><th>sensor read</th><th>change from zero</th><th>change per 100 g</th><th></th></tr><tr><td>nothing (zero)</td><td>' + Math.round(s.cal_zero) + '</td><td>—</td><td>—</td><td></td></tr>' + rows.replace(/<button[^>]*caldel[^>]*>[^<]*<\/button>/g, '') + '</table>' + calVerdict(s).html;
 return '<table class="cal" style="margin-top:10px;width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;color:var(--mute)"><th>on the pad</th><th>sensor read</th><th>change from zero</th><th>change per 100 g</th><th></th></tr><tr><td>nothing (zero)</td><td>' + Math.round(s.cal_zero) + '</td><td>—</td><td>—</td></tr>' + rows + '</table>'
 + '<p class="kv" style="margin-top:6px">A good calibration: the last column is about the same on every row. × removes a row (a weight that bottomed the blade out, or one captured while the table shook).</p>' + calVerdict(s).html
 + '<div class="row"><button class="primary" data-act="forcedone">Done: use this calibration</button></div>';
