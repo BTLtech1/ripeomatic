@@ -196,6 +196,8 @@ class H(BaseHTTPRequestHandler):
             import math
             raw = 2001.0 + 120.0 * math.sin(time.time() * 1.3)   # pretend someone is pushing the blade
             return self._json(200, {"raw": raw, "force_n": (raw - 2001.0) * settings["hall_n_per_count"]})
+        if u.path == "/api/events":
+            return self._json(200, {"now": 120, "events": [{"t": 60, "s": "measure: start at 0.0 mm, sensor 1266"}, {"t": 75, "s": "  approach from 0.0 mm, 0.00 N, sensor 1266"}, {"t": 95, "s": "measure: end at 0.0 mm, sensor 1265"}]})
         if u.path == "/api/status":
             with LOCK:
                 f = state["fruit"]
@@ -324,8 +326,6 @@ class H(BaseHTTPRequestHandler):
             else:
                 settings["motor_checked"] = True
             return self._json(200, {"ok": True})
-        if u.path == "/api/events":
-            return self._json(200, {"now": 120, "events": [{"t": 60, "s": "measure: start at 0.0 mm, sensor 1266"}, {"t": 75, "s": "  approach from 0.0 mm, 0.00 N, sensor 1266"}, {"t": 95, "s": "measure: end at 0.0 mm, sensor 1265"}]})
         if u.path == "/api/cal/delete":
             pts = [q for q in settings["cal_points"].split(";") if q]
             i = int(d.get("i", -1))
