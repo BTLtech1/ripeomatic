@@ -418,6 +418,11 @@ class Machine {
     // position backstop short so a wrong guess can't turn into a deep press.
     if (!S.cal_points[0] && t.max_squish_mm > 3.0f) t.max_squish_mm = 3.0f;
 
+    // An attempt that fails (sensor wire off, home not set...) must not be retried on the next tick: the
+    // scheduler would start it again every second. Book the next automatic try for 10 minutes from now;
+    // a reading that succeeds overwrites this with the normal interval.
+    if (!bladeCal) { measured_since_boot = true; last_measure_millis = millis() - (uint32_t)(intervalHours() * 3600000.0f) + 600000UL; }
+
     if (!homeKnown) { finishAborted(HOME_UNSET_MSG); return; }
     home();
     if (stepper.aborted()) { finishAborted(error[0] ? error : "stopped"); return; }
