@@ -324,6 +324,8 @@ class H(BaseHTTPRequestHandler):
             else:
                 settings["motor_checked"] = True
             return self._json(200, {"ok": True})
+        if u.path == "/api/events":
+            return self._json(200, {"now": 120, "events": [{"t": 60, "s": "measure: start at 0.0 mm, sensor 1266"}, {"t": 75, "s": "  approach from 0.0 mm, 0.00 N, sensor 1266"}, {"t": 95, "s": "measure: end at 0.0 mm, sensor 1265"}]})
         if u.path == "/api/cal/delete":
             pts = [q for q in settings["cal_points"].split(";") if q]
             i = int(d.get("i", -1))

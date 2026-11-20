@@ -4,6 +4,7 @@
 // answering while the sled creeps for two minutes.
 #pragma once
 #include <Arduino.h>
+#include <stdarg.h>
 #include "config.h"
 #include "settings.h"
 #include "measure.h"
@@ -40,6 +41,18 @@ struct LastReading {
 
 class Machine {
  public:
+  // ---- event log: the last 40 things the machine did, kept in memory (cleared by a restart) ----
+  struct Ev { uint32_t ms; char text[96]; };
+  static const int EV_N = 40;
+  Ev evs[EV_N];
+  int evHead = 0, evCount = 0;
+  void logEv(const char* fmt, ...) {
+    Ev& e = evs[evHead];
+    e.ms = millis();
+    va_list ap; va_start(ap, fmt); vsnprintf(e.text, sizeof e.text, fmt, ap); va_end(ap);
+    evHead = (evHead + 1) % EV_N;
+    if (evCount < EV_N) evCount++;
+  }
   Stepper28BYJ stepper;
   Hall hall;
   Storage store;
@@ -251,7 +264,8 @@ class Machine {
   // or 4095 would make every weight after it meaningless).
   float captureZero() {
     float raw = hall.readRaw(HALL_SAMPLES_TARE);
-    if (raw < 20 || raw > 4075) return -1;
+    if (raw < 20 || raw > 4075) { logEv("capture zero refused: sensor %d", (int)raw); return -1; }
+    logEv("zero captured: sensor %d", (int)raw);
     S.cal_zero_counts = raw;
     S.cal_points[0] = 0;
     zeroCaptured_ = true;
@@ -275,6 +289,7 @@ class Machine {
     snprintf(pt, sizeof pt, "%s%.1f:%.0f", S.cal_points[0] ? ";" : "", grams, raw);
     if (strlen(S.cal_points) + strlen(pt) >= sizeof S.cal_points) { *why = "too many points; clear and redo"; return false; }
     strcat(S.cal_points, pt);
+    logEv("weight captured: %.1f g, sensor %d", grams, (int)raw);
     refitCalibration();
     last_cal_millis_ = millis();
     settingsSave();
@@ -309,9 +324,16 @@ class Machine {
 
   // ---- the jobs (run inside the task) -------------------------------------
  private:
+  ripe::Stage evStage_ = ripe::Stage::Idle;
   static void taskEntry(void* arg) {
     Machine* m = (Machine*)arg;
+    const char* jn = jobName(m->job);
+    bool mv = moves(m->job);
+    if (mv) m->logEv("%s: start at %.1f mm, sensor %d", jn, m->stepper.posMm(), (int)m->hall.readRaw(8));
+    else m->logEv("%s: start", jn);
     m->runJob();
+    if (mv) m->logEv("%s: end at %.1f mm, sensor %d%s%s", jn, m->stepper.posMm(), (int)m->hall.readRaw(8), m->error[0] ? " - " : "", m->error);
+    else m->logEv("%s: end%s%s", jn, m->error[0] ? " - " : "", m->error);
     if (moves(m->job)) m->posSave(false);
     m->job = Job::Idle;
     m->stage = ripe::Stage::Idle;
@@ -430,6 +452,7 @@ class Machine {
       force = hall.countsToForce(raw);
       live_raw = raw;
       live_force = force;
+      if (core.stage() != evStage_) { evStage_ = core.stage(); logEv("  %s from %.1f mm, %.2f N, sensor %d", ripe::stageName(evStage_), pos, force, (int)raw); }
       // Sensor sanity. The force should never go strongly negative while we
       // push: if it does, hall_n_per_count has the wrong sign (or the magnet
       // is flipped). One sample well below zero is enough during the fast
@@ -459,6 +482,7 @@ class Machine {
     last.contact = r.contact_pos_mm; last.force_max = r.force_max_n; last.n_points = r.n_points;
     last_measure_millis = millis();
     measured_since_boot = true;
+    logEv("  result: %s, %.2f N/mm, squish %.2f mm, peak %.2f N, touched at %.1f mm", ripe::outcomeName(r.outcome), r.stiffness_n_per_mm, r.squish_at_cap_mm, r.force_max_n, r.contact_pos_mm);
 
     if (bladeCal) {
       if (r.outcome == ripe::Outcome::Reading && r.stiffness_n_per_mm > 0.2f) {

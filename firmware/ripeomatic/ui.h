@@ -177,6 +177,12 @@ details[open] summary::after{content:"–"}
 <p class="kv">▶ moves the sled away from the motor (toward the avocado); if it goes toward the motor, flip <b>motor_invert</b> in Settings. <b>Home</b> drives it back to home. <b>Set home here</b> tells the machine the sled is touching the end stop at the motor end: do it once after building, or again if home ever looks wrong (◀ 5 mm stops at home; ◀ 1 can creep past it to reach the real end stop). Position: <b id="pos">—</b> mm from home, force now: <b id="forcenow">—</b> N.</p>
 <div id="servo" hidden style="margin-top:8px"><button id="btnTip">Open the back gate</button></div>
 </details>
+<details id="d-log">
+<summary>Log</summary>
+<p class="kv">The last 40 things the machine did since it was switched on, newest at the bottom: where each move started and ended, what the sensor read, and why anything stopped. A restart clears it.</p>
+<pre id="evlog" style="white-space:pre-wrap;font-size:13px;line-height:1.5;margin:8px 0;max-height:340px;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px">Open to load.</pre>
+<div class="row"><button id="btnEvRefresh" class="quiet">Refresh</button><button id="btnEvCopy" class="quiet">Copy</button></div>
+</details>
 <details id="d-set">
 <summary>Settings</summary>
 <form class="form" id="settings" autocomplete="off"></form>
@@ -256,6 +262,7 @@ st = await api('/api/status');
 render();
 if (st.last && st.last.time !== lastReadingTime) { lastReadingTime = st.last.time; loadRows(); }
 pollFails = 0;
+if ($('d-log').open) loadEvents();
 } catch (e) {
 // one missed answer is normal (the board is busy saving, or Wi-Fi blinked): only call it offline after three in a row
 if (++pollFails >= 3) { $('pill').textContent = 'offline'; $('pill').className = 'pill off'; $('busybar').hidden = false; $('busybar').className = 'off'; $('busystop').hidden = true; $('busytext').textContent = 'No answer from the machine. Buttons will not work until it is back; the numbers below are the last ones it sent.'; }
@@ -404,6 +411,18 @@ const act = (path, data, okMsg) => async () => { try { await post(path, data); i
 $('btnMeasure').onclick = act('/api/measure', null, 'Measuring…');
 $('btnNew').onclick = async () => { if (!confirm('Start tracking a new avocado? The current one is kept in the log.')) return; act('/api/newfruit', null, 'New avocado. Measuring…')(); };
 $('btnAbort').onclick = act('/api/abort', null, 'Stopping');
+// ---- log ---------------------------------------------------------------------
+async function loadEvents() {
+try {
+const r = await api('/api/events');
+const ago = t => { const d = Math.max(0, r.now - t); return d < 60 ? d + ' s ago' : d < 3600 ? Math.floor(d / 60) + ' min ago' : Math.floor(d / 3600) + ' h ago'; };
+$('evlog').textContent = r.events.length ? r.events.map(e => (e.s.startsWith(' ') ? '            ' : (ago(e.t) + '          ').slice(0, 12)) + e.s).join('\n') : 'Nothing yet since it was switched on.';
+$('evlog').scrollTop = $('evlog').scrollHeight;
+} catch (e) { $('evlog').textContent = 'Could not load the log: ' + e.message; }
+}
+$('d-log').addEventListener('toggle', () => { if ($('d-log').open) loadEvents(); });
+$('btnEvRefresh').onclick = loadEvents;
+$('btnEvCopy').onclick = async () => { try { await navigator.clipboard.writeText($('evlog').textContent); toast('Log copied'); } catch (e) { toast('Select the text and copy it by hand'); } };
 $('busystop').onclick = () => $('btnAbort').onclick();
 // every tap is acknowledged at once with a ring round the button, before the machine has answered
 document.addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return; b.classList.add('tapped'); setTimeout(() => b.classList.remove('tapped'), 700); }, true);

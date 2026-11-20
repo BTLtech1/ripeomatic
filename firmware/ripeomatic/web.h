@@ -83,6 +83,17 @@ class Web {
       if (!M.captureMass(g, &why)) return fail(400, why);
       json(200, String("{\"ok\":true,\"n_per_count\":") + String(S.hall_n_per_count, 6) + "}");
     });
+    server.on("/api/events", HTTP_GET, [this] {
+      String o; o.reserve(4200);
+      o += "{\"now\":"; o += (unsigned long)(millis() / 1000); o += ",\"events\":[";
+      for (int i = 0; i < M.evCount; i++) {
+        const Machine::Ev& e = M.evs[(M.evHead - M.evCount + i + 2 * Machine::EV_N) % Machine::EV_N];
+        if (i) o += ",";
+        o += "{\"t\":"; o += (unsigned long)(e.ms / 1000); o += ",\"s\":\""; jsonEscape(e.text, o); o += "\"}";
+      }
+      o += "]}";
+      json(200, o);
+    });
     server.on("/api/cal/clear", HTTP_POST, [this] { M.clearCalibration(); ok(); });
     // first-run checklist
     server.on("/api/ntfy/new", HTTP_POST, [this] { M.newNtfyTopic(); json(200, String("{\"ok\":true,\"topic\":\"") + S.ntfy_topic + "\"}"); });
