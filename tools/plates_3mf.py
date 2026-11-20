@@ -9,7 +9,8 @@ single file with objects spread ~1 m along X.
 
 Plates sit side by side 200 mm apart in X. Open the file in Bambu Studio and
 each group lands on its own plate (add plates with the + button if it shows
-only one, or press A to arrange). TPU parts are on their own plate.
+only one, or press A to arrange). The optional TPU pad (pad-TPU.stl) and the old
+back-gate parts (gate-*.stl) are not on any plate.
 """
 import sys
 import pathlib
@@ -24,10 +25,12 @@ STRIDE = 200.0
 # plate -> (file, centre x, centre y, rotation about Z in degrees)
 PLATES = {
     1: [("base.stl", 90, 90, 0)],
-    2: [("gate-frame.stl", 55, 90, 0), ("gate-door.stl", 144.5, 90, 0)],
-    3: [("v45/v45-sled.stl", 50, 90, 0), ("v45/v45-lead-screw.stl", 95, 90, 0), ("v45/v45-blade.stl", 125, 90, 0),
-        ("gate-lever.stl", 155, 40, 0), ("gate-link.stl", 155, 140, 90)],
-    4: [("pad-TPU.stl", 90, 90, 0)],
+    # the tipping V-holder (it replaced the back gate's frame, door, lever and link)
+    2: [("tip-frame.stl", 45, 90, 0), ("tip-cradle.stl", 130, 90, 0)],
+    3: [("v45/v45-sled.stl", 50, 90, 0), ("v45/v45-lead-screw.stl", 95, 90, 0), ("v45/v45-blade-stiff.stl", 125, 90, 0),
+        ("sled-wire-clip.stl", 155, 40, 0)],
+    # tools: the calibration cup (one of the two: -stem for the bare stem, the other for the TPU dome pad)
+    4: [("cal-cup-stem.stl", 45, 90, 0), ("cal-cup.stl", 125, 90, 0)],
     # the two electronics boxes (the ESP32 case is BTL's v6 case, printed as supplied)
     5: [("esp32-case/esp32-case-base.stl", 25, 36, 0), ("esp32-case/esp32-case-lid-firm-key.stl", 25, 102, 0),
         ("driver-box.stl", 75, 32, 0), ("driver-box-lid.stl", 75, 88, 0),
@@ -73,7 +76,7 @@ def main():
         sys.exit(1)
     if split:
         out.mkdir(parents=True, exist_ok=True)
-        names = {1: "base", 2: "holder-gate", 3: "sled-screw-blade-lever-link", 4: "TPU-pad", 5: "electronics-boxes"}
+        names = {1: "base", 2: "tipping-holder", 3: "sled-screw-blade-clip", 4: "calibration-cups", 5: "electronics-boxes"}
         for k, sc in scenes.items():
             f = out / f"plate{k}-{names.get(k, k)}.3mf"
             sc.export(f)
