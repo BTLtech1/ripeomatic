@@ -554,9 +554,12 @@ return '<table class="cal" style="margin-top:10px;width:100%;border-collapse:col
 + '<p class="kv" style="margin-top:6px">A good calibration: the last column is about the same on every row. × removes a row (a weight that bottomed the blade out, or one captured while the table shook).</p>' + calVerdict(s).html
 + '<div class="row"><button class="primary" data-act="forcedone">Done: use this calibration</button></div>';
 }
+let stepBusy = false;      // one checklist action at a time: a second tap while the first is still on its way is ignored
 $('steps').addEventListener('click', async ev => {
 const b = ev.target.closest('button[data-act]'); if (!b) return;
+if (stepBusy) return toast('Still working on the last tap…');
 const a = b.dataset.act;
+stepBusy = true; const label = b.textContent; if (a === 'mass' || a === 'zero') { b.disabled = true; b.textContent = 'Capturing…'; }
 try {
 const clr = id => ls.set('redo_' + id, '0');
 if (a === 'redo') { ls.set('redo_' + b.dataset.id, '1'); }
@@ -580,8 +583,9 @@ else if (a === 'forcedone') { ls.set('forceCalDone', '1'); ls.set('forceCalOpen'
 else if (a === 'mass') { const g = parseFloat($('grams').value); if (!(g > 0)) return toast('Type the grams on the pad'); await post('/api/cal/mass', {g}); ls.set('forceCalOpen', '1'); $('grams').value = ''; toast('Captured ' + g + ' g'); }
 else if (a === 'blade') { if (!confirm('Is something hard (a jar, a can) where the avocado goes?')) return; await post('/api/cal/blade'); clr('blade'); toast('Measuring the blade…'); }
 else if (a === 'measure') { await post('/api/measure'); clr('fruit'); toast('Measuring…'); }
-stepsKey = ''; poll();
+stepsKey = ''; await poll();
 } catch (e) { toast(e.message); }
+finally { stepBusy = false; if (b.isConnected && (a === 'mass' || a === 'zero')) { b.disabled = false; b.textContent = label; } }
 });
 async function waitForTest() {
 for (let i = 0; i < 20; i++) {
