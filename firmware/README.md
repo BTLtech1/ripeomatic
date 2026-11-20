@@ -11,7 +11,7 @@ ESP32 firmware for the Ripe-O-Matic. One sketch, no libraries beyond the Arduino
 - **Knows when you swap avocados** (contact position jumps, or the fruit got much stiffer) and starts a new fruit id. Notices when the avocado is gone.
 - **Logs** every reading to a CSV on the ESP32's flash in the shared schema (`docs/data-sharing.md`), downloadable from the page as `/data.csv`.
 - **Alerts** to your phone through [ntfy](https://ntfy.sh) (free, no account) and/or to a **Discord channel** through a webhook: "almost ripe", "ripe", "no avocado". Both are set up from the page's checklist.
-- **Web app** at `http://ripeomatic.local`: verdict, trend chart, last press curve, one-tap rating buttons (the labels that make pooled data useful), calibration wizard, motor jog, all settings, Wi-Fi. Add it to your home screen and it behaves like an app.
+- **Web app** at [http://ripeomatic.local](http://ripeomatic.local): verdict, trend chart, last press curve, one-tap rating buttons (the labels that make pooled data useful), calibration wizard, motor jog, all settings, Wi-Fi. Add it to your home screen and it behaves like an app.
 - **BOOT button**: short press = measure now, hold 2 s = "it was perfect".
 - **Wi-Fi setup** without editing code: the web installer asks for it over USB (Improv); otherwise first boot opens an access point `RipeOMatic-xxxxxx`; join it and pick your network.
 - **Updates over Wi-Fi** from the device's own page (*Wi-Fi & device → Check for updates*) after the first USB flash; Arduino IDE OTA works too.
