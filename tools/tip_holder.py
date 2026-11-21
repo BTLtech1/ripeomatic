@@ -71,7 +71,7 @@ PAD_R, PAD_T = 21.0, 4.2                 # the thick disc inside the end plate t
 HORN_ZONE = 5.6                          # pocket depth: room for horns up to this tall
 # the MG90S's single-arm horn, measured from a photo on a ruled mat: 7 mm hub, 18.3 mm from the shaft's centre to the tip,
 # 5.2 mm wide next to the hub tapering to about 3.8 at the tip. The slot is that plus 0.3 mm a side.
-HORN_TIP, HORN_W0, HORN_W1, HUB_R, HUB_SEAT = 18.9, 2.9, 2.25, 4.6, 3.55
+HORN_TIP, HORN_W0, HORN_W1, HUB_R, HUB_SEAT = 19.3, 3.4, 2.5, 4.6, 3.85   # first print was tight on a real horn (5.7 wide at the hub end, 3.7 at the tip): 0.5 mm a side now
 ARM_DIR = -math.pi / 2                   # the horn's arm points down when the V is at rest
 STOP_S = (0.8, 5.0)                      # the stops carry the floor's underside from 0.8 to 5 mm behind its front tip
 
