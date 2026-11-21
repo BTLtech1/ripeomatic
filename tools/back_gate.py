@@ -449,6 +449,10 @@ def build_base():
     am.vertices = np.column_stack([v[:, 0], v[:, 2] + deck - 0.05, v[:, 1]])
     am.invert()
     b = b + M(am)
+    # the motor plate stopped 2 mm short of the outer faces of its two side blocks, leaving a step:
+    # carry it out to them so each end is one square corner
+    for sz in (-1.0, 1.0):
+        b = b + box3(-38.0, -34.0, deck - 0.2, 36.0, min(sz * 23.9, sz * 26.0), max(sz * 23.9, sz * 26.0))
     return b
 
 
