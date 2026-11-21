@@ -26,7 +26,7 @@ HEADER = ("schema,device_id,fw_version,hw_version,timestamp,fruit_id,variety,fru
 
 settings = {
     "device_id": "a3f9c2", "host": "ripeomatic", "wifi_ssid": "HomeWifi", "ntfy_server": "https://ntfy.sh", "ntfy_topic": "",
-    "notify_nearly": True, "variety": "hass", "auto_enabled": True, "interval_h": 12.0, "steps_per_mm": 2048.0, "motor_invert": False,
+    "notify_nearly": True, "update_check": True, "variety": "hass", "auto_enabled": True, "interval_h": 12.0, "steps_per_mm": 2048.0, "motor_invert": False,
     "fast_mm_s": 0.45, "creep_mm_s": 0.25, "hall_n_per_count": 0.0035, "cal_zero_counts": 2001.0, "cal_points": "",
     "contact_threshold_n": 0.1, "preload_force_n": 0.2, "force_cap_n": 2.5, "blade_k_n_per_mm": 0.0, "sample_step_mm": 0.05,
     "approach_step_mm": 0.5, "safety_margin_mm": 2.0, "max_travel_mm": 42.0, "max_squish_mm": 6.0, "ripe_abs_n_per_mm": 1.5,

@@ -71,6 +71,9 @@ class Machine {
   uint32_t last_measure_millis = 0;
   uint32_t boot_millis = 0;
   bool measured_since_boot = false;
+  uint32_t next_upd_check = 3UL * 60 * 1000;   // millis: first look three minutes after start, then daily
+  bool upd_auto = false;
+  char upd_told[12] = "";                      // the build an alert was last sent about (one alert per build per power-up)
 
   // A notification queued by the loop task (button) to be sent from the job task.
   char pendingTitle[32] = "", pendingMsg[96] = "";
@@ -194,6 +197,9 @@ class Machine {
   void tick() {
     if (busy()) return;
     if (pendingTitle[0]) { start(Job::Notify); return; }
+    // Look for a newer build by itself: the app shows a banner, and a phone alert goes out if alerts are set up.
+    // It only tells you. Installing is always a tap, so the machine never restarts mid-job on its own.
+    if (S.update_check && net.online() && (int32_t)(millis() - next_upd_check) >= 0) { upd_auto = true; start(Job::UpdateCheck); return; }
     if (!S.auto_enabled) return;
     // Never press unattended until the machine has been set up: direction
     // checked, blade and force calibrated. Until then readings are manual.
@@ -354,7 +360,18 @@ class Machine {
       case Job::Home:     home(); stepper.release(); break;
       case Job::Tip:      servo.tip(S.servo_rest_deg, S.servo_tip_deg, S.servo_hold_ms); break;
       case Job::Notify:   net.notify(pendingTitle, pendingMsg, 2, "white_check_mark"); pendingTitle[0] = 0; pendingMsg[0] = 0; break;
-      case Job::UpdateCheck: upd.check(); break;
+      case Job::UpdateCheck: {
+        bool own = upd_auto; upd_auto = false;                           // its own daily look, or a tap on Check for updates
+        bool ok = upd.check();
+        next_upd_check = millis() + (ok ? 24UL : 1UL) * 3600000UL;      // daily; an hour after a failed look
+        if (own && ok && !strcmp(upd.state, "available") && strcmp(upd_told, upd.latestId)) {
+          strlcpy(upd_told, upd.latestId, sizeof upd_told);
+          logEv("update available: %s", upd.latest);
+          char m[120]; snprintf(m, sizeof m, "Build %s is out. Open the app and tap Update now.", upd.latest);
+          queueNotify("Ripe-O-Matic update", m);
+        }
+        break;
+      }
       case Job::Update:
         stepper.release();
         if (upd.run()) { delay(2500); ESP.restart(); }   // let the page see "done" first

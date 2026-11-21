@@ -19,6 +19,7 @@ struct Settings {
   char ntfy_server[64] = "https://ntfy.sh";
   char ntfy_topic[48]  = "";
   bool notify_nearly   = true;
+  bool update_check    = true;         // look for a newer build once a day and say so (never installs by itself)
   bool ntfy_ok         = false;        // an alert (ntfy or Discord) has gone through at least once
   char discord_webhook[160] = "";      // https://discord.com/api/webhooks/<id>/<token>
   // first-run checklist
@@ -72,6 +73,7 @@ inline const FieldDef* settingsFields(int& count) {
     {"ntfy_server",       "ntfy_srv", F_STR,   S.ntfy_server,        sizeof S.ntfy_server, false},
     {"ntfy_topic",        "ntfy_top", F_STR,   S.ntfy_topic,         sizeof S.ntfy_topic,  false},
     {"notify_nearly",     "ntf_near", F_BOOL,  &S.notify_nearly,     0, false},
+    {"update_check",      "upd_chk",  F_BOOL,  &S.update_check,      0, false},
     {"ntfy_ok",           "ntfy_ok",  F_BOOL,  &S.ntfy_ok,           0, false},
     {"discord_webhook",   "discord",  F_STR,   S.discord_webhook,    sizeof S.discord_webhook, true},
     {"motor_checked",     "mot_chk",  F_BOOL,  &S.motor_checked,     0, false},

@@ -48,6 +48,9 @@ button:not(:disabled):active{transform:scale(.97)}
 button.tapped{box-shadow:0 0 0 3px var(--green)}
 #busybar{position:sticky;top:0;z-index:5;margin:0 0 10px;padding:9px 14px;border-radius:12px;background:var(--green-ink);color:#fff;font-size:14px;display:flex;gap:10px;align-items:center}
 #busybar[hidden]{display:none}
+#updbanner{margin:0 0 10px;padding:9px 14px;border-radius:12px;border:1px solid var(--green);font-size:14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#updbanner[hidden]{display:none}
+#updbanner button{flex:0 0 auto;min-height:0;padding:4px 12px;font-size:13px}
 #busybar.off{background:var(--danger)}
 #busybar button{flex:0 0 auto;min-height:0;padding:4px 12px;font-size:13px}
 .rate button{flex:1 1 18%;padding:9px 4px;font-size:14px}
@@ -112,6 +115,7 @@ details[open] summary::after{content:"–"}
 <div><h1>Ripe-O-Matic</h1><div class="sub" id="sub">connecting…</div></div>
 <span class="pill" id="pill">…</span>
 </header>
+<div id="updbanner" hidden><span id="updbannertext" style="flex:1"></span><button id="updbannergo">Update now</button><button id="updbannerx" class="quiet" title="Hide until the next build">Later</button></div>
 <div id="busybar" hidden><span id="busytext" style="flex:1"></span><button id="busystop" hidden>Stop</button></div>
 <div class="card setup" id="setup" hidden>
 <div class="setuphead"><h2 style="margin:0">Set up <span id="setupcount"></span></h2><button class="quiet" id="setupHide" style="padding:4px 8px;min-height:0">hide</button></div>
@@ -363,9 +367,16 @@ done: 'Installed. Restarting…',
 failed: 'That didn\'t work: ' + (s.upd_error || 'unknown error') + '. Nothing was changed; try again, or use the USB installer.',
 }[st] || '';
 if (st === 'downloading' || st === 'done') updating = true;
+// the machine looks for a newer build once a day: say so at the top of the page, wherever you are on it
+let later = ''; try { later = localStorage.getItem('upd_later') || ''; } catch (e) {}
+$('updbanner').hidden = !(st === 'available' && s.upd_latest !== later);
+$('updbannertext').textContent = 'An update is ready: ' + s.upd_latest + '. It takes about a minute and keeps your settings, calibration and readings.';
+$('updbannergo').disabled = busy || !s.online;
 }
 let updTapped = 0;
 $('btnUpdCheck').onclick = () => { updTapped = Date.now(); if (st) render(); act('/api/update/check', null, 'Checking for updates…')(); };
+$('updbannergo').onclick = () => $('btnUpd').onclick();
+$('updbannerx').onclick = () => { try { localStorage.setItem('upd_later', st.upd_latest || ''); } catch (e) {} $('updbanner').hidden = true; };
 $('btnUpd').onclick = async () => { if (!confirm('Install the newer firmware now? The machine restarts when it\'s done.')) return; updating = true; act('/api/update/run', null, 'Updating…')(); };
 const hms = s => s == null ? '' : s >= 86400 ? Math.floor(s / 86400) + 'd ' + Math.floor(s % 86400 / 3600) + 'h' : s >= 3600 ? Math.floor(s / 3600) + 'h ' + Math.floor(s % 3600 / 60) + 'm' : Math.floor(s / 60) + 'm';
 // ---- charts ---------------------------------------------------------------
@@ -653,6 +664,7 @@ const FIELDS = [
 ['Notifications', null],
 ['ntfy_topic', 'ntfy topic', 'Pick any unguessable name, subscribe to it in the ntfy app (free, Android/iOS), and the device pushes "ripe" to your phone.'],
 ['ntfy_server', 'ntfy server'], ['notify_nearly', 'Also notify when almost ripe', 'bool'],
+['update_check', 'Look for firmware updates once a day and tell me (never installs by itself)', 'bool'],
 ['Discord', null],
 ['discord_note', 'The Discord webhook is set in the setup checklist (Show the setup checklist, below). Alerts go to every channel that is set.', 'note'],
 ['Schedule', null],
