@@ -285,7 +285,7 @@ async function poll() {
 function render() {
   const s = st, f = s.fruit || {}, busy = s.job !== 'idle';
   $('sub').textContent = (s.ap_mode ? 'setup mode: ' + s.ap_ssid : 'http://' + s.host + '.local') + (s.time ? '' : ' · clock not set');
-  $('pill').textContent = busy ? (s.job === 'measure' ? 'measuring: ' + s.stage : ({updcheck: 'checking for updates', update: 'updating firmware'}[s.job] || s.job)) : (s.next_auto_s > 0 ? 'next in ' + hms(s.next_auto_s) : (s.simulate ? 'simulation · idle' : 'idle'));
+  $('pill').textContent = busy ? (s.job === 'measure' ? 'measuring: ' + s.stage : ({updcheck: 'checking for updates', update: 'updating firmware'}[s.job] || s.job)) : (s.next_auto_s > 0 ? (s.next_auto_s < 60 ? 'next reading in under a minute' : 'next in ' + hms(s.next_auto_s)) : (s.simulate ? 'simulation · idle' : 'idle'));
   $('pill').className = 'pill' + (busy ? ' busy' : '');
   // say WHY buttons are greyed out: the machine does one thing at a time
   const jobName = {measure: 'taking a reading', bladecal: 'measuring the blade', jog: 'moving the sled', home: 'sending the sled home', tip: 'opening the gate', notify: 'sending a test alert', updcheck: 'checking for updates', update: 'installing an update', sensor: 'running the sensor test'}[s.job] || s.job;
