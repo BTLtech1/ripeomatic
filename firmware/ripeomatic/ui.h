@@ -308,6 +308,11 @@ if (f.elapsed_days != null) meta.push('<span>day <b>' + (Math.floor(f.elapsed_da
 if (f.days_to_ripe > 0) meta.push('<span>ripe in about <b>' + (f.days_to_ripe < 1 ? 'a day' : Math.round(f.days_to_ripe) + ' days') + '</b></span>');
 else if (f.days_to_ripe === 0) meta.push('<span><b>ripe</b></span>');
 meta.push('<span>' + f.n + ' reading' + (f.n === 1 ? '' : 's') + '</span>');
+{ // when the last press was: the newest row with a number, by the clock if the board has the time
+const lr = rows.filter(r => r.stiffness_n_per_mm !== '').pop(), t = lr ? Date.parse(lr.timestamp) : NaN;
+if (!isNaN(t)) { const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+const ago = m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 2880 ? Math.floor(m / 60) + ' h ' + (m % 60) + ' min ago' : Math.floor(m / 1440) + ' days ago';
+meta.push('<span title="' + esc(new Date(t).toLocaleString()) + '">last press <b>' + ago + '</b></span>'); } }
 if (f.rating) meta.push('<span>you said: <b>' + esc(f.rating) + '</b></span>');
 }
 $('meta').innerHTML = meta.join('');
