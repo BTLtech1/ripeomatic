@@ -92,7 +92,7 @@ ripeomatic/
 
 ## Data wanted!
 
-The most useful thing anyone can contribute is **readings from real avocados**, and above all the tap that says it was *perfect* to eat. Download the CSV from your device's page and open a pull request into `data/contrib/<device id>/`; CI checks the format. See [`data/README.md`](data/README.md).
+The most useful thing anyone can contribute is **readings from real avocados**, and above all the tap that says it was *perfect* to eat. Download the CSV from your device's page and attach it to a [Share my readings](https://github.com/BTLtech1/ripeomatic/issues/new?template=share-readings.md) issue (or open a pull request into `data/contrib/<device id>/`; CI checks the format). See [`data/README.md`](data/README.md).
 
 ## Planned: tipping nest (v2)
 

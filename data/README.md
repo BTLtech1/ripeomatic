@@ -4,6 +4,10 @@ Readings from real avocados. This is how a good ripeness threshold gets found, s
 
 ## Contributing readings
 
+**The easy way:** on your device's page tap **Download CSV**, then open [Share my readings](https://github.com/BTLtech1/ripeomatic/issues/new?template=share-readings.md), drag the file into the box and submit. A maintainer files it into `contrib/` for you. The app has the same three steps under **Share your readings**.
+
+**Or by pull request,** if you know your way round GitHub:
+
 1. On your device's page, **Download CSV** (that's `/data.csv?fruit=all&old=1`).
 2. Put the file in `contrib/<your device id>/` (the id is on the page footer, e.g. `a3f9c2`). Any file name ending in `.csv`; one file per download is fine, duplicates are dropped on merge.
 3. Open a pull request. The `data` workflow validates the file (schema v1 header, ids, timestamps, vocabularies) and says exactly what's wrong if anything is. Once merged, `all.csv` is rebuilt automatically.
