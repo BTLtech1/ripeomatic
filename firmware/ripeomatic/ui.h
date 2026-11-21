@@ -372,24 +372,47 @@ const pts = rows.filter(r => r.stiffness_n_per_mm !== '' && !isNaN(parseFloat(r.
 const ratings = rows.filter(r => r.stiffness_n_per_mm === '' && r.human_rating).map(r => ({t: Date.parse(r.timestamp) || null, r: r.human_rating}));
 let h = '';
 if (pts.length < 1) { svg.innerHTML = '<text x="200" y="115" text-anchor="middle">No readings for this avocado yet</text>'; $('chartnote').textContent = ''; return; }
-const t0 = pts[0].t || 0, hasT = pts.every(q => q.t);
-const xs = pts.map((q, i) => hasT ? (q.t - t0) / 86400000 : i);
-const xmax = Math.max(hasT ? 1 : 1, ...xs) * 1.05;
+// The whole life of this avocado in one picture: every reading gets its own dot.
+// Time axis when the readings span an hour or more, otherwise evenly spaced in order (a burst of test presses).
+const t0 = pts[0].t || 0, hasT = pts.every(q => q.t), span = hasT ? pts[pts.length - 1].t - t0 : 0;
+const byTime = hasT && span >= 3600000, unit = span >= 2 * 86400000 ? 86400000 : 3600000;
+const xs = pts.map((q, i) => byTime ? (q.t - t0) / unit : i);
+const xmax = Math.max(byTime ? xs[xs.length - 1] : pts.length - 1, 1);
 const thr = st && st.fruit && st.fruit.threshold > 0 ? st.fruit.threshold : 0;
 const isHard = k => k >= 29.9 || k <= 0;                    // "too stiff to measure" (and old rows with a nonsense slope)
+const anyHard = pts.some(q => isHard(q.k));
 const ymax = Math.max(...pts.filter(q => !isHard(q.k)).map(q => q.k), thr * 1.6, 1) * 1.15;
-pts.forEach(q => { q.hard = isHard(q.k); q.k = q.hard ? ymax : q.k; });
-const a = axes(W, H, p);
-for (let i = 0; i <= 4; i++) { const yv = ymax * i / 4, y = a.y(i / 4); h += `<line class="grid" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${p.l - 6}" y="${y + 4}" text-anchor="end">${yv.toFixed(1)}</text>`; }
-const xt = hasT ? Math.max(1, Math.ceil(xmax / 6)) : 1;
-for (let xv = 0; xv <= xmax; xv += xt) { const x = a.x(xv / xmax); h += `<text x="${x}" y="${H - 10}" text-anchor="middle">${hasT ? 'day ' + (xv + 1) : '#' + (xv + 1)}</text>`; }
-if (thr) { const y = a.y(thr / ymax); h += `<line class="thr" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${W - p.r}" y="${y - 4}" text-anchor="end">ripe below ${thr.toFixed(2)}</text>`; }
-const path = pts.map((q, i) => (i ? 'L' : 'M') + a.x(xs[i] / xmax).toFixed(1) + ' ' + a.y(q.k / ymax).toFixed(1)).join(' ');
+// "hard" has no number, so it gets its own row above the scale; the numbered part uses the rest
+const top = anyHard ? 0.8 : 1;
+pts.forEach(q => { q.hard = isHard(q.k); q.yf = q.hard ? 1 : q.k / ymax * top; });
+const a = axes(W, H, p), X = v => a.x(0.04 + 0.92 * v / xmax);
+for (let i = 0; i <= 4; i++) { const yv = ymax * i / 4, y = a.y(i / 4 * top); h += `<line class="grid" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${p.l - 6}" y="${y + 4}" text-anchor="end">${yv.toFixed(1)}</text>`; }
+if (anyHard) { const y = a.y(1); h += `<line class="grid" stroke-dasharray="2 4" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${p.l - 6}" y="${y + 4}" text-anchor="end">hard</text>`; }
+if (byTime) {
+const step = [1, 2, 3, 6, 12, 24].find(v => xmax / v <= 6) || Math.ceil(xmax / 6);
+for (let xv = 0; xv <= xmax + 1e-6; xv += step) h += `<text x="${X(xv)}" y="${H - 10}" text-anchor="middle">${unit === 86400000 ? 'day ' + (xv + 1) : xv + ' h'}</text>`;
+} else {
+const step = Math.max(1, Math.ceil(pts.length / 8));
+for (let i = 0; i < pts.length; i += step) h += `<text x="${X(i)}" y="${H - 10}" text-anchor="middle">#${i + 1}</text>`;
+}
+if (thr) { const y = a.y(thr / ymax * top); h += `<line class="thr" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${p.l + 4}" y="${y + 13}" text-anchor="start">ripe below ${thr.toFixed(2)}</text>`; }
+const path = pts.map((q, i) => (i ? 'L' : 'M') + X(xs[i]).toFixed(1) + ' ' + a.y(q.yf).toFixed(1)).join(' ');
 h += `<path class="ln" d="${path}"/>`;
-pts.forEach((q, i) => h += `<circle class="pt" cx="${a.x(xs[i] / xmax).toFixed(1)}" cy="${a.y(q.k / ymax).toFixed(1)}" r="4"${q.hard ? ' style="fill:none;stroke-width:2"' : ''}><title>${q.hard ? 'too stiff to measure' : q.k.toFixed(2) + ' N/mm'}</title></circle>`);
-ratings.forEach(q => { if (!hasT || !q.t) return; const x = a.x(((q.t - t0) / 86400000) / xmax); h += `<line class="thr" x1="${x}" x2="${x}" y1="${p.t}" y2="${H - p.b}"/><text x="${x + 3}" y="${p.t + 10}">${esc(q.r)}</text>`; });
+const last = pts.length - 1;
+pts.forEach((q, i) => h += `<circle class="pt" cx="${X(xs[i]).toFixed(1)}" cy="${a.y(q.yf).toFixed(1)}" r="${i === last ? 6 : 4.5}" style="${q.hard ? 'fill:var(--card);stroke:var(--green);stroke-width:2.5' : 'stroke:var(--card);stroke-width:1.5'}"><title>${q.hard ? 'too stiff to measure' : q.k.toFixed(2) + ' N/mm'}</title></circle>`);
+// the newest reading carries its number
+{ const q = pts[last], x = X(xs[last]), y = a.y(q.yf);
+h += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="10" style="fill:none;stroke:var(--green);stroke-opacity:.35;stroke-width:2"/>`;
+h += `<text x="${(x > W - 70 ? x - 14 : x + 14).toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="${x > W - 70 ? 'end' : 'start'}" style="fill:var(--green);font-size:14px;font-weight:700">${q.hard ? 'hard' : q.k.toFixed(2)}</text>`; }
+// thumb ratings: a small label under the reading nearest in time, so it never covers a dot
+ratings.forEach(q => {
+let j = pts.length - 1;
+if (hasT && q.t) { j = 0; pts.forEach((r, i) => { if (Math.abs(r.t - q.t) < Math.abs(pts[j].t - q.t)) j = i; }); }
+const x = X(xs[j]), y = a.y(pts[j].yf), below = y < H - p.b - 24;
+h += `<text x="${x}" y="${below ? y + 16 : y - 9}" text-anchor="${x < 80 ? 'start' : x > W - 60 ? 'end' : 'middle'}" style="fill:var(--ripe)">${esc(q.r)}</text>`;
+});
 svg.innerHTML = h;
-$('chartnote').textContent = 'Stiffness (N/mm) of the current avocado over time. ' + (pts.some(q => q.hard) ? 'Hollow dots at the top: too stiff to measure. ' : '') + (thr ? 'Dashed line: the ripe threshold, a placeholder until there is pooled data.' : 'No ripe threshold set.');
+$('chartnote').textContent = 'Stiffness (N/mm) of the current avocado, every reading since it went in' + (byTime ? '' : ', in order') + '. ' + (anyHard ? 'Dots on the "hard" row were too stiff to put a number on. ' : '') + (thr ? 'Dashed line: the ripe threshold, a placeholder until there is pooled data.' : 'No ripe threshold set.');
 }
 let liveCache = null;
 async function drawCurve(live) {
