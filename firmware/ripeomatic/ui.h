@@ -667,7 +667,7 @@ try { await post('/api/jog', {mm, past: 1}); poll(); } catch (e2) { toast(e2.mes
 }
 }
 document.querySelectorAll('[data-jog]').forEach(b => b.onclick = () => jogBtn(b.dataset.jog));
-document.querySelectorAll('#rate button').forEach(b => b.onclick = act('/api/rate', {r: b.dataset.r, cut: $('cut').value}, 'Thanks, logged'));
+document.querySelectorAll('#rate button').forEach(b => b.onclick = act('/api/rate', {r: b.dataset.r, cut: $('cut').value}, 'Saved on this machine'));
 // ---- settings form ----------------------------------------------------------
 const FIELDS = [
 ['Notifications', null],
