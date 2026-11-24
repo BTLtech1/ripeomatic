@@ -162,6 +162,14 @@ details[open] summary::after{content:"–"}
 <p class="kv" style="margin:6px 0 0">The file holds numbers only: a random machine id, times and measurements. No name, location or Wi-Fi details. It becomes part of the project's public data.</p>
 </details>
 </div>
+<div class="card" id="fwbox">
+<div class="row" style="align-items:center;gap:10px;flex-wrap:wrap">
+<p class="kv" id="fwinfo" style="margin:0;flex:1 1 220px"></p>
+<button id="btnUpdCheck" class="quiet" style="flex:0 0 auto">Check for updates</button><button id="btnUpd" class="primary" hidden style="flex:0 0 auto">Update now</button>
+</div>
+<div class="bar" id="updbarw" hidden><i id="updbar"></i></div>
+<p id="updmsg" class="kv" style="margin:6px 0 0"></p>
+</div>
 <div class="card" id="panels">
 <details id="d-cal">
 <summary>Calibration</summary>
@@ -209,13 +217,6 @@ details[open] summary::after{content:"–"}
 <div class="full"><label>Its password</label><input id="pass" type="password" placeholder="leave blank to keep the saved one"></div>
 <div class="full row"><button id="btnWifi" class="primary">Switch network &amp; reboot</button><button id="btnScan" class="quiet">Rescan</button></div>
 <div class="hint" id="devinfo"></div>
-<div class="full" id="fwbox">
-<label>Firmware</label>
-<p class="kv" id="fwinfo" style="margin:2px 0 8px"></p>
-<div class="row"><button id="btnUpdCheck" class="quiet">Check for updates</button><button id="btnUpd" class="primary" hidden>Update now</button></div>
-<div class="bar" id="updbarw" hidden><i id="updbar"></i></div>
-<p id="updmsg" class="kv" style="margin-top:6px"></p>
-</div>
 <div class="full row">
 <button id="btnSetupShow2" class="quiet">Show setup checklist</button>
 <button id="btnReboot" class="quiet">Reboot</button>
@@ -356,7 +357,7 @@ renderUpdate(s, busy);
 let updating = false;
 function renderUpdate(s, busy) {
 if (updating && s.uptime_s < 90 && s.job === 'idle') { updating = false; toast('Updated. Reloading…'); setTimeout(() => location.reload(), 1200); return; }
-$('fwinfo').textContent = 'version ' + s.fw + ' · build ' + (s.fw_build || '?') + (s.last_start ? ' · running for ' + hms(s.uptime_s) + ' · last start: ' + s.last_start : '');
+$('fwinfo').textContent = 'Firmware ' + s.fw + ' · build ' + (s.fw_build || '?') + (s.last_start ? ' · running for ' + hms(s.uptime_s) + ' · last start: ' + s.last_start : '');
 let st = s.upd_state || ''; const m = $('updmsg');
 // the check takes about 10 s: say so from the moment the button is tapped, not when the answer arrives
 const checkingNow = s.job === 'updcheck' || st === 'checking' || (updTapped && Date.now() - updTapped < 4000);
