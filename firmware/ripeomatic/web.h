@@ -211,7 +211,8 @@ class Web {
     if (days >= 0) addNum(o, "elapsed_days", days, 2);
     float thr = M.thresholdNow();
     addNum(o, "threshold", thr, 3);
-    addStr(o, "verdict", ripe::verdictName(FR.loaded ? ripe::judge(FR.last_k, FR.first_k, S.t) : ripe::Verdict::Unknown));
+    addStr(o, "verdict", ripe::verdictName(FR.loaded ? M.verdictNow() : ripe::Verdict::Unknown));
+    addBool(o, "own_line", FR.thr_override > 0);
     addNum(o, "days_to_ripe", FR.loaded ? ripe::daysToRipe(FR.first_k, FR.last_k, days, thr) : -1, 1);
     addStr(o, "rating", FR.last_rating);
     addBool(o, "ripe_notified", FR.notified_ripe);

@@ -216,8 +216,10 @@ class Machine {
   float intervalHours() const {
     float h = S.interval_h;
     if (FR.loaded && FR.last_k > 0) {
-      ripe::Verdict v = ripe::judge(FR.last_k, FR.first_k, S.t);
+      ripe::Verdict v = verdictNow();
       if (v == ripe::Verdict::Nearly) h = h / 2;
+      // you said "not ripe yet" while it was close: watch it closely, at least every 3 hours
+      if (FR.thr_override > 0 && v != ripe::Verdict::Ripe && h > 3.0f) h = 3.0f;
     }
     return h < 0.25f ? 0.25f : h;
   }
@@ -229,7 +231,16 @@ class Machine {
     return d < 0 ? 0 : d;
   }
 
+  // The ripe judgement, with this avocado's own line if your ratings set one.
+  ripe::Tunables tunablesNow() const {
+    ripe::Tunables t = S.t;
+    if (FR.thr_override > 0) { t.ripe_abs_n_per_mm = FR.thr_override; t.ripe_pct_of_first = 0; }
+    return t;
+  }
+  ripe::Verdict verdictNow() const { return ripe::judge(FR.last_k, FR.first_k, tunablesNow()); }
+
   float thresholdNow() const {
+    if (FR.thr_override > 0) return FR.thr_override;
     float thr = S.t.ripe_abs_n_per_mm > 0 ? S.t.ripe_abs_n_per_mm : 0;
     if (S.t.ripe_pct_of_first > 0 && FR.first_k > 0 && FR.first_k < ripe::K_HARD * 0.99f) {
       float rel = FR.first_k * S.t.ripe_pct_of_first / 100.0f;
@@ -253,6 +264,22 @@ class Machine {
     ripe::RowMeta m{S.device_id, ts, fid, S.variety, 0, NAN, "", rating, cut ? cut : "", notes ? notes : ""};
     ripe::formatEventRow(m, row, sizeof row);
     strlcpy(FR.last_rating, rating, sizeof FR.last_rating);
+    // Your thumb outranks the placeholder ripe line, for this avocado:
+    //  "hard"/"firm" while it reads ripe or nearly -> move the line below the latest reading, so it reads
+    //    "nearly ripe" and gets checked every 3 hours, and the ripe alert can go off again later;
+    //  "ready"/"perfect"/"overripe" while it reads not ripe -> move the line just above the latest reading.
+    if (FR.loaded && FR.last_k > 0 && FR.last_k < ripe::K_HARD * 0.99f) {
+      ripe::Verdict v = verdictNow();
+      bool notYet = !strcmp(rating, "hard") || !strcmp(rating, "firm");
+      if (notYet && (v == ripe::Verdict::Ripe || v == ripe::Verdict::Nearly)) {
+        FR.thr_override = FR.last_k * 0.85f;
+        FR.notified_ripe = false;
+        logEv("you said %s at %.2f N/mm: ripe line for this avocado now %.2f, checking every 3 h", rating, FR.last_k, FR.thr_override);
+      } else if (!notYet && v != ripe::Verdict::Ripe) {
+        FR.thr_override = FR.last_k * 1.05f;
+        logEv("you said %s at %.2f N/mm: ripe line for this avocado now %.2f", rating, FR.last_k, FR.thr_override);
+      }
+    }
     fruitSave();
     return store.appendRow(row);
   }
@@ -593,7 +620,7 @@ class Machine {
     Serial.println(row);
 
     // Verdict + notifications (once per fruit each).
-    ripe::Verdict v = ripe::judge(FR.last_k, FR.first_k, S.t);
+    ripe::Verdict v = verdictNow();
     char msg[160];
     if (v == ripe::Verdict::Ripe && !FR.notified_ripe) {
       snprintf(msg, sizeof msg, "Stiffness %.2f N/mm (%.0f%% of day 1). Eat it today or fridge it.", FR.last_k, FR.first_k > 0 ? 100 * FR.last_k / FR.first_k : 0);

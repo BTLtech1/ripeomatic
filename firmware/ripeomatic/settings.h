@@ -212,6 +212,7 @@ struct FruitState {
   bool     notified_nearly = false;
   bool     notified_ripe = false;
   char     last_rating[12] = "";
+  float    thr_override = 0;      // ripe line for this avocado from your ratings (0 = use the settings)
 };
 
 extern FruitState FR;
@@ -229,6 +230,7 @@ inline void fruitLoad() {
   FR.notified_nearly = p.getBool("nn", false);
   FR.notified_ripe = p.getBool("nr", false);
   p.getString("rating", FR.last_rating, sizeof FR.last_rating);
+  FR.thr_override = p.getFloat("tov", 0);
   p.end();
 }
 
@@ -245,6 +247,7 @@ inline void fruitSave() {
   p.putBool("nn", FR.notified_nearly);
   p.putBool("nr", FR.notified_ripe);
   p.putString("rating", FR.last_rating);
+  p.putFloat("tov", FR.thr_override);
   p.end();
 }
 

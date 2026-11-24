@@ -314,6 +314,7 @@ function render() {
   if (!f.loaded && !busy) { verdict = 'unknown'; msg = s.last && s.last.outcome === 'empty' ? 'No avocado in the machine. Put one in and tap Measure now.' : (s.simulate ? 'Simulation: a virtual avocado is in the machine. Tap Measure now to press it.' : 'No reading yet. Put an avocado in and tap Measure now.'); }
   else if (f.n === 1) msg = 'First reading taken. The trend starts with the next one.';
   else if (verdict === 'ripe') msg = 'Eat it today or move it to the fridge.';
+  else if (verdict === 'nearly' && f.own_line) msg = 'You said it is not ripe yet, so the ripe line for this avocado moved below its last reading. Checking every 3 hours.';
   else if (verdict === 'nearly') msg = 'Probably ready tomorrow. Checking more often now.';
   else if (verdict === 'hard' && f.n > 1) msg = 'Not softening yet.';
   if (s.last && s.last.outcome === 'overtravel') msg = 'Last press never reached the force cap: very soft fruit, or check the sensor.';
