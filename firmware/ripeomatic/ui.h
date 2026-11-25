@@ -298,13 +298,14 @@ $('ver').textContent = 'fw ' + s.fw + ' · ' + s.hw + ' · id ' + s.device_id;
 renderSetup(s);
 $('servo').hidden = !s.servo;
 const v = $('verdict');
-const names = {unknown: '—', hard: 'Hard', firming: 'Softening', nearly: 'Almost ripe', ripe: 'Ripe!'};
+const names = {unknown: '—', hard: 'Hard', firming: 'Starting to soften', nearly: 'Almost ripe', ripe: 'Ripe!'};
 let verdict = f.verdict || 'unknown', msg = '';
 if (!f.loaded && !busy) { verdict = 'unknown'; msg = s.last && s.last.outcome === 'empty' ? 'No avocado in the machine. Put one in and tap Measure now.' : (s.simulate ? 'Simulation: a virtual avocado is in the machine. Tap Measure now to press it.' : 'No reading yet. Put an avocado in and tap Measure now.'); }
 else if (f.n === 1) msg = 'First reading taken. The trend starts with the next one.';
 else if (verdict === 'ripe') msg = 'Eat it today or move it to the fridge.';
 else if (verdict === 'nearly' && f.own_line) msg = 'You said it is not ripe yet, so the ripe line for this avocado moved below its last reading. Checking every 3 hours.';
 else if (verdict === 'nearly') msg = 'Probably ready tomorrow. Checking more often now.';
+else if (verdict === 'firming') msg = 'The surface has started to give. It is usually ready within about a day: check it by thumb. Checking more often now.';
 else if (verdict === 'hard' && f.n > 1) msg = 'Not softening yet.';
 if (s.last && s.last.outcome === 'overtravel') msg = 'Last press never reached the force cap: very soft fruit, or check the sensor.';
 if (s.last && s.last.outcome === 'aborted') msg = 'Last press was stopped: ' + (s.error || 'aborted') + '.' + (/bottomed/.test(s.error || '') ? ' The sensor ran out of range before the press reached full force. Check the blade can move freely, then redo the force and blade calibrations; if it keeps happening, lower Force cap in Settings.' : '');
@@ -347,7 +348,7 @@ if (tab === 'curve') drawCurve(true);
 $('pos').textContent = fmt(s.pos_mm, 2); $('forcenow').textContent = fmt(s.force_n, 3);
 const rawEl = $('raw'); if (rawEl) rawEl.textContent = s.raw != null ? Math.round(s.raw) : '—';
 $('calpoints').innerHTML = calTable(s, true);
-$('calstate').innerHTML = 'blade_k: <b>' + (s.blade_calibrated ? fmt(s.blade_k) + ' N/mm' : 'not measured') + '</b> · force: <b>' + (s.calibrated ? fmt(s.n_per_count * 1000, 3) + ' mN/count, ' + s.cal_points_n + ' point' + (s.cal_points_n === 1 ? '' : 's') : 'not calibrated') + '</b>';
+$('calstate').innerHTML = 'blade_k: <b>' + (s.blade_calibrated ? fmt(s.blade_k) + ' N/mm' + (s.blade_curve >= 2 ? ', curve saved' : ', <span style="color:var(--ripe)">no curve yet: redo the hard-object step once</span>') : 'not measured') + '</b> · force: <b>' + (s.calibrated ? fmt(s.n_per_count * 1000, 3) + ' mN/count, ' + s.cal_points_n + ' point' + (s.cal_points_n === 1 ? '' : 's') : 'not calibrated') + '</b>';
 $('wifinow').textContent = s.ap_mode ? 'Not on a Wi-Fi network yet: pick yours below.' : 'Connected to ' + (settings && settings.wifi_ssid ? settings.wifi_ssid : 'your Wi-Fi') + '. Only change this if the router or password changes, or the machine moves house.';
 $('devinfo').textContent = 'id ' + s.device_id + ' · ' + (s.ip || '') + (s.rssi ? ' · ' + s.rssi + ' dBm' : '') + ' · log ' + Math.round((s.log_bytes || 0) / 1024) + ' kB · free ' + Math.round((s.fs_free || 0) / 1024) + ' kB · up ' + hms(s.uptime_s);
 document.querySelectorAll('#rate button').forEach(b => b.classList.toggle('on', b.dataset.r === f.rating));
@@ -569,7 +570,7 @@ else body = `<p><b>Set home.</b> The machine counts every step from here, so it 
 if (st.done) body = `<p><b>Force calibration</b> · ${s.cal_points_n} point${s.cal_points_n === 1 ? '' : 's'}${calVerdict(s).short}</p><div class="row"><button class="quiet" data-act="forceredo">Show the points / add more</button></div>`;
 else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<div class="row" style="margin-bottom:8px"><button class="quiet" data-act="sensortest">Test the sensor first</button></div><p>1 · Stand the machine on its motor end so the pad points at the ceiling. Put the printed calibration cup (<code>cal-cup.stl</code>) on the pad, empty, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cup (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Any known weight up to 250 g works. Two or three different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${calTable(s)}`;
 } else if (st.id === 'blade') {
-if (st.done) body = `<p><b>Blade calibration</b> · ${fmt(s.blade_k)} N/mm</p><p class="kv">Redo it after any new force calibration, and whenever the holder changes.</p>`;
+if (st.done) body = `<p><b>Blade calibration</b> · ${fmt(s.blade_k)} N/mm</p><p class="kv">Redo it after any new force calibration, after changing the force cap, and whenever the holder changes.</p>`;
 else body = `<p><b>Blade calibration</b> measures the machine's own flex so it can be subtracted from every reading.</p>${s.simulate ? '<p class="kv">Simulation: tap it and watch the status pill; a pretend press runs in about ten seconds.</p>' : ''}<p>Stand the machine back up. Put something hard where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade</button></div>`;
 } else if (st.id === 'fruit') {
 if (st.done) body = `<p><b>First avocado</b> · measured</p>`;

@@ -195,6 +195,7 @@ class Web {
     addBool(o, "online", M.net.online());
     addInt(o, "fruit_count", FR.counter);
     addNum(o, "blade_k", S.t.blade_k_n_per_mm, 2);
+    addInt(o, "blade_curve", S.t.bend_n);
     addBool(o, "servo", ENABLE_SERVO && S.gate_fitted);
     addInt(o, "log_bytes", M.store.logSize()); addInt(o, "fs_free", M.store.freeBytes());
     addInt(o, "next_auto_s", M.secondsToNextAuto());

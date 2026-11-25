@@ -19,5 +19,7 @@ class Preferences {
   size_t putUInt(const char*, uint32_t) { return 4; }
   size_t putUShort(const char*, uint16_t) { return 2; }
   size_t putString(const char*, const char*) { return 1; }
+  size_t putBytes(const char*, const void*, size_t len) { return len; }
+  size_t getBytes(const char*, void*, size_t) { return 0; }
   size_t putString(const char*, const String&) { return 1; }
 };

@@ -124,6 +124,15 @@ inline void settingsLoad() {
       case F_STR:   p.getString(f[i].key, (char*)f[i].ptr, f[i].len); break;
     }
   }
+  // the jar curve (not a web-form field): count, then the two arrays
+  S.t.bend_n = 0;
+  if (p.isKey("bend_n")) {
+    int bn = p.getInt("bend_n", 0);
+    if (bn >= 2 && bn <= ripe::Tunables::BEND_N
+        && p.getBytes("bend_f", S.t.bend_f, sizeof S.t.bend_f) == sizeof S.t.bend_f
+        && p.getBytes("bend_mm", S.t.bend_mm, sizeof S.t.bend_mm) == sizeof S.t.bend_mm) S.t.bend_n = bn;
+  }
+  if (S.t.blade_k_n_per_mm <= 0.01f) S.t.bend_n = 0;
   p.end();
   if (S.device_id[0] == 0) {
     uint32_t r = esp_random();
@@ -144,6 +153,10 @@ inline void settingsSave() {
       case F_STR:   p.putString(f[i].key, (const char*)f[i].ptr); break;
     }
   }
+  if (S.t.blade_k_n_per_mm <= 0.01f) S.t.bend_n = 0;     // blade number cleared (also from the settings form): the curve goes with it
+  p.putInt("bend_n", S.t.bend_n);
+  p.putBytes("bend_f", S.t.bend_f, sizeof S.t.bend_f);
+  p.putBytes("bend_mm", S.t.bend_mm, sizeof S.t.bend_mm);
   p.end();
 }
 

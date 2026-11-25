@@ -208,6 +208,55 @@ int main() {
     csvField("say \"hi\"", f, sizeof f); CHECK(strcmp(f, "\"say \"\"hi\"\"\"") == 0);
   }
 
+  // ---- the machine's give as a curve (a blade that stiffens as it bends), and a fruit that gives in a step
+  {
+    // machine: travel = F/0.6 - 0.25*F^2 past contact (stiffer at higher force), inverted by bisection
+    struct Sim2 {
+      float fruit_pos; int mode;   // 0 rigid jar, 1 surface gives 0.4 mm at 0.3 N then holds, 2 spring 2 N/mm
+      static float mach(float f) { return f / 0.6f - 0.25f * f * f; }
+      float fruit(float f) const { if (mode == 0) return 0; if (mode == 2) return f / 2.0f; return f < 0.25f ? 0 : f < 0.35f ? (f - 0.25f) * 4.0f : 0.4f; }
+      float force(float pos) const {
+        float pen = pos - fruit_pos; if (pen <= 0) return 0;
+        float lo = 0, hi = 1.6f;
+        for (int i = 0; i < 40; i++) { float m = (lo + hi) / 2; if (mach(m) + fruit(m) < pen) lo = m; else hi = m; }
+        return (lo + hi) / 2;
+      }
+    };
+    auto run2 = [](Sim2& sim, const Tunables& t) {
+      MeasureCore core; core.start(t, 0); float pos = 0; int guard = 0;
+      while (true) { auto c = core.feed(pos, sim.force(pos)); if (c.kind == MeasureCore::Cmd::Stop) break; pos += c.mm; if (++guard > 9000) { failures++; break; } }
+      return core.reading();
+    };
+    Tunables t; t.force_cap_n = 0.8f; t.blade_k_n_per_mm = 0;
+    Sim2 jar{20.0f, 0};
+    Reading rj = run2(jar, t);
+    CHECK(rj.outcome == Outcome::Reading);
+    Tunables tc = t; tc.blade_k_n_per_mm = rj.stiffness_n_per_mm;
+    CHECK(buildBendTable(rj, tc));
+    CHECK(tc.bend_n >= 3);
+    // the jar itself, corrected by its own curve: no give, reads hard
+    Reading rj2 = run2(jar, tc);
+    CHECK_NEAR(rj2.squish_at_cap_mm, 0.0, 0.03);
+    CHECK_NEAR(rj2.stiffness_n_per_mm, K_HARD, 1e-3);
+    // with only the single number the same jar shows give that is not there (this is what hid hard fruit before)
+    Tunables t1 = t; t1.blade_k_n_per_mm = rj.stiffness_n_per_mm;
+    Reading rj1 = run2(jar, t1);
+    printf("jar: curve give %.3f mm, single-number give %.3f mm, table %d points\n", rj2.squish_at_cap_mm, rj1.squish_at_cap_mm, tc.bend_n);
+    // a surface that gives 0.4 mm at a light touch and then holds: report the 0.4 mm, as N per mm of give
+    Sim2 step{20.0f, 1};
+    Reading rs = run2(step, tc);
+    CHECK_NEAR(rs.squish_at_cap_mm, 0.40, 0.04);
+    CHECK_NEAR(rs.stiffness_n_per_mm, (0.8 - 0.2) / 0.40, 0.25);
+    // a plain spring still reads as its stiffness
+    Sim2 spring{20.0f, 2};
+    Reading rp = run2(spring, tc);
+    CHECK_NEAR(rp.stiffness_n_per_mm, 2.0, 0.2);
+    printf("step fruit: give %.2f mm -> %.2f N/mm; 2 N/mm spring -> %.2f\n", rs.squish_at_cap_mm, rs.stiffness_n_per_mm, rp.stiffness_n_per_mm);
+    // a short or flat press makes no table
+    Reading bad; bad.outcome = Outcome::Reading; bad.n_points = 5;
+    Tunables tb; CHECK(!buildBendTable(bad, tb) && tb.bend_n == 0);
+  }
+
   if (failures) { printf("%d FAILURE(S)\n", failures); return 1; }
   printf("all tests passed\n");
   return 0;

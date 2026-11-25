@@ -21,6 +21,13 @@ struct Tunables {
   float preload_force_n     = 0.20f;  // seats the fruit; travel zero
   float force_cap_n         = 2.50f;  // never push harder than this
   float blade_k_n_per_mm    = 0.0f;   // 0 = not calibrated, no correction
+  // The machine's own give against something rigid, as a curve: sled travel (mm past preload) at each force.
+  // One number (blade_k) assumes the blade is a perfect spring; the jar press shows it is not, so when this
+  // table is filled it is used instead. bend_n = 0: fall back to blade_k.
+  static const int BEND_N = 8;
+  float bend_f[BEND_N]  = {0};
+  float bend_mm[BEND_N] = {0};
+  int   bend_n          = 0;
   float sample_step_mm      = 0.05f;  // creep/measure increment
   float approach_step_mm    = 0.50f;  // fast approach increment (force is checked between)
   float safety_margin_mm    = 2.0f;   // switch to creep this far before last contact
@@ -33,6 +40,20 @@ struct Tunables {
 };
 
 constexpr float K_HARD = 30.0f;      // N/mm reported for "too stiff to measure"
+
+// The machine's own give (mm) at a force, from the jar curve, or from blade_k if there is no curve.
+inline float machineBend(const Tunables& t, float f) {
+  if (t.bend_n >= 2) {
+    int i = 1;
+    while (i < t.bend_n - 1 && f > t.bend_f[i]) i++;             // segment [i-1, i]; the end segments extrapolate
+    float df = t.bend_f[i] - t.bend_f[i - 1];
+    if (df < 1e-4f) return t.bend_mm[i];
+    return t.bend_mm[i - 1] + (f - t.bend_f[i - 1]) * (t.bend_mm[i] - t.bend_mm[i - 1]) / df;
+  }
+  if (t.blade_k_n_per_mm > 0.01f) return f / t.blade_k_n_per_mm;
+  return 0;
+}
+inline bool hasCorrection(const Tunables& t) { return t.bend_n >= 2 || t.blade_k_n_per_mm > 0.01f; }
 
 enum class Stage : uint8_t { Idle, Homing, Taring, Approach, Creep, Preload, Measure, Retract, Done, Error };
 
@@ -217,11 +238,9 @@ class MeasureCore {
   void addPoint(float pos_mm, float force_n) {
     if (r_.n_points >= MAX_POINTS) return;
     float travel = pos_mm - r_.preload_pos_mm;
-    float bend = 0;
-    if (t_.blade_k_n_per_mm > 0.01f) bend = (force_n - preload_force_) / t_.blade_k_n_per_mm;
-    float squish = travel - bend;
-    if (squish < 0) squish = 0;
-    r_.squish[r_.n_points] = squish;
+    float bend = machineBend(t_, force_n) - machineBend(t_, preload_force_);
+    // kept signed: a point can sit a little below zero from noise, and clamping each one would bias the average up
+    r_.squish[r_.n_points] = travel - bend;
     r_.force[r_.n_points] = force_n;
     r_.n_points++;
     if (force_n > r_.force_max_n) r_.force_max_n = force_n;
@@ -236,6 +255,21 @@ class MeasureCore {
       r_.stiffness_n_per_mm = f.slope;
       r_.r2 = f.r2;
       r_.squish_at_cap_mm = r_.squish[r_.n_points - 1];
+      if (hasCorrection(t_)) {
+        // A softening avocado does not press like a spring: its surface gives a few tenths of a millimetre at
+        // a light touch and then holds. A straight line through that step is not a stiffness (it read ~0.5 for
+        // firm and ready fruit alike). So report what was actually measured: how far the fruit had given by the
+        // top of the press (the average over the top fifth of the force range, which rides out noise and slips),
+        // and the force that took, as newtons per millimetre of give.
+        float f_lo = preload_force_ + 0.8f * (r_.force_max_n - preload_force_);
+        double sq = 0, fo = 0; int m = 0;
+        for (int i = 0; i < r_.n_points; i++) if (r_.force[i] >= f_lo) { sq += r_.squish[i]; fo += r_.force[i]; m++; }
+        if (m > 0) {
+          float give = (float)(sq / m), ftop = (float)(fo / m);
+          r_.squish_at_cap_mm = give > 0 ? give : 0;
+          r_.stiffness_n_per_mm = give >= 0.06f ? (ftop - preload_force_) / give : K_HARD;
+        }
+      }
     } else if (o == Outcome::Reading) {
       // Reached the cap in under 3 samples: very hard fruit, or the cap is too low.
       // Report what we have: treat as very stiff.
@@ -261,6 +295,27 @@ class MeasureCore {
   float first_touch_ = 0;
   int consecutive_ = 0;
 };
+
+// Build the machine's give curve from a press against something rigid (taken with no correction, so the
+// reading's "squish" is plain sled travel past preload). Points are averaged in BEND_N runs, which smooths
+// the sensor noise. Returns false (and leaves the table empty) if the press is too short or not rising.
+inline bool buildBendTable(const Reading& r, Tunables& t) {
+  t.bend_n = 0;
+  const int N = Tunables::BEND_N;
+  if (r.outcome != Outcome::Reading || r.n_points < 2 * N) return false;
+  int n = 0;
+  for (int k = 0; k < N; k++) {
+    int a = (int)((long)r.n_points * k / N), b = (int)((long)r.n_points * (k + 1) / N);
+    double sf = 0, sm = 0;
+    for (int i = a; i < b; i++) { sf += r.force[i]; sm += r.squish[i]; }
+    float f = (float)(sf / (b - a)), mm = (float)(sm / (b - a));
+    if (n && (f <= t.bend_f[n - 1] + 0.01f || mm <= t.bend_mm[n - 1])) continue;   // keep it strictly rising
+    t.bend_f[n] = f; t.bend_mm[n] = mm; n++;
+  }
+  if (n < 3) return false;
+  t.bend_n = n;
+  return true;
+}
 
 // ---- Interpretation ----------------------------------------------------------
 enum class Verdict : uint8_t { Unknown, Hard, Firming, Nearly, Ripe };

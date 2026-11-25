@@ -217,7 +217,7 @@ class Machine {
     float h = S.interval_h;
     if (FR.loaded && FR.last_k > 0) {
       ripe::Verdict v = verdictNow();
-      if (v == ripe::Verdict::Nearly) h = h / 2;
+      if (v == ripe::Verdict::Nearly || v == ripe::Verdict::Firming) h = h / 2;   // softening has started: it moves fast from here
       // you said "not ripe yet" while it was close: watch it closely, at least every 3 hours
       if (FR.thr_override > 0 && v != ripe::Verdict::Ripe && h > 3.0f) h = 3.0f;
     }
@@ -300,7 +300,7 @@ class Machine {
     if (raw < 20 || raw > 4075) { logEv("capture zero refused: sensor %d", (int)raw); return -1; }
     logEv("zero captured: sensor %d", (int)raw);
     S.cal_zero_counts = raw;
-    S.t.blade_k_n_per_mm = 0;      // a new force calibration: the blade must be measured again against something hard
+    S.t.blade_k_n_per_mm = 0; S.t.bend_n = 0;      // a new force calibration: the blade must be measured again against something hard
     S.cal_points[0] = 0;
     zeroCaptured_ = true;
     last_cal_millis_ = millis();
@@ -337,7 +337,7 @@ class Machine {
     return n;
   }
 
-  void clearCalibration() { S.cal_points[0] = 0; S.t.blade_k_n_per_mm = 0; settingsSave(); }
+  void clearCalibration() { S.cal_points[0] = 0; S.t.blade_k_n_per_mm = 0; S.t.bend_n = 0; settingsSave(); }
 
   // Drop one captured weight (0 = the first row under the zero) and refit with the rest.
   bool deleteCalPoint(int idx) {
@@ -458,7 +458,7 @@ class Machine {
 
   void runMeasurement(bool bladeCal) {
     ripe::Tunables t = S.t;
-    if (bladeCal) t.blade_k_n_per_mm = 0;   // we want the raw machine slope
+    if (bladeCal) { t.blade_k_n_per_mm = 0; t.bend_n = 0; }   // we want the raw machine press, uncorrected
     // Until the force scale is calibrated the cap is a guess: keep the
     // position backstop short so a wrong guess can't turn into a deep press.
     if (!S.cal_points[0] && t.max_squish_mm > 3.0f) t.max_squish_mm = 3.0f;
@@ -524,9 +524,10 @@ class Machine {
       const ripe::Reading& rb = core.reading();
       if (rb.outcome == ripe::Outcome::Reading && rb.stiffness_n_per_mm > 0.2f) {
         S.t.blade_k_n_per_mm = rb.stiffness_n_per_mm;
+        bool curve = ripe::buildBendTable(rb, S.t);     // the whole press, not just its average slope
         last_cal_millis_ = millis();
         settingsSave();
-        logEv("  blade measured: %.2f N/mm, peak %.2f N", rb.stiffness_n_per_mm, rb.force_max_n);
+        logEv("  blade measured: %.2f N/mm, peak %.2f N, curve %s (%d points)", rb.stiffness_n_per_mm, rb.force_max_n, curve ? "saved" : "not usable", S.t.bend_n);
       }
     }
 
@@ -548,6 +549,7 @@ class Machine {
     if (bladeCal) {
       if (r.outcome == ripe::Outcome::Reading && r.stiffness_n_per_mm > 0.2f) {
         S.t.blade_k_n_per_mm = r.stiffness_n_per_mm;
+        ripe::buildBendTable(r, S.t);
         last_cal_millis_ = millis();
         settingsSave();
         Serial.printf("blade_k = %.2f N/mm (r2 %.3f)\n", r.stiffness_n_per_mm, r.r2);
@@ -659,7 +661,11 @@ class Machine {
         float old_npc = S.hall_n_per_count;
         S.hall_n_per_count = f.slope;
         // blade_k was measured in newtons of the OLD scale; it scales exactly with the sensor scale.
-        if (S.t.blade_k_n_per_mm > 0 && fabsf(old_npc) > 1e-7f) S.t.blade_k_n_per_mm *= fabsf(f.slope / old_npc);
+        if (S.t.blade_k_n_per_mm > 0 && fabsf(old_npc) > 1e-7f) {
+          float ratio = fabsf(f.slope / old_npc);
+          S.t.blade_k_n_per_mm *= ratio;
+          for (int i = 0; i < S.t.bend_n; i++) S.t.bend_f[i] *= ratio;     // the curve's forces are in the same old newtons
+        }
       }
     }
   }
