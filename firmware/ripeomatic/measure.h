@@ -306,6 +306,7 @@ inline bool looksLikeNewFruit(float contact_pos, float first_contact_pos, float 
 inline float daysToRipe(float first_stiffness, float now_stiffness, float days_elapsed, float threshold) {
   if (first_stiffness <= 0 || now_stiffness <= 0 || threshold <= 0 || days_elapsed < 0.5f) return -1;
   if (now_stiffness <= threshold) return 0;
+  if (first_stiffness >= K_HARD * 0.99f) return -1;           // first reading was "too stiff to measure": no rate to go on
   if (now_stiffness >= first_stiffness * 0.98f) return -1;   // hasn't started softening
   float rate = logf(first_stiffness / now_stiffness) / days_elapsed;   // per day
   if (rate <= 1e-4f) return -1;

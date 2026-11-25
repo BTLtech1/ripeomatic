@@ -331,10 +331,10 @@ function render() {
   if (tooHard && f.n === 1) msg = 'First reading taken: rock hard, it gave less than the machine can measure.';
   const meta = [];
   if (f.loaded) {
-    if (f.first_k > 0 && f.n > 1) meta.push('<span><b>' + Math.round(100 * f.last_k / f.first_k) + '%</b> of day 1</span>');
+    if (f.first_k > 0 && f.first_k < 29.7 && f.n > 1) meta.push('<span><b>' + Math.round(100 * f.last_k / f.first_k) + '%</b> of day 1</span>');
     if (f.elapsed_days != null) meta.push('<span>day <b>' + (Math.floor(f.elapsed_days) + 1) + '</b></span>');
     if (f.days_to_ripe > 0) meta.push('<span>ripe in about <b>' + (f.days_to_ripe < 1 ? 'a day' : Math.round(f.days_to_ripe) + ' days') + '</b></span>');
-    else if (f.days_to_ripe === 0) meta.push('<span><b>ripe</b></span>');
+    else if (f.days_to_ripe === 0 && f.verdict === 'ripe') meta.push('<span><b>ripe</b></span>');
     meta.push('<span>' + f.n + ' reading' + (f.n === 1 ? '' : 's') + '</span>');
     { // when the last press was: the newest row with a number, by the clock if the board has the time
       const lr = rows.filter(r => r.stiffness_n_per_mm !== '').pop(), t = lr ? Date.parse(lr.timestamp) : NaN;
