@@ -29,6 +29,7 @@ class Hall {
   // Zero with the pad in the air. Call before every measurement.
   void tare() { tare_ = readRaw(HALL_SAMPLES_TARE); }
   float tareCounts() const { return tare_; }
+  void nudgeTare(float counts) { tare_ += counts; }
 
   // Force between two raw readings. With a calibration curve the answer depends on where on the curve the
   // readings sit, so both are placed on it by their distance from the calibration zero.

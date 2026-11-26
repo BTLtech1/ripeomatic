@@ -515,6 +515,14 @@ class Machine {
       force = hall.countsToForce(raw);
       live_raw = raw;
       live_force = force;
+      // The no-load reading drifts as the sled travels (a real unit: 14 counts over 16 mm, most likely the motor's
+      // own magnet falling away behind the sensor). Near rest that is worth 0.4 N, enough to look like a touch.
+      // Before anything is touched, let the zero follow the reading, but only as fast as drift moves it: at most
+      // 2 counts per millimetre of travel. Touching even a very soft fruit climbs many times faster than that.
+      if (core.stage() == ripe::Stage::Approach || core.stage() == ripe::Stage::Creep) {
+        float d = raw - hall.tareCounts(), lim = 2.0f * fabsf(c.mm);
+        hall.nudgeTare(d > lim ? lim : d < -lim ? -lim : d);
+      }
       if (core.stage() != evStage_) { evStage_ = core.stage(); logEv("  %s from %.1f mm, %.2f N, sensor %d", ripe::stageName(evStage_), pos, force, (int)raw); }
       // Sensor sanity. The force should never go strongly negative while we
       // push: if it does, hall_n_per_count has the wrong sign (or the magnet
