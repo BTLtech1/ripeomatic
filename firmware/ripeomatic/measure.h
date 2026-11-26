@@ -296,6 +296,51 @@ class MeasureCore {
   int consecutive_ = 0;
 };
 
+// ---- Force calibration as a curve ------------------------------------------------
+// A hall sensor does not read evenly as the magnet comes closer: on a real unit the same 100 g moved the
+// reading 33 counts near rest and 96 counts near the post. One newtons-per-count number is then wrong
+// everywhere. With two or more weights the machine uses the curve through the points instead: straight
+// lines between them, the first and last segments carried on beyond the ends.
+struct CalCurve {
+  int n = 0;                 // points including the zero; fewer than 3 = use the single number `lin`
+  float u[7] = {0};          // counts moved from the calibration zero, toward load (always positive)
+  float f[7] = {0};          // newtons
+  float sgn = 1, lin = 0;
+};
+
+// pts: "grams:counts;grams:counts", zero: counts with nothing on the pad, lin: the fitted newtons per count.
+inline void calCurveBuild(const char* pts, float zero, float lin, CalCurve& c) {
+  c = CalCurve(); c.lin = lin; c.sgn = lin < 0 ? -1.0f : 1.0f;
+  float g[6], d[6]; int n = 0;
+  for (const char* p = pts ? pts : ""; *p && n < 6;) {
+    const char* colon = strchr(p, ':'); if (!colon) break;
+    g[n] = (float)atof(p); d[n] = (float)atof(colon + 1) - zero; n++;
+    const char* s = strchr(p, ';'); if (!s) break;
+    p = s + 1;
+  }
+  if (n < 2) return;
+  float sum = 0; for (int i = 0; i < n; i++) sum += d[i];
+  c.sgn = sum < 0 ? -1.0f : 1.0f;
+  for (int i = 1; i < n; i++)                                   // sort by weight (a handful of points)
+    for (int j = i; j > 0 && g[j] < g[j - 1]; j--) { float t = g[j]; g[j] = g[j - 1]; g[j - 1] = t; t = d[j]; d[j] = d[j - 1]; d[j - 1] = t; }
+  c.u[0] = 0; c.f[0] = 0;
+  for (int i = 0; i < n; i++) {
+    float u = d[i] * c.sgn, f = g[i] / 1000.0f * 9.80665f;
+    if (u <= c.u[i] + 0.5f || f <= c.f[i] + 1e-4f) return;       // a heavier weight must move the sensor further: if not, stay on the single number
+    c.u[i + 1] = u; c.f[i + 1] = f;
+  }
+  c.n = n + 1;
+}
+
+// newtons for a reading `dc` counts away from the calibration zero
+inline float calForce(const CalCurve& c, float dc) {
+  if (c.n < 3) return dc * c.lin;
+  float u = dc * c.sgn;
+  int i = 1;
+  while (i < c.n - 1 && u > c.u[i]) i++;
+  return c.f[i - 1] + (u - c.u[i - 1]) * (c.f[i] - c.f[i - 1]) / (c.u[i] - c.u[i - 1]);
+}
+
 // Build the machine's give curve from a press against something rigid (taken with no correction, so the
 // reading's "squish" is plain sled travel past preload). Points are averaged in BEND_N runs, which smooths
 // the sensor noise. Returns false (and leaves the table empty) if the press is too short or not rising.

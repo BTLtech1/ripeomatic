@@ -424,7 +424,7 @@ class Machine {
       live_raw = raw;
       // Once the sensor is calibrated the sign is known: only a RISE in force is unexpected. A fall is normal
       // (backing off something the pad was pressed against releases up to the full press force).
-      float dF = S.cal_points[0] ? (raw - raw0) * S.hall_n_per_count : fabsf(raw - raw0) * npc;
+      float dF = S.cal_points[0] ? hall.forceBetween(raw0, raw) : fabsf(raw - raw0) * npc;
       if (dF > limit_n) {
         strlcpy(error, "unexpected force during a plain move: check motor_invert / the sensor sign", sizeof error);
         stepper.requestAbort();

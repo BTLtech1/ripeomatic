@@ -50,7 +50,7 @@ const shots = process.argv[2] || require('os').tmpdir();
   await page.fill('#grams', '200');
   await step('mass', 500);
   out.calTable = (await page.$$('#steps table.cal tr')).length;                      // header + zero + two weights
-  out.calVerdict = /points agree within/.test(await page.textContent('#steps'));
+  out.calVerdict = /with a curve through/.test(await page.textContent('#steps'));
   await step('forcedone', 500);
   page.once('dialog', dlg => dlg.accept());
   await step('blade', 500);

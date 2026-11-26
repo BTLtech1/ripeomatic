@@ -257,6 +257,29 @@ int main() {
     Tunables tb; CHECK(!buildBendTable(bad, tb) && tb.bend_n == 0);
   }
 
+  // ---- force calibration as a curve (numbers from a real unit: the same 100 g moved the sensor 33 counts
+  //      near rest and 96 near the post)
+  {
+    CalCurve c; calCurveBuild("51:1471;107.5:1448;221.8:1372;464.8:1042", 1488, -0.00952f, c);
+    CHECK(c.n == 5);
+    CHECK_NEAR(calForce(c, 1471 - 1488), 51 * 0.00980665, 1e-3);
+    CHECK_NEAR(calForce(c, 1372 - 1488), 221.8 * 0.00980665, 1e-3);
+    CHECK_NEAR(calForce(c, 1042 - 1488), 464.8 * 0.00980665, 1e-3);
+    CHECK_NEAR(calForce(c, 0), 0, 1e-6);
+    CHECK(calForce(c, 1410 - 1488) > calForce(c, 1448 - 1488) && calForce(c, 1410 - 1488) < calForce(c, 1372 - 1488));
+    CHECK(calForce(c, 1000 - 1488) > calForce(c, 1042 - 1488));      // carries on past the last point
+    CHECK(calForce(c, 1495 - 1488) < 0);                              // and below zero
+    // the single number is badly off at a light press: that is what the curve fixes
+    printf("40 counts in: curve %.2f N, single number %.2f N\n", calForce(c, -40), -40 * -0.00952f);
+    // order of capture does not matter; one point, or a heavier weight that moved less, falls back to the single number
+    CalCurve d; calCurveBuild("464.8:1042;51:1471;221.8:1372;107.5:1448", 1488, -0.00952f, d);
+    CHECK(d.n == 5); CHECK_NEAR(calForce(d, -116), calForce(c, -116), 1e-6);
+    CalCurve e; calCurveBuild("107.5:941", 1139, -0.00533f, e);
+    CHECK(e.n < 3); CHECK_NEAR(calForce(e, -100), 0.533, 1e-4);
+    CalCurve g; calCurveBuild("51:1471;107.5:1448;221.8:1450", 1488, -0.0095f, g);
+    CHECK(g.n < 3);
+  }
+
   if (failures) { printf("%d FAILURE(S)\n", failures); return 1; }
   printf("all tests passed\n");
   return 0;

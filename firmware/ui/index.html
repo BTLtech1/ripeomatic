@@ -612,9 +612,16 @@ function calVerdict(s) {
   if (pts.some(p => Math.abs(p.d) < 15)) return {short: ' · weak signal', html: '<p class="bad">The sensor moved by fewer than 15 counts for one of these. That is too little to measure well: check the magnet sits right behind the sensor, or use a heavier weight.</p>'};
   if (per.some(v => v * per[0] < 0)) return {short: ' · points disagree', html: '<p class="bad">One weight pushed the reading up and another pushed it down. Something moved between captures: capture zero and start again.</p>'};
   if (pts.length < 2) return {short: '', html: '<p class="ok">Saved: ' + mN + '. Add a second, different amount to check it.</p>'};
-  const lo = Math.min(...per.map(Math.abs)), hi = Math.max(...per.map(Math.abs)), spread = Math.round(100 * (hi - lo) / hi);
-  return spread <= 22 ? {short: ' · points agree within ' + spread + ' %', html: '<p class="ok">Calibrated: ' + mN + '. The points agree within ' + spread + ' %. (Heavier weights read a little stronger per gram: the magnet\'s pull grows as the blade bends toward the sensor. Up to about 20 % is normal.)</p>'}
-    : {short: ' · points differ by ' + spread + ' %', html: '<p class="bad">Saved (' + mN + '), but the points differ by ' + spread + ' %. Was the cup rocking, or a weight typed wrong? Capture zero and redo for a better result.</p>'};
+  // Two or more weights: the machine uses the curve through the points, so they do not have to agree per gram
+  // (this kind of sensor reads stronger the closer the magnet gets). What must hold is that each heavier weight
+  // moves the reading further, and that the steps between points change smoothly.
+  const srt = pts.slice().sort((p, q) => p.g - q.g), top = srt[srt.length - 1];
+  for (let i = 1; i < srt.length; i++) if (Math.abs(srt[i].d) <= Math.abs(srt[i - 1].d) + 0.5) return {short: ' · points out of order', html: '<p class="bad">' + srt[i].g + ' g moved the sensor no further than ' + srt[i - 1].g + ' g did. The heavier one has bottomed the blade out on the post, or a weight was typed wrong: remove that row (×) or redo.</p>'};
+  const seg = srt.map((p, i) => Math.abs(p.d - (i ? srt[i - 1].d : 0)) / (p.g - (i ? srt[i - 1].g : 0)));   // counts per gram, step by step
+  let jump = 1; for (let i = 1; i < seg.length; i++) jump = Math.max(jump, seg[i] / seg[i - 1], seg[i - 1] / seg[i]);
+  const range = 'Calibrated up to ' + top.g + ' g (' + fmt(top.g * 0.00980665, 1) + ' N) with a curve through ' + pts.length + ' points. Keep the force cap under that.';
+  return jump <= 3 ? {short: ' · curve through ' + pts.length + ' points, to ' + top.g + ' g', html: '<p class="ok">' + range + ' The sensor reads stronger per gram as the blade nears it; that is normal and the curve allows for it.</p>'}
+    : {short: ' · uneven points', html: '<p class="bad">Saved, but one step between weights is more than three times the next. Was the cup rocking, or a weight typed wrong? An extra weight in between would settle it. ' + range + '</p>'};
 }
 function calTable(s, readOnly) {
   const pts = calPts(s); if (!pts.length) return '';

@@ -30,7 +30,18 @@ class Hall {
   void tare() { tare_ = readRaw(HALL_SAMPLES_TARE); }
   float tareCounts() const { return tare_; }
 
-  float countsToForce(float raw) const { return (raw - tare_) * S.hall_n_per_count; }
+  // Force between two raw readings. With a calibration curve the answer depends on where on the curve the
+  // readings sit, so both are placed on it by their distance from the calibration zero.
+  float forceBetween(float raw_from, float raw_to) {
+    if (strcmp(key_pts_, S.cal_points) || key_zero_ != S.cal_zero_counts || key_lin_ != S.hall_n_per_count) {
+      strlcpy(key_pts_, S.cal_points, sizeof key_pts_); key_zero_ = S.cal_zero_counts; key_lin_ = S.hall_n_per_count;
+      ripe::calCurveBuild(S.cal_points, S.cal_zero_counts, S.hall_n_per_count, curve_);
+    }
+    if (curve_.n < 3) return (raw_to - raw_from) * S.hall_n_per_count;
+    return ripe::calForce(curve_, raw_to - S.cal_zero_counts) - ripe::calForce(curve_, raw_from - S.cal_zero_counts);
+  }
+  bool usesCurve() { forceBetween(0, 0); return curve_.n >= 3; }
+  float countsToForce(float raw) { return forceBetween(tare_, raw); }
   float readForce(int samples = HALL_SAMPLES_LIVE) { return countsToForce(readRaw(samples)); }
 
  private:
@@ -51,4 +62,7 @@ class Hall {
 #endif
   const Stepper28BYJ* stepper_ = nullptr;
   float tare_ = 0;
+  ripe::CalCurve curve_;
+  char key_pts_[sizeof S.cal_points] = "\x01";      // what curve_ was built from
+  float key_zero_ = 0, key_lin_ = 0;
 };
