@@ -479,6 +479,19 @@ class Machine {
     live_force = 0;
     if (live_raw < 20 || live_raw > 4075) { finishAborted("hall sensor saturated: magnet too close/far, or wiring"); retract(); return; }
 
+    // The sensor is far less sensitive near rest than near the post (a real unit: 0.03 N per count at rest), and
+    // a moving sled wobbles the reading by a few counts. A "touching" force worth fewer counts than that wobble
+    // fires in mid-air: the press then starts nowhere near the fruit. So the touch force is never allowed to be
+    // worth fewer than 10 counts at rest, and the preload is kept at least 2.5 times the touch force.
+    {
+      float f10 = fmaxf(fabsf(hall.forceBetween(live_raw, live_raw - 10)), fabsf(hall.forceBetween(live_raw, live_raw + 10)));
+      if (f10 > t.contact_threshold_n) {
+        t.contact_threshold_n = f10;
+        if (t.preload_force_n < 2.5f * f10) t.preload_force_n = 2.5f * f10;
+        logEv("  touch force raised to %.2f N, preload %.2f N (10 sensor counts at rest)", t.contact_threshold_n, t.preload_force_n);
+      }
+    }
+
     // Back gate: the press pushes the avocado against the door, and a relaxed servo lets the door's
     // leverage turn it. Hold the servo at its shut angle for the whole press, let go after backing off.
     bool holdGate = S.gate_fitted && S.gate_hold && ENABLE_SERVO;

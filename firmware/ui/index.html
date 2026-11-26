@@ -491,7 +491,22 @@ async function loadEvents() {
 }
 $('d-log').addEventListener('toggle', () => { if ($('d-log').open) loadEvents(); });
 $('btnEvRefresh').onclick = loadEvents;
-$('btnEvCopy').onclick = async () => { try { await navigator.clipboard.writeText($('evlog').textContent); toast('Log copied'); } catch (e) { toast('Select the text and copy it by hand'); } };
+// The page is served over plain http, where browsers switch the modern clipboard off. Fall back to the old way:
+// put the text in a hidden box, select it, and ask the browser to copy the selection.
+function copyText(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text).then(() => true, () => false);
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.setAttribute('readonly', ''); ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+  document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove();
+  return Promise.resolve(ok);
+}
+$('btnEvCopy').onclick = async () => {
+  if (await copyText($('evlog').textContent)) { toast('Log copied'); return; }
+  const r = document.createRange(); r.selectNodeContents($('evlog')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);   // leave it selected: Ctrl+C finishes the job
+  toast('Could not copy by itself. The log is selected: press Ctrl+C');
+};
 $('busystop').onclick = () => $('btnAbort').onclick();
 // every tap is acknowledged at once with a ring round the button, before the machine has answered
 document.addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b || b.disabled) return; b.classList.add('tapped'); setTimeout(() => b.classList.remove('tapped'), 700); }, true);
