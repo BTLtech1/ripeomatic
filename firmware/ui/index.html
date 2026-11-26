@@ -589,7 +589,7 @@ function renderSetup(s) {
       else body = `<p><b>Force calibration</b> turns the sensor's numbers into real force.</p>${s.simulate ? '<p class="kv">Simulation: there is no sensor, so just tap the buttons; the coins are pretend.</p>' : ''}<div class="row" style="margin-bottom:8px"><button class="quiet" data-act="sensortest">Test the sensor first</button></div><p>1 · Stand the machine on its motor end so the pad points at the ceiling. Put the printed calibration cup (<code>cal-cup.stl</code>) on the pad, empty, then:</p><div class="row"><button data-act="zero">Capture zero</button><span class="kv" style="align-self:center">sensor: <b id="raw">—</b></span></div><p style="margin-top:10px">2 · Put coins in the cup (a US nickel is exactly 5 g; 20 nickels = 100 g), type the total grams, capture. Any known weight up to 250 g works. Two or three different amounts are better than one.</p><div class="row"><input id="grams" type="number" inputmode="decimal" placeholder="grams on the pad" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)"><button class="primary" data-act="mass" style="flex:0 0 auto">Capture</button></div>${calTable(s)}`;
     } else if (st.id === 'blade') {
       if (st.done) body = `<p><b>Blade calibration: hard object</b> · ${fmt(s.blade_k)} N/mm</p><p class="kv">Redo it after any new force calibration, after changing the force cap, and whenever the holder changes.</p>`;
-      else body = `<p><b>Blade calibration: hard object.</b> The machine presses something that cannot dent, so it learns its own flex and can subtract it from every reading.</p>${s.simulate ? '<p class="kv">Simulation: tap it and watch the status pill; a pretend press runs in about ten seconds.</p>' : ''}<p>Lay the machine flat again, the way it normally sits. Put something hard where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade against the hard object</button></div>`;
+      else body = `<p><b>Blade calibration: hard object.</b> The machine presses something that cannot dent, so it learns its own flex and can subtract it from every reading.</p>${s.simulate ? '<p class="kv">Simulation: tap it and watch the status pill; a pretend press runs in about ten seconds.</p>' : ''}<p>Lay the machine flat again, the way it normally sits. Put something hard where the avocado goes (a glass jar, a can), then:</p><div class="row"><button class="primary" data-act="blade">Measure the blade against the hard object</button></div>${bladeTry(s)}`;
     } else if (st.id === 'fruit') {
       if (st.done) body = `<p><b>First avocado</b> · measured</p>`;
       else body = `<p><b>First avocado.</b> ${s.simulate ? 'A virtual avocado is already in the machine; it softens over about 20 minutes, so take a few readings and watch the chart.' : 'Take the jar out, put an avocado in with its side toward the pad, then:'}</p><div class="row"><button class="primary" data-act="measure">Measure now</button></div><p class="kv" style="margin-top:6px">After this, readings run on their own every 12 hours.</p>`;
@@ -604,6 +604,16 @@ function renderSetup(s) {
 // ---- force calibration: show what was captured, and whether the points agree ----
 function calPts(s) {
   return (s.cal_points || '').split(';').filter(Boolean).map(p => { const [g, c] = p.split(':').map(Number); return {g, c, d: c - s.cal_zero}; });
+}
+function bladeTry(s) {
+  // what the last press against the hard object did, so a failed try does not just look like nothing happened
+  const o = s.last && s.last.outcome, e = s.error || '';
+  if (s.job === 'bladecal') return '<p class="kv">Pressing the hard object now. It takes about a minute; this step ticks itself off when it is done.</p>';
+  if (!o || o === 'none' || o === 'reading') return e ? '<p class="bad">Last try did not work: ' + esc(e) + '.</p>' : '';
+  const why = {overtravel: 'the press ran out of travel before it reached the force cap. Check the hard object is in the holder and cannot slide back, or lower Force cap in Settings',
+    empty: 'the pad found nothing to press. Put the hard object where the avocado goes, close to the pad',
+    aborted: e || 'it was stopped'}[o] || e || o;
+  return '<p class="bad">Last try did not work: ' + esc(why) + '.</p>';
 }
 function calVerdict(s) {
   const pts = calPts(s); if (!pts.length) return {short: '', html: ''};
