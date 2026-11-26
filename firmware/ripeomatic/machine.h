@@ -497,48 +497,75 @@ class Machine {
     bool holdGate = S.gate_fitted && S.gate_hold && ENABLE_SERVO;
     if (holdGate) { servo.write(S.servo_rest_deg); delay(300); }
 
-    logEv("  pressing up to %.2f N (force cap), preload %.2f N, at most %.1f mm past preload", t.force_cap_n, t.preload_force_n, t.max_squish_mm);
-    core.start(t, bladeCal ? 0 : FR.last_contact_mm);
-    stage = core.stage();
-    float pos = stepper.posMm();
-    float force = hall.readForce();
-    int negativeRun = 0;
-    float climbForce = force, climbPos = pos;   // the last place the force was still rising
-    while (true) {
-      ripe::MeasureCore::Cmd c = core.feed(pos, force);
+    auto press = [&](float expect) {
+      logEv("  pressing up to %.2f N (force cap), preload %.2f N, at most %.1f mm past preload", t.force_cap_n, t.preload_force_n, t.max_squish_mm);
+      core.start(t, expect);
       stage = core.stage();
-      if (c.kind == ripe::MeasureCore::Cmd::Stop) break;
-      stepper.setSpeedMmS(c.fast ? S.fast_mm_s : S.creep_mm_s);
-      stepper.moveMm(c.mm);
-      if (stepper.aborted()) { core.abort(); break; }
-      pos = stepper.posMm();
-      float raw = hall.readRaw(HALL_SAMPLES_LIVE);
-      force = hall.countsToForce(raw);
-      live_raw = raw;
-      live_force = force;
-      // The no-load reading drifts as the sled travels (a real unit: 14 counts over 16 mm, most likely the motor's
-      // own magnet falling away behind the sensor). Near rest that is worth 0.4 N, enough to look like a touch.
-      // Before anything is touched, let the zero follow the reading, but only as fast as drift moves it: at most
-      // 2 counts per millimetre of travel. Touching even a very soft fruit climbs many times faster than that.
-      if (core.stage() == ripe::Stage::Approach || core.stage() == ripe::Stage::Creep) {
-        float d = raw - hall.tareCounts(), lim = 2.0f * fabsf(c.mm);
-        hall.nudgeTare(d > lim ? lim : d < -lim ? -lim : d);
+      float pos = stepper.posMm();
+      float force = hall.readForce();
+      int negativeRun = 0;
+      float climbForce = force, climbPos = pos;   // the last place the force was still rising
+      while (true) {
+        ripe::MeasureCore::Cmd c = core.feed(pos, force);
+        stage = core.stage();
+        if (c.kind == ripe::MeasureCore::Cmd::Stop) break;
+        stepper.setSpeedMmS(c.fast ? S.fast_mm_s : S.creep_mm_s);
+        stepper.moveMm(c.mm);
+        if (stepper.aborted()) { core.abort(); break; }
+        pos = stepper.posMm();
+        float raw = hall.readRaw(HALL_SAMPLES_LIVE);
+        force = hall.countsToForce(raw);
+        live_raw = raw;
+        live_force = force;
+        // The no-load reading drifts as the sled travels (a real unit: 14 counts over 16 mm, most likely the motor's
+        // own magnet falling away behind the sensor). Near rest that is worth 0.4 N, enough to look like a touch.
+        // Before anything is touched, let the zero follow the reading, but only as fast as drift moves it: at most
+        // 2 counts per millimetre of travel. Touching even a very soft fruit climbs many times faster than that.
+        if (core.stage() == ripe::Stage::Approach || core.stage() == ripe::Stage::Creep) {
+          float d = raw - hall.tareCounts(), lim = 2.0f * fabsf(c.mm);
+          hall.nudgeTare(d > lim ? lim : d < -lim ? -lim : d);
+        }
+        if (core.stage() != evStage_) { evStage_ = core.stage(); logEv("  %s from %.1f mm, %.2f N, sensor %d", ripe::stageName(evStage_), pos, force, (int)raw); }
+        // Sensor sanity. The force should never go strongly negative while we
+        // push: if it does, hall_n_per_count has the wrong sign (or the magnet
+        // is flipped). One sample well below zero is enough during the fast
+        // approach, where each step is 0.5 mm.
+        bool bad = force < -0.5f * t.force_cap_n;
+        if (force < -3 * t.contact_threshold_n) bad = bad || ++negativeRun >= 2; else negativeRun = 0;
+        if (bad) { core.abort(); strlcpy(error, "force reads negative: flip the sign of hall_n_per_count (or the magnet)", sizeof error); break; }
+        if (raw < 20 || raw > 4075) { core.abort(); strlcpy(error, "hall sensor saturated: magnet too close/far, or wiring", sizeof error); break; }
+        // Touching something, sled still advancing, force no longer rising for 1 mm (20 samples): the blade has bottomed out
+        // (or the force scale is far too small to ever reach the cap). Stop instead of driving on to max travel.
+        // Only judged once the force is well up (a small steady offset in free air is not a bottomed-out blade).
+        float floorN = fmaxf(0.6f, 3.0f * t.contact_threshold_n);
+        if (force <= floorN || force > climbForce + 0.05f) { climbForce = force; climbPos = pos; }
+        else if (pos - climbPos > 1.0f) { core.abort(); snprintf(error, sizeof error, "force stuck at %.2f N (sensor %d) for 1 mm: bottomed out?", force, (int)raw); break; }
       }
-      if (core.stage() != evStage_) { evStage_ = core.stage(); logEv("  %s from %.1f mm, %.2f N, sensor %d", ripe::stageName(evStage_), pos, force, (int)raw); }
-      // Sensor sanity. The force should never go strongly negative while we
-      // push: if it does, hall_n_per_count has the wrong sign (or the magnet
-      // is flipped). One sample well below zero is enough during the fast
-      // approach, where each step is 0.5 mm.
-      bool bad = force < -0.5f * t.force_cap_n;
-      if (force < -3 * t.contact_threshold_n) bad = bad || ++negativeRun >= 2; else negativeRun = 0;
-      if (bad) { core.abort(); strlcpy(error, "force reads negative: flip the sign of hall_n_per_count (or the magnet)", sizeof error); break; }
-      if (raw < 20 || raw > 4075) { core.abort(); strlcpy(error, "hall sensor saturated: magnet too close/far, or wiring", sizeof error); break; }
-      // Touching something, sled still advancing, force no longer rising for 1 mm (20 samples): the blade has bottomed out
-      // (or the force scale is far too small to ever reach the cap). Stop instead of driving on to max travel.
-      // Only judged once the force is well up (a small steady offset in free air is not a bottomed-out blade).
-      float floorN = fmaxf(0.6f, 3.0f * t.contact_threshold_n);
-      if (force <= floorN || force > climbForce + 0.05f) { climbForce = force; climbPos = pos; }
-      else if (pos - climbPos > 1.0f) { core.abort(); snprintf(error, sizeof error, "force stuck at %.2f N (sensor %d) for 1 mm: bottomed out?", force, (int)raw); break; }
+    };
+    press(bladeCal ? 0 : FR.last_contact_mm);
+
+    // Bedding in. The first press on a freshly placed avocado pushes it back into the holder and beds the pad into
+    // the skin, and that movement reads as give (a real unit: 2.31 N/mm on the first press, 2.98 and 3.03 after).
+    // So when the fruit is new, or sits somewhere else than last time, press once to seat it, back off until the
+    // pad is clear, and take the reading from a second press. An avocado left in place is pressed once, as before.
+    if (!bladeCal && !stepper.aborted() && core.reading().outcome == ripe::Outcome::Reading) {
+      float c1 = core.reading().contact_pos_mm;
+      bool moved = !FR.loaded || fabsf(c1 - FR.last_contact_mm) > 1.5f;
+      if (moved) {
+        float k1 = core.reading().stiffness_n_per_mm;
+        stage = ripe::Stage::Retract;
+        stepper.setSpeedMmS(S.fast_mm_s);
+        float back = stepper.posMm() - c1 + 2.0f;                 // 2 mm clear of where it first touched
+        if (back > stepper.posMm()) back = stepper.posMm();
+        guardedMove(-back, S.t.force_cap_n + 1.0f);
+        if (!stepper.aborted()) {
+          delay(500);
+          hall.tare();                                             // pad in the air again: a fresh zero, right next to the fruit
+          logEv("  seated it (first press read %.2f N/mm); pressing again for the reading", k1);
+          evStage_ = ripe::Stage::Retract;
+          press(c1);
+        }
+      }
     }
 
     // Blade calibration: save the result now, before the sled travels home, so a hiccup on the way back can't lose it.
