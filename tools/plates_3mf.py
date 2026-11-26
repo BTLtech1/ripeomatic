@@ -27,8 +27,11 @@ PLATES = {
     1: [("base.stl", 90, 90, 0)],
     # the tipping V-holder (it replaced the back gate's frame, door, lever and link)
     2: [("tip-frame.stl", 45, 90, 0), ("tip-cradle.stl", 130, 90, 0)],
-    3: [("v45/v45-sled.stl", 50, 90, 0), ("v45/v45-lead-screw.stl", 95, 90, 0), ("v45/v45-blade-stiff.stl", 125, 90, 0),
-        ("sled-wire-clip.stl", 155, 40, 0)],
+    # three stiff blades, marked 1, 2, 3: the foot is 0.1, 0.2 and 0.3 mm thicker. Use the tightest that pushes in by hand
+    # (a loose foot lets the blade lean toward the sensor and throws away force range; on the first unit only 3 held)
+    3: [("v45/v45-sled.stl", 45, 90, 0), ("v45/v45-lead-screw.stl", 82, 90, 0),
+        ("v45/v45-blade-stiff-snug.stl", 106, 90, 0), ("v45/v45-blade-stiff-tight.stl", 124, 90, 0), ("v45/v45-blade-stiff-xtight.stl", 142, 90, 0),
+        ("sled-wire-clip.stl", 165, 40, 0)],
     # tools: the calibration cup (one of the two: -stem for the bare stem, the other for the TPU dome pad)
     4: [("cal-cup-stem.stl", 45, 90, 0), ("cal-cup.stl", 125, 90, 0)],
     # the two electronics boxes (the ESP32 case is BTL's v6 case, printed as supplied)
