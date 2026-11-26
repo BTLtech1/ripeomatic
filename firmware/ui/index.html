@@ -621,6 +621,10 @@ function calPts(s) {
   return (s.cal_points || '').split(';').filter(Boolean).map(p => { const [g, c] = p.split(':').map(Number); return {g, c, d: c - s.cal_zero}; });
 }
 function bladeTry(s) {
+  const cap = settings ? '<p class="kv">It will press up to <b>' + fmt(settings.force_cap_n, 1) + ' N</b> (Force cap in Settings). Use the same cap you want for avocados.</p>' : '';
+  return cap + bladeTry2(s);
+}
+function bladeTry2(s) {
   // what the last press against the hard object did, so a failed try does not just look like nothing happened
   const o = s.last && s.last.outcome, e = s.error || '';
   if (s.job === 'bladecal') return '<p class="kv">Pressing the hard object now. It takes about a minute; this step ticks itself off when it is done.</p>';

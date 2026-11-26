@@ -497,6 +497,7 @@ class Machine {
     bool holdGate = S.gate_fitted && S.gate_hold && ENABLE_SERVO;
     if (holdGate) { servo.write(S.servo_rest_deg); delay(300); }
 
+    logEv("  pressing up to %.2f N (force cap), preload %.2f N, at most %.1f mm past preload", t.force_cap_n, t.preload_force_n, t.max_squish_mm);
     core.start(t, bladeCal ? 0 : FR.last_contact_mm);
     stage = core.stage();
     float pos = stepper.posMm();
