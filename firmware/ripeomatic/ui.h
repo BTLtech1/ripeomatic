@@ -168,7 +168,7 @@ details[open] summary::after{content:"–"}
 <div class="kv" id="calstate" style="margin-bottom:8px"></div>
 <div id="calpoints"></div>
 <p class="kv">Both calibrations are in the setup checklist at the top of the page. Redo them after reprinting the blade or sled, or if readings look off.</p>
-<div class="row" style="padding:4px 0 10px"><button id="btnSetupShow">Show the setup checklist</button><button id="btnCalClear" class="quiet">Clear force points and recalibrate</button></div>
+<div class="row" style="padding:4px 0 10px"><button id="btnSetupShow">Show the setup checklist</button><button id="btnBladeRedo">Redo the hard-object step</button><button id="btnCalClear" class="quiet">Clear force points and recalibrate</button></div>
 <p class="kv">Alternative to coins: put a kitchen scale where the avocado goes and press it. Read the peak grams and compare with the force the device reports; adjust <code>hall_n_per_count</code> by the ratio.</p>
 </details>
 <details id="d-sensor">
@@ -685,6 +685,8 @@ testPending = false; testResult = 'fail'; stepsKey = ''; poll();
 }
 $('btnTip').onclick = act('/api/tip', null, 'Opening the gate');
 $('btnSetupShow2').onclick = () => $('btnSetupShow').onclick();
+// straight to the hard-object step, reopened and ready to press (it was three taps deep: checklist, find the step, Redo)
+$('btnBladeRedo').onclick = () => { ls.set('redo_blade', '1'); $('btnSetupShow').onclick(); };
 $('btnFresh').onclick = async () => {
 if (!confirm('Start over from scratch?\n\nThis erases both calibrations, home, every setting, the current avocado and ALL readings. Wi-Fi is kept, so the machine comes back on this same address in about 20 seconds.\n\nDownload the CSV first if you want the readings.')) return;
 ['forceCalOpen', 'forceCalDone', 'alertsOpen', 'setupHidden', 'ntfySkipped', 'redo_ntfy', 'redo_motor', 'redo_home', 'redo_blade', 'redo_fruit'].forEach(k => ls.set(k, '0'));
