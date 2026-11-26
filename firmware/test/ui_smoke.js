@@ -54,7 +54,7 @@ const shots = process.argv[2] || require('os').tmpdir();
   await step('forcedone', 500);
   page.once('dialog', dlg => dlg.accept());
   await step('blade', 500);
-  await page.waitForFunction(() => /Blade calibration · /.test(document.getElementById('steps').textContent) && !document.querySelector('#steps .sstep:nth-child(4):not(.done)'), null, { timeout: 30000 });
+  await page.waitForFunction(() => /Blade calibration: hard object · /.test(document.getElementById('steps').textContent) && !document.querySelector('#steps .sstep:nth-child(4):not(.done)'), null, { timeout: 30000 });
   out.setup4 = await page.textContent('#setupcount');
   await step('measure', 500);
   await page.waitForFunction(() => document.getElementById('setup').hidden, null, { timeout: 30000 });
