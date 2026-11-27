@@ -31,15 +31,20 @@ class Hall {
   float tareCounts() const { return tare_; }
   void nudgeTare(float counts) { tare_ += counts; }
 
-  // Force between two raw readings. With a calibration curve the answer depends on where on the curve the
-  // readings sit, so both are placed on it by their distance from the calibration zero.
+  // Force between two raw readings: the curve is entered at the first one, as "nothing on the pad".
+  //
+  // An earlier version placed both readings on the curve by their distance from the calibration zero. That is
+  // right only if a shifted zero means the blade itself has moved. It does not: with the blade seated firmly
+  // the no-load reading still wanders by 10 to 25 counts as the sled travels (a stray field, not a deflection),
+  // and treating that as blade movement slid the curve's corners to a different force in every press. A press
+  // on fruit then disagreed with the jar press it is corrected by, which showed up as give that was not there,
+  // starting at a calibration weight. Entered at the tare, the corners sit at the same forces in every press.
   float forceBetween(float raw_from, float raw_to) {
     if (strcmp(key_pts_, S.cal_points) || key_zero_ != S.cal_zero_counts || key_lin_ != S.hall_n_per_count) {
       strlcpy(key_pts_, S.cal_points, sizeof key_pts_); key_zero_ = S.cal_zero_counts; key_lin_ = S.hall_n_per_count;
       ripe::calCurveBuild(S.cal_points, S.cal_zero_counts, S.hall_n_per_count, curve_);
     }
-    if (curve_.n < 3) return (raw_to - raw_from) * S.hall_n_per_count;
-    return ripe::calForce(curve_, raw_to - S.cal_zero_counts) - ripe::calForce(curve_, raw_from - S.cal_zero_counts);
+    return ripe::calForce(curve_, raw_to - raw_from);
   }
   bool usesCurve() { forceBetween(0, 0); return curve_.n >= 3; }
   float countsToForce(float raw) { return forceBetween(tare_, raw); }

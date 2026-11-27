@@ -111,6 +111,8 @@ inline const FieldDef* settingsFields(int& count) {
   return f;
 }
 
+static const int BEND_VERSION = 2;      // 2: forces read from the curve entered at the tare
+
 inline void settingsLoad() {
   Preferences p;
   p.begin("ripe", false);   // read-write so the namespace is created on first boot (read-only open fails until it exists)
@@ -133,6 +135,7 @@ inline void settingsLoad() {
         && p.getBytes("bend_mm", S.t.bend_mm, sizeof S.t.bend_mm) == sizeof S.t.bend_mm) S.t.bend_n = bn;
   }
   if (S.t.blade_k_n_per_mm <= 0.01f) S.t.bend_n = 0;
+  if (p.getInt("bend_v", 1) != BEND_VERSION) S.t.bend_n = 0;   // taken with an older force conversion: redo the hard-object step
   p.end();
   if (S.device_id[0] == 0) {
     uint32_t r = esp_random();
@@ -155,6 +158,7 @@ inline void settingsSave() {
   }
   if (S.t.blade_k_n_per_mm <= 0.01f) S.t.bend_n = 0;     // blade number cleared (also from the settings form): the curve goes with it
   p.putInt("bend_n", S.t.bend_n);
+  if (S.t.bend_n >= 2) p.putInt("bend_v", BEND_VERSION);
   p.putBytes("bend_f", S.t.bend_f, sizeof S.t.bend_f);
   p.putBytes("bend_mm", S.t.bend_mm, sizeof S.t.bend_mm);
   p.end();

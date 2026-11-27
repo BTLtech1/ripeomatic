@@ -150,7 +150,7 @@ details[open] summary::after{content:"–"}
 <select id="cut" style="flex:1;font:inherit;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink)">
 <option value="">Not cut open</option><option value="no_bruise">Cut: no bruise</option><option value="bruise_at_pad">Cut: bruise at pad</option><option value="bruise_elsewhere">Cut: bruise elsewhere</option>
 </select>
-<a href="/data.csv?fruit=all&old=1" download style="flex:0 0 auto"><button type="button">Download CSV</button></a>
+<a href="/data.csv?fruit=all&old=1" download style="flex:0 0 auto" id="csvlink"><button type="button">Download CSV</button></a>
 </div>
 <details style="margin-top:10px"><summary style="cursor:pointer;font-size:14px">Share your readings (it makes the ripe line better for everyone)</summary>
 <p class="kv" style="margin:8px 0 0">The ripe line is a placeholder until enough real avocados have been measured. Yours count, most of all the ones where you tapped how it was to eat.</p>
@@ -485,6 +485,7 @@ let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
 ta.remove();
 return Promise.resolve(ok);
 }
+$('csvlink').addEventListener('click', () => toast('Downloading the CSV: look in your Downloads folder'));
 $('btnEvCopy').onclick = async () => {
 if (await copyText($('evlog').textContent)) { toast('Log copied'); return; }
 const r = document.createRange(); r.selectNodeContents($('evlog')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);   // leave it selected: Ctrl+C finishes the job
