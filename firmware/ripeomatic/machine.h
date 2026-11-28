@@ -548,9 +548,14 @@ class Machine {
     // the skin, and that movement reads as give (a real unit: 2.31 N/mm on the first press, 2.98 and 3.03 after).
     // So when the fruit is new, or sits somewhere else than last time, press once to seat it, back off until the
     // pad is clear, and take the reading from a second press. An avocado left in place is pressed once, as before.
-    if (!bladeCal && !stepper.aborted() && core.reading().outcome == ripe::Outcome::Reading) {
+    //
+    // The hard object is always seated first. Its first press beds the stem and the jar in as well, and on a real
+    // unit that soft start went into the bend table: every later fruit press then had too much "machine bend"
+    // subtracted around 1 N and read less give than the jar (squish down to -0.34 mm, then "hard"). A fruit that
+    // stays in place is pressed already seated, so the table has to come from a seated press too.
+    if (!stepper.aborted() && core.reading().outcome == ripe::Outcome::Reading) {
       float c1 = core.reading().contact_pos_mm;
-      bool moved = !FR.loaded || fabsf(c1 - FR.last_contact_mm) > 1.5f;
+      bool moved = bladeCal || !FR.loaded || fabsf(c1 - FR.last_contact_mm) > 1.5f;
       if (moved) {
         float k1 = core.reading().stiffness_n_per_mm;
         stage = ripe::Stage::Retract;
@@ -594,6 +599,13 @@ class Machine {
         last_cal_millis_ = millis();
         settingsSave();
         logEv("  blade measured: %.2f N/mm, peak %.2f N, curve %s (%d points)", rb.stiffness_n_per_mm, rb.force_max_n, curve ? "saved" : "not usable", S.t.bend_n);
+        if (curve) {   // the table itself, so a bad one can be spotted from the Log
+          for (int h = 0; h < S.t.bend_n; h += 4) {      // log lines are short: four points per line
+            char tb[64]; int o = 0;
+            for (int i = h; i < S.t.bend_n && i < h + 4; i++) o += snprintf(tb + o, sizeof tb - o, " %.2f:%.2f", S.t.bend_f[i], S.t.bend_mm[i]);
+            logEv("  bend curve (N:mm)%s", tb);
+          }
+        }
       }
     }
 

@@ -111,7 +111,7 @@ inline const FieldDef* settingsFields(int& count) {
   return f;
 }
 
-static const int BEND_VERSION = 2;      // 2: forces read from the curve entered at the tare
+static const int BEND_VERSION = 3;      // 2: forces read from the curve entered at the tare; 3: hard object seated first
 
 inline void settingsLoad() {
   Preferences p;
