@@ -127,6 +127,7 @@ struct Reading {
   float squish_at_cap_mm = 0;
   float force_max_n = 0;         // force actually reached (= cap on a normal reading)
   float blade_k_n_per_mm = 0;    // the correction that was applied (0 = none)
+  float min_squish_mm = 0;       // lowest corrected squish in the press (well below zero = not trustworthy)
   int n_points = 0;
   float squish[MAX_POINTS];
   float force[MAX_POINTS];
@@ -255,6 +256,8 @@ class MeasureCore {
       r_.stiffness_n_per_mm = f.slope;
       r_.r2 = f.r2;
       r_.squish_at_cap_mm = r_.squish[r_.n_points - 1];
+      r_.min_squish_mm = 0;
+      for (int i = 0; i < r_.n_points; i++) if (r_.squish[i] < r_.min_squish_mm) r_.min_squish_mm = r_.squish[i];
       if (hasCorrection(t_)) {
         // A softening avocado does not press like a spring: its surface gives a few tenths of a millimetre at
         // a light touch and then holds. A straight line through that step is not a stiffness (it read ~0.5 for
@@ -394,6 +397,16 @@ inline Verdict judge(float stiffness, float first_stiffness, const Tunables& t) 
 }
 
 // Has the avocado been swapped since the last reading of the current fruit?
+// A fruit can only add give on top of the machine's own bend, never take it away. A press whose corrected squish
+// dips well below zero (the force climbed while the sled hardly moved) was not measuring the fruit: a slip, a
+// hiccup in the sensor, a sled that caught and let go. A real unit read "hard" from such a press (squish down to
+// -0.34 mm) ten minutes after reading 4.6 N/mm on the same avocado, and started a new fruit because of it.
+// Noise in good presses stays within about -0.1 mm.
+constexpr float SUSPECT_SQUISH_MM = -0.15f;
+inline bool suspectPress(const Reading& r, const Tunables& t) {
+  return hasCorrection(t) && (r.outcome == Outcome::Reading || r.outcome == Outcome::Overtravel) && r.min_squish_mm < SUSPECT_SQUISH_MM;
+}
+
 inline bool looksLikeNewFruit(float contact_pos, float first_contact_pos, float stiffness, float last_stiffness, const Tunables& t) {
   if (first_contact_pos > 0 && fabsf(contact_pos - first_contact_pos) > t.swap_contact_mm) return true;
   if (last_stiffness > 0 && stiffness > last_stiffness * (1.0f + t.swap_stiffer_pct / 100.0f)) return true;

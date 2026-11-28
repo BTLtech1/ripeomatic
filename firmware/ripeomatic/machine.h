@@ -568,6 +568,23 @@ class Machine {
       }
     }
 
+    // A press with less give than the jar alone did not measure the fruit (see suspectPress). Try once more.
+    if (!bladeCal && !stepper.aborted() && ripe::suspectPress(core.reading(), t)) {
+      float c1 = core.reading().contact_pos_mm;
+      logEv("  that press read less give than the hard object alone (%.2f mm): not trusted, pressing again", core.reading().min_squish_mm);
+      stage = ripe::Stage::Retract;
+      stepper.setSpeedMmS(S.fast_mm_s);
+      float back = stepper.posMm() - c1 + 2.0f;
+      if (back > stepper.posMm()) back = stepper.posMm();
+      guardedMove(-back, S.t.force_cap_n + 1.0f);
+      if (!stepper.aborted()) {
+        delay(500);
+        hall.tare();
+        evStage_ = ripe::Stage::Retract;
+        press(c1);
+      }
+    }
+
     // Blade calibration: save the result now, before the sled travels home, so a hiccup on the way back can't lose it.
     if (bladeCal) {
       const ripe::Reading& rb = core.reading();
@@ -645,6 +662,18 @@ class Machine {
   }
 
   void processReading(const ripe::Reading& r, const char* ts) {
+    // Still not trustworthy after a second press: log it so it can be looked at, but leave the fruit alone
+    // (no new fruit, no new stiffness, no verdict or alert from it).
+    if (ripe::suspectPress(r, S.t)) {
+      char fid[16], row[700];
+      fruitId(fid, sizeof fid);
+      ripe::RowMeta m{S.device_id, ts, fid, S.variety, 0, NAN, S.cal_points, "", "", "not trusted: less give than the hard object"};
+      ripe::formatReadingRow(r, m, S.t.force_cap_n, row, sizeof row);
+      store.appendRow(row);
+      Serial.println(row);
+      logEv("  not trusted twice in a row: logged, fruit left as it was");
+      return;
+    }
     // New avocado?
     bool isNew = !FR.loaded || ripe::looksLikeNewFruit(r.contact_pos_mm, FR.first_contact_mm, r.stiffness_n_per_mm, FR.last_k, S.t);
     if (isNew) {

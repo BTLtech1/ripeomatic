@@ -160,6 +160,15 @@ int main() {
   // ---- swap detection
   {
     Tunables t;
+    {
+      Tunables tc; tc.blade_k_n_per_mm = 1.1f;
+      Reading rs; rs.outcome = Outcome::Reading; rs.min_squish_mm = -0.34f;
+      CHECK(suspectPress(rs, tc));
+      rs.min_squish_mm = -0.08f;
+      CHECK(!suspectPress(rs, tc));               // ordinary noise
+      rs.min_squish_mm = -0.34f; tc.blade_k_n_per_mm = 0; tc.bend_n = 0;
+      CHECK(!suspectPress(rs, tc));               // no correction: nothing to compare with
+    }
     CHECK(looksLikeNewFruit(30.0f, 20.0f, 3.0f, 3.0f, t));        // contact moved 10 mm
     CHECK(!looksLikeNewFruit(21.0f, 20.0f, 2.8f, 3.0f, t));
     CHECK(looksLikeNewFruit(20.5f, 20.0f, 5.0f, 2.0f, t));        // got much stiffer
