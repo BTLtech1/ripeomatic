@@ -396,7 +396,7 @@ function draw() { tab === 'trend' ? drawTrend() : drawCurve(false); }
 function axes(W, H, p) { return {x: v => p.l + (W - p.l - p.r) * v, y: v => H - p.b - (H - p.b - p.t) * v}; }
 function drawTrend() {
 const svg = $('chart'), W = 400, H = 230, p = {l: 36, r: 10, t: 14, b: 26};
-const pts = rows.filter(r => r.stiffness_n_per_mm !== '' && !isNaN(parseFloat(r.stiffness_n_per_mm))).map(r => ({t: Date.parse(r.timestamp) || null, k: parseFloat(r.stiffness_n_per_mm), r: r.human_rating}));
+const pts = rows.filter(r => r.stiffness_n_per_mm !== '' && !isNaN(parseFloat(r.stiffness_n_per_mm))).map(r => ({t: Date.parse(r.timestamp) || null, k: parseFloat(r.stiffness_n_per_mm), r: r.human_rating, bad: /^not trusted/.test(r.notes || '')}));
 const ratings = rows.filter(r => r.stiffness_n_per_mm === '' && r.human_rating).map(r => ({t: Date.parse(r.timestamp) || null, r: r.human_rating}));
 let h = '';
 if (pts.length < 1) { svg.innerHTML = '<text x="200" y="115" text-anchor="middle">No readings for this avocado yet</text>'; $('chartnote').textContent = ''; return; }
@@ -408,11 +408,13 @@ const xs = pts.map((q, i) => byTime ? (q.t - t0) / unit : i);
 const xmax = Math.max(byTime ? xs[xs.length - 1] : pts.length - 1, 1);
 const thr = st && st.fruit && st.fruit.threshold > 0 ? st.fruit.threshold : 0;
 const isHard = k => k >= 29.9 || k <= 0;                    // "too stiff to measure" (and old rows with a nonsense slope)
-const anyHard = pts.some(q => isHard(q.k));
-const ymax = Math.max(...pts.filter(q => !isHard(q.k)).map(q => q.k), thr * 1.6, 1) * 1.15;
+// presses the machine did not trust (less give than the hard object) get a grey cross, off the line, and never the label
+const good = pts.filter(q => !q.bad), anyBad = good.length < pts.length;
+const anyHard = good.some(q => isHard(q.k));
+const ymax = Math.max(...good.filter(q => !isHard(q.k)).map(q => q.k), thr * 1.6, 1) * 1.15;
 // "hard" has no number, so it gets its own row above the scale; the numbered part uses the rest
 const top = anyHard ? 0.8 : 1;
-pts.forEach(q => { q.hard = isHard(q.k); q.yf = q.hard ? 1 : q.k / ymax * top; });
+pts.forEach(q => { q.hard = isHard(q.k); q.yf = q.hard ? (anyHard ? 1 : top) : Math.min(q.k / ymax * top, top); });
 const a = axes(W, H, p), X = v => a.x(0.04 + 0.92 * v / xmax);
 for (let i = 0; i <= 4; i++) { const yv = ymax * i / 4, y = a.y(i / 4 * top); h += `<line class="grid" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${p.l - 6}" y="${y + 4}" text-anchor="end">${yv.toFixed(1)}</text>`; }
 if (anyHard) { const y = a.y(1); h += `<line class="grid" stroke-dasharray="2 4" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${p.l - 6}" y="${y + 4}" text-anchor="end">hard</text>`; }
@@ -424,23 +426,28 @@ const step = Math.max(1, Math.ceil(pts.length / 8));
 for (let i = 0; i < pts.length; i += step) h += `<text x="${X(i)}" y="${H - 10}" text-anchor="middle">#${i + 1}</text>`;
 }
 if (thr) { const y = a.y(thr / ymax * top); h += `<line class="thr" x1="${p.l}" x2="${W - p.r}" y1="${y}" y2="${y}"/><text x="${p.l + 4}" y="${y + 13}" text-anchor="start">ripe below ${thr.toFixed(2)}</text>`; }
-const path = pts.map((q, i) => (i ? 'L' : 'M') + X(xs[i]).toFixed(1) + ' ' + a.y(q.yf).toFixed(1)).join(' ');
-h += `<path class="ln" d="${path}"/>`;
-const last = pts.length - 1;
-pts.forEach((q, i) => h += `<circle class="pt" cx="${X(xs[i]).toFixed(1)}" cy="${a.y(q.yf).toFixed(1)}" r="${i === last ? 6 : 4.5}" style="${q.hard ? 'fill:var(--card);stroke:var(--green);stroke-width:2.5' : 'stroke:var(--card);stroke-width:1.5'}"><title>${q.hard ? 'too stiff to measure' : q.k.toFixed(2) + ' N/mm'}</title></circle>`);
+const path = pts.map((q, i) => [q, i]).filter(([q]) => !q.bad).map(([q, i], n) => (n ? 'L' : 'M') + X(xs[i]).toFixed(1) + ' ' + a.y(q.yf).toFixed(1)).join(' ');
+if (path) h += `<path class="ln" d="${path}"/>`;
+let last = -1; pts.forEach((q, i) => { if (!q.bad) last = i; });
+pts.forEach((q, i) => {
+if (!q.bad) return;
+const x = X(xs[i]), y = a.y(q.yf);
+h += `<g style="stroke:var(--mute);stroke-width:2"><line x1="${x - 4}" y1="${y - 4}" x2="${x + 4}" y2="${y + 4}"/><line x1="${x - 4}" y1="${y + 4}" x2="${x + 4}" y2="${y - 4}"/><title>not trusted: less give than the hard object (${q.hard ? 'hard' : q.k.toFixed(2) + ' N/mm'})</title></g>`;
+});
+pts.forEach((q, i) => q.bad ? 0 : h += `<circle class="pt" cx="${X(xs[i]).toFixed(1)}" cy="${a.y(q.yf).toFixed(1)}" r="${i === last ? 6 : 4.5}" style="${q.hard ? 'fill:var(--card);stroke:var(--green);stroke-width:2.5' : 'stroke:var(--card);stroke-width:1.5'}"><title>${q.hard ? 'too stiff to measure' : q.k.toFixed(2) + ' N/mm'}</title></circle>`);
 // the newest reading carries its number
-{ const q = pts[last], x = X(xs[last]), y = a.y(q.yf);
+if (last >= 0) { const q = pts[last], x = X(xs[last]), y = a.y(q.yf);
 h += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="10" style="fill:none;stroke:var(--green);stroke-opacity:.35;stroke-width:2"/>`;
 h += `<text x="${(x > W - 70 ? x - 14 : x + 14).toFixed(1)}" y="${(y + 5).toFixed(1)}" text-anchor="${x > W - 70 ? 'end' : 'start'}" style="fill:var(--green);font-size:14px;font-weight:700">${q.hard ? 'hard' : q.k.toFixed(2)}</text>`; }
 // thumb ratings: a small label under the reading nearest in time, so it never covers a dot
 ratings.forEach(q => {
-let j = pts.length - 1;
-if (hasT && q.t) { j = 0; pts.forEach((r, i) => { if (Math.abs(r.t - q.t) < Math.abs(pts[j].t - q.t)) j = i; }); }
+let j = last >= 0 ? last : pts.length - 1;
+if (hasT && q.t) { pts.forEach((r, i) => { if (!r.bad && Math.abs(r.t - q.t) < Math.abs(pts[j].t - q.t)) j = i; }); }
 const x = X(xs[j]), y = a.y(pts[j].yf), below = y < H - p.b - 24;
 h += `<text x="${x}" y="${below ? y + 16 : y - 9}" text-anchor="${x < 80 ? 'start' : x > W - 60 ? 'end' : 'middle'}" style="fill:var(--ripe)">${esc(q.r)}</text>`;
 });
 svg.innerHTML = h;
-$('chartnote').textContent = 'Stiffness (N/mm) of the current avocado, every reading since it went in' + (byTime ? '' : ', in order') + '. ' + (anyHard ? 'Dots on the "hard" row were too stiff to put a number on. ' : '') + (thr ? 'Dashed line: the ripe threshold, a placeholder until there is pooled data.' : 'No ripe threshold set.');
+$('chartnote').textContent = 'Stiffness (N/mm) of the current avocado, every reading since it went in' + (byTime ? '' : ', in order') + '. ' + (anyHard ? 'Dots on the "hard" row were too stiff to put a number on. ' : '') + (anyBad ? 'Grey crosses: presses the machine did not trust (less give than the hard object); they do not count. ' : '') + (thr ? 'Dashed line: the ripe threshold, a placeholder until there is pooled data.' : 'No ripe threshold set.');
 }
 let liveCache = null;
 async function drawCurve(live) {
